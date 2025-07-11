@@ -110,6 +110,17 @@ body {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
+.liquid-diamond {
+  background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 0 rgba(255,255,255,0.25) inset;
+  border-radius: 32%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  transition: all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  opacity: 0.95;
+}
+
 .nav-link {
   position: relative;
   padding: 8px 0;

@@ -28,7 +28,7 @@ export default function SmokeBackground() {
     scene.add(camera)
 
     // Add lighting
-    const light = new THREE.DirectionalLight(0xffffff, 0.5)
+    const light = new THREE.DirectionalLight(0xffffff, 2.2)
     light.position.set(-1, 0, 1)
     scene.add(light)
 
@@ -40,13 +40,13 @@ export default function SmokeBackground() {
       color: 0xffffff,
       map: smokeTexture,
       transparent: true,
-      opacity: 0.4, // Augmenté de 0.3 à 0.4
+      opacity: 0.10, // Encore plus clair
     })
     const smokeGeo = new THREE.PlaneGeometry(300, 300)
     const smokeParticles: THREE.Mesh[] = []
 
     // Create smoke particles
-    for (let p = 0; p < 200; p++) {
+    for (let p = 0; p < 250; p++) {
       // Augmenté de 150 à 200
       const particle = new THREE.Mesh(smokeGeo, smokeMaterial)
       particle.position.set(Math.random() * 500 - 250, Math.random() * 500 - 250, Math.random() * 1000 - 100)

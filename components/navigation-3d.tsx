@@ -6,6 +6,7 @@ import { Html, useGLTF } from "@react-three/drei"
 import type { Group, Object3D, Box3, Vector3 } from "three"
 import { PerspectiveCamera } from "three"
 import { motion, AnimatePresence } from "framer-motion"
+import { X, Folder, Mail, Cog } from "lucide-react"
 
 interface Navigation3DProps {
   isMenuOpen: boolean
@@ -115,50 +116,60 @@ export default function Navigation3D({
   currentPage,
 }: Navigation3DProps) {
   const handleModelClick = () => {
-    setIsMenuOpen(!isMenuOpen)
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    } else {
+      setIsMenuOpen(true);
+    }
   }
+  // Taille du conteneur principal (doit matcher le Canvas 3D)
+  const DIAMOND_SIZE = 750;
+  const DIAMOND_HALF = DIAMOND_SIZE / 2;
+  const BUTTON_OFFSET = 270; // distance du centre pour chaque bouton
+  const DIAMOND_BUTTONS = [
+    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down') },
+    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right') },
+    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up') },
+    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left') },
+  ];
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
       <div className="relative pointer-events-auto w-full max-w-[500px] aspect-square mx-auto">
+        {/* Canvas 3D devant (z-20) */}
         <Canvas
           camera={{ position: [0, 0, 8], fov: 35 }}
-          style={{ width: "100%", height: "100%", background: "transparent" }}
+          style={{ width: "100%", height: "100%", background: "transparent", position: "relative", zIndex: 40 }}
           shadows
         >
-          <ambientLight intensity={1} />
-          <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+          <ambientLight intensity={3} />
+          <directionalLight position={[5, 5, 5]} intensity={3.5} castShadow />
+          <directionalLight position={[-5, 5, 5]} intensity={2} />
+          <directionalLight position={[0, -5, 5]} intensity={1.2} />
           <RobotModel onClick={handleModelClick} />
         </Canvas>
         <AnimatePresence>
           {isMenuOpen && (
-            <div className="absolute inset-0 pointer-events-none">
-              {getGridPositions(currentPage).map((pos, i) => {
-                let initial = { opacity: 0, x: 0, y: 0 }
-                if (pos.position === "top") initial = { opacity: 0, x: 0, y: 40 }
-                if (pos.position === "bottom") initial = { opacity: 0, x: 0, y: -40 }
-                if (pos.position === "left") initial = { opacity: 0, x: 40, y: 0 }
-                if (pos.position === "right") initial = { opacity: 0, x: -40, y: 0 }
-                return (
-                  <motion.div
-                    key={`${pos.page}-${pos.position}`}
-                    initial={initial}
-                    animate={{ opacity: 1, x: 0, y: 0 }}
-                    exit={initial}
-                    transition={{
-                      duration: 0.5,
-                      delay: i * 0.08,
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                    }}
-                    className={`${getLabelPositionClass(pos.position)} liquid-nav-label text-black font-mono text-xs px-3 py-2 pointer-events-auto cursor-pointer ${pos.page === "home" ? "text-indigo-600" : ""}`}
-                    onClick={() => onNavigate(pos.page, pos.direction)}
+            <motion.div
+              initial={{ scale: 0.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.2, opacity: 0 }}
+              transition={{ duration: 0.5, type: "spring", stiffness: 180, damping: 22 }}
+              className="absolute inset-0 pointer-events-auto z-30"
+            >
+              {/* Boutons en formation diamond autour de l'objet 3D, sans losange SVG */}
+              <div className={`absolute top-0 left-0 w-[${DIAMOND_SIZE}px] h-[${DIAMOND_SIZE}px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
+                {DIAMOND_BUTTONS.map(({ key, x, y, icon, onClick }) => (
+                  <button
+                    key={key}
+                    className="absolute text-white drop-shadow-lg pointer-events-auto hover:scale-110 transition-transform"
+                    style={{ left: `${x}px`, top: `${y}px`, transform: 'translate(-50%, -50%)' }}
+                    onClick={onClick}
                   >
-                    {pos.label}
-                  </motion.div>
-                )
-              })}
-            </div>
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

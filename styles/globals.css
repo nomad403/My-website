@@ -92,3 +92,36 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.liquid-diamond {
+  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.10) 100%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 0 rgba(255,255,255,0.25) inset;
+  border-radius: 32%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  transition: all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  opacity: 0.97;
+}
+
+.inner-curve {
+  position: absolute;
+  width: 80px;
+  height: 32px;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.08) 100%);
+  border-radius: 0 0 48px 48px;
+  filter: blur(8px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.halo {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(180,180,255,0.25) 0%, rgba(120,120,255,0.10) 60%, transparent 100%);
+  filter: blur(8px);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
