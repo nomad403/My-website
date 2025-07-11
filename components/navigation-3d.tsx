@@ -6,7 +6,7 @@ import { Html, useGLTF } from "@react-three/drei"
 import type { Group, Object3D, Box3, Vector3 } from "three"
 import { PerspectiveCamera } from "three"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Folder, Mail, Cog } from "lucide-react"
+import { X, Folder, Mail, Cog, Home } from "lucide-react"
 
 interface Navigation3DProps {
   isMenuOpen: boolean
@@ -108,6 +108,44 @@ function getLabelPositionClass(position: string) {
   }
 }
 
+// Mapping dynamique des boutons diamond selon la page courante
+function getDiamondButtons(currentPage: string, onNavigate: (page: string, direction?: string) => void) {
+  const DIAMOND_HALF = 750 / 2;
+  const BUTTON_OFFSET = 270;
+  // Par défaut : about (haut), projects (gauche), skills (bas), contact (droite)
+  const base = [
+    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
+    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
+    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
+    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
+  ];
+  if (currentPage === 'home') return base;
+  // Trouver le bouton opposé à la direction du slide de la page courante
+  const pageToDir = {
+    about: 'down',
+    projects: 'right',
+    skills: 'up',
+    contact: 'left',
+  };
+  const dirToOpposite = {
+    down: 'up',
+    up: 'down',
+    left: 'right',
+    right: 'left',
+  };
+  const homeButton = { icon: <Home size={28} />, onClick: () => onNavigate('home'), key: 'home' };
+  const currentDir = pageToDir[currentPage as keyof typeof pageToDir];
+  const oppositeDir = dirToOpposite[currentDir as keyof typeof dirToOpposite];
+  // Remplacer le bouton opposé par Accueil
+  return base
+    .map(btn =>
+      btn.direction === oppositeDir
+        ? { ...btn, icon: homeButton.icon, onClick: homeButton.onClick, key: 'home', page: 'home' }
+        : btn
+    )
+    .filter(btn => btn.key !== currentPage);
+}
+
 export default function Navigation3D({
   isMenuOpen,
   setIsMenuOpen,
@@ -135,7 +173,7 @@ export default function Navigation3D({
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
       <div className="relative pointer-events-auto w-full max-w-[500px] aspect-square mx-auto">
-        {/* Canvas 3D devant (z-20) */}
+        {/* Canvas 3D devant (z-40) */}
         <Canvas
           camera={{ position: [0, 0, 8], fov: 35 }}
           style={{ width: "100%", height: "100%", background: "transparent", position: "relative", zIndex: 40 }}
@@ -156,9 +194,9 @@ export default function Navigation3D({
               transition={{ duration: 0.5, type: "spring", stiffness: 180, damping: 22 }}
               className="absolute inset-0 pointer-events-auto z-30"
             >
-              {/* Boutons en formation diamond autour de l'objet 3D, sans losange SVG */}
-              <div className={`absolute top-0 left-0 w-[${DIAMOND_SIZE}px] h-[${DIAMOND_SIZE}px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
-                {DIAMOND_BUTTONS.map(({ key, x, y, icon, onClick }) => (
+              {/* Boutons en formation diamond autour de l'objet 3D, dynamiques selon la page */}
+              <div className={`absolute top-0 left-0 w-[750px] h-[750px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
+                {getDiamondButtons(currentPage, onNavigate).map(({ key, x, y, icon, onClick }) => (
                   <button
                     key={key}
                     className="absolute text-white drop-shadow-lg pointer-events-auto hover:scale-110 transition-transform"
