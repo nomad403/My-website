@@ -127,10 +127,10 @@ function getDiamondButtons(currentPage: string, onNavigate: (page: string, direc
   const ICONS_OFFSET_Y = 40 // Décalage vertical pour compenser le centre visuel de l'objet 3D
   // Par défaut : about (haut), projects (gauche), skills (bas), contact (droite)
   const base = [
-    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
-    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
-    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
-    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
+    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down', position: 'top' },
+    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right', position: 'left' },
+    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up', position: 'bottom' },
+    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left', position: 'right' },
   ];
   if (currentPage === 'home') return base;
   // Trouver le bouton opposé à la direction du slide de la page courante
@@ -146,17 +146,37 @@ function getDiamondButtons(currentPage: string, onNavigate: (page: string, direc
     left: 'right',
     right: 'left',
   };
-  const homeButton = { icon: <Home size={28} />, onClick: () => onNavigate('home'), key: 'home' };
-  const currentDir = pageToDir[currentPage as keyof typeof pageToDir];
-  const oppositeDir = dirToOpposite[currentDir as keyof typeof dirToOpposite];
-  // Remplacer le bouton opposé par Accueil
-  return base
-    .map(btn =>
-      btn.direction === oppositeDir
-        ? { ...btn, icon: homeButton.icon, onClick: homeButton.onClick, key: 'home', page: 'home' }
-        : btn
-    )
-    .filter(btn => btn.key !== currentPage);
+  const positionToDir: { [key: string]: string } = {
+    top: 'down',
+    bottom: 'up',
+    left: 'right',
+    right: 'left',
+  };
+  const current = base.find((pos: any) => pos.key === currentPage);
+  const opp = current ? base.find((pos) => pos.position === getOppositePosition(current.position)) : undefined;
+  function getOppositePosition(pos: string) {
+    switch (pos) {
+      case 'top': return 'bottom';
+      case 'bottom': return 'top';
+      case 'left': return 'right';
+      case 'right': return 'left';
+      default: return 'top';
+    }
+  }
+  return base.map((pos: any) => {
+    if (current && pos.position === getOppositePosition(current.position)) {
+      // Ajoute la bonne direction au bouton home
+      return {
+        ...pos,
+        key: 'home',
+        page: 'home',
+        icon: <Home size={28} />, 
+        onClick: () => onNavigate('home', positionToDir[pos.position]),
+        direction: positionToDir[pos.position],
+      };
+    }
+    return pos.key === currentPage ? null : pos;
+  }).filter(Boolean) as Array<{ key: string; x: number; y: number; icon: React.ReactNode; onClick: () => void; direction: string; position: string; }>;
 }
 
 export default function Navigation3D({
@@ -183,10 +203,10 @@ export default function Navigation3D({
   function getDiamondButtons(currentPage: string, onNavigate: (page: string, direction?: string) => void) {
     // Par défaut : about (haut), projects (gauche), skills (bas), contact (droite)
     const base = [
-      { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
-      { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
-      { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
-      { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
+      { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down', position: 'top' },
+      { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right', position: 'left' },
+      { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up', position: 'bottom' },
+      { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left', position: 'right' },
     ];
     if (currentPage === 'home') return base;
     // Trouver le bouton opposé à la direction du slide de la page courante
@@ -202,16 +222,37 @@ export default function Navigation3D({
       left: 'right',
       right: 'left',
     };
-    const homeButton = { icon: <Home size={28} />, onClick: () => onNavigate('home'), key: 'home' };
-    const currentDir = pageToDir[currentPage as keyof typeof pageToDir];
-    const oppositeDir = dirToOpposite[currentDir as keyof typeof dirToOpposite];
-    return base
-      .map(btn =>
-        btn.direction === oppositeDir
-          ? { ...btn, icon: homeButton.icon, onClick: homeButton.onClick, key: 'home', page: 'home' }
-          : btn
-      )
-      .filter(btn => btn.key !== currentPage);
+    const positionToDir: { [key: string]: string } = {
+      top: 'down',
+      bottom: 'up',
+      left: 'right',
+      right: 'left',
+    };
+    const current = base.find((pos: any) => pos.key === currentPage);
+    const opp = current ? base.find((pos) => pos.position === getOppositePosition(current.position)) : undefined;
+    function getOppositePosition(pos: string) {
+      switch (pos) {
+        case 'top': return 'bottom';
+        case 'bottom': return 'top';
+        case 'left': return 'right';
+        case 'right': return 'left';
+        default: return 'top';
+      }
+    }
+    return base.map((pos: any) => {
+      if (current && pos.position === getOppositePosition(current.position)) {
+        // Ajoute la bonne direction au bouton home
+        return {
+          ...pos,
+          key: 'home',
+          page: 'home',
+          icon: <Home size={28} />, 
+          onClick: () => onNavigate('home', positionToDir[pos.position]),
+          direction: positionToDir[pos.position],
+        };
+      }
+      return pos.key === currentPage ? null : pos;
+    }).filter(Boolean) as Array<{ key: string; x: number; y: number; icon: React.ReactNode; onClick: () => void; direction: string; position: string; }>;
   }
 
   // Correction du comportement de clic sur l'objet 3D
