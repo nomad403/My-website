@@ -16,7 +16,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
             <div className="grid grid-cols-12 gap-8 h-full">
               {/* Left side - Main content */}
               <div className="col-span-8">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight">ABOUT</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">ABOUT</h1>
                 <div className="space-y-8">
                   <div className="liquid-card p-8">
                     <p className="font-jetbrains text-lg font-light text-black mb-6 leading-relaxed">
@@ -62,7 +62,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-12">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight">SPECIALIST</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">SPECIALIST</h1>
               </div>
 
               {/* Main skills grid */}
@@ -176,7 +176,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-12">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight">PROJECTS</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">PROJECTS</h1>
               </div>
 
               {/* Featured project */}
@@ -244,7 +244,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-8">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight">CONTACT</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">CONTACT</h1>
                 <div className="liquid-card p-8">
                   <div className="grid grid-cols-2 gap-8">
                     <div>
@@ -317,13 +317,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
   return (
     <div className="absolute inset-0 z-25 bg-white/30 backdrop-blur-sm">
       <div className="container mx-auto px-8 py-8 h-full overflow-y-auto">
-        <button
-          onClick={onBack}
-          className="liquid-button flex items-center space-x-2 text-black font-jetbrains text-sm font-light mb-8 px-4 py-2 transition-all duration-300 uppercase tracking-wide"
-        >
-          <ArrowLeft size={16} />
-          <span>Back</span>
-        </button>
+        
 
         {getPageContent()}
       </div>

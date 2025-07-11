@@ -54,6 +54,18 @@ export default function HomePage() {
           <div className="font-jetbrains text-black text-sm font-medium tracking-wider uppercase">NOMAD403</div>
           <div className="hidden md:flex space-x-8 font-jetbrains text-black text-sm font-light">
             <button
+              onClick={() => handlePageChange("home")}
+              className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""}`}
+            >
+              HOME
+            </button>
+            <button
+              onClick={() => handlePageChange("projects")}
+              className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""}`}
+            >
+              PROJECTS
+            </button>
+            <button
               onClick={() => handlePageChange("about")}
               className={`nav-link transition-all duration-300 ${currentPage === "about" ? "active" : ""}`}
             >
@@ -66,16 +78,8 @@ export default function HomePage() {
               SPECIALIST
             </button>
             <button
-              onClick={() => handlePageChange("projects")}
-              className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""}`}
-            >
-              PROJECTS
-            </button>
-          </div>
-          <div className="liquid-button px-6 py-2">
-            <button
               onClick={() => handlePageChange("contact")}
-              className="font-jetbrains text-black text-sm font-medium"
+              className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""}`}
             >
               CONTACT
             </button>
@@ -122,38 +126,6 @@ export default function HomePage() {
                           <p className="font-jetbrains text-black text-xs font-light uppercase tracking-wide">
                             CONTACT WITH US
                           </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Center - navigation hint */}
-                    <div className="col-span-6 flex justify-center">
-                      <div className="text-center">
-                        <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-2 mx-auto">
-                          <div className="text-white text-xs">↓</div>
-                        </div>
-                        <p className="font-jetbrains text-black text-xs font-light uppercase tracking-wide">
-                          DISCOVER MORE
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right side - description */}
-                    <div className="col-span-3">
-                      <div className="space-y-4">
-                        <p className="font-jetbrains text-black text-xs font-light leading-relaxed">
-                          We don't always have a choice in feeling depressed; sometimes it can be due to circumstances
-                          as we might be experiencing grief and loss, other times, it comes from a chemical imbalance.
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span className="font-kode text-black text-xs">01</span>
-                          <div className="flex space-x-1">
-                            <div className="w-1 h-1 bg-black rounded-full"></div>
-                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                          </div>
-                          <span className="font-kode text-black text-xs">04</span>
                         </div>
                       </div>
                     </div>
