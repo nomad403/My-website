@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Html, useGLTF } from "@react-three/drei"
 import type { Group, Object3D, Box3, Vector3 } from "three"
-import { PerspectiveCamera } from "three"
+import { PerspectiveCamera, Vector3 as ThreeVector3 } from "three"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Folder, Mail, Cog, Home } from "lucide-react"
 
@@ -14,29 +14,29 @@ interface Navigation3DProps {
   onNavigate: (page: string, direction?: string) => void
   isTransitioning?: boolean
   currentPage: string
+  is3DCentered: boolean
+  on3DObjectClick: () => void
 }
 
-function RobotModel({ onClick }: { onClick: () => void }) {
+function RobotModel({ onClick, targetPosition, targetScale }: { onClick: () => void, targetPosition: [number, number, number], targetScale: number }) {
   const group = useRef<Group>(null)
   const { scene } = useGLTF("/cyberpunk_head_robot_random_represent.glb")
   const { camera } = useThree()
   const [fitted, setFitted] = useState(false)
 
-  // Centrage et zoom automatique
+  // Centrage et zoom automatique (une seule fois)
   useEffect(() => {
     if (!group.current || fitted) return
-    // Clone la scène pour ne pas modifier l'original
     const temp = scene.clone() as Object3D
     const box = new (require('three').Box3)().setFromObject(temp)
     const size = new (require('three').Vector3)()
     box.getSize(size)
     const center = new (require('three').Vector3)()
     box.getCenter(center)
-    // Centre le modèle
     group.current.position.x = -center.x
     group.current.position.y = -center.y
     group.current.position.z = -center.z
-    // Calcule le scale pour que le modèle tienne dans la vue
+    // Ajuste la caméra pour voir tout le modèle
     const perspectiveCamera = camera as PerspectiveCamera
     const maxDim = Math.max(size.x, size.y, size.z)
     const fitHeightDistance = maxDim / (2 * Math.atan((Math.PI * perspectiveCamera.fov) / 360))
@@ -49,15 +49,25 @@ function RobotModel({ onClick }: { onClick: () => void }) {
     setFitted(true)
   }, [scene, camera, fitted])
 
-  useFrame(({ clock }) => {
+  // Animation de la position/scale du groupe 3D
+  useFrame(() => {
     if (group.current) {
-      group.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.5) * 0.2
+      // Animation fluide vers la cible
+      group.current.position.lerp(new ThreeVector3(...targetPosition), 0.1)
+      group.current.scale.lerp(new ThreeVector3(targetScale, targetScale, targetScale), 0.1)
+      // Animation de rotation/flottement
+      group.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.2
       group.current.rotation.y += 0.01
-      group.current.position.y += Math.sin(clock.getElapsedTime() * 1.5) * 0.01 // léger flottement
+      group.current.position.y += Math.sin(Date.now() * 0.0015) * 0.01
     }
   })
 
-  return <group ref={group} onPointerDown={onClick}><primitive object={scene} /></group>
+  // Correction : pointerEvents/cursor sur <primitive> (pas sur <group>)
+  return (
+    <group ref={group} onPointerDown={onClick}>
+      <primitive object={scene} pointerOver={true} />
+    </group>
+  )
 }
 
 const NAV_BUTTONS = [
@@ -110,14 +120,17 @@ function getLabelPositionClass(position: string) {
 
 // Mapping dynamique des boutons diamond selon la page courante
 function getDiamondButtons(currentPage: string, onNavigate: (page: string, direction?: string) => void) {
-  const DIAMOND_HALF = 750 / 2;
-  const BUTTON_OFFSET = 270;
+  // Taille du diamond = taille du conteneur centré de l'objet 3D (500px)
+  const DIAMOND_SIZE = 500
+  const DIAMOND_HALF = DIAMOND_SIZE / 2
+  const BUTTON_OFFSET = 200 // Plus grand pour espacer le diamond
+  const ICONS_OFFSET_Y = 40 // Décalage vertical pour compenser le centre visuel de l'objet 3D
   // Par défaut : about (haut), projects (gauche), skills (bas), contact (droite)
   const base = [
-    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
-    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
-    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
-    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
+    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
+    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
+    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
+    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
   ];
   if (currentPage === 'home') return base;
   // Trouver le bouton opposé à la direction du slide de la page courante
@@ -152,39 +165,84 @@ export default function Navigation3D({
   onNavigate,
   isTransitioning,
   currentPage,
+  is3DCentered,
+  on3DObjectClick,
 }: Navigation3DProps) {
-  const handleModelClick = () => {
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
+  // Cibles de position/scale pour l'objet 3D
+  // Centré : (0,0,0), scale 0.45 ; Rangé : ex (-10, 5, 0), scale 0.13 (à ajuster selon la scène)
+  const targetPosition: [number, number, number] = is3DCentered ? [0, 0, 0] : [-9, 4.7, 0]
+  const targetScale = is3DCentered ? 0.45 : 0.13
+
+  // Taille du diamond = taille du conteneur centré de l'objet 3D (500px)
+  const DIAMOND_SIZE = 500
+  const DIAMOND_HALF = DIAMOND_SIZE / 2
+  const BUTTON_OFFSET = 270 // Plus grand pour éloigner les boutons
+  const ICONS_OFFSET_Y = 40 // Décalage vertical pour compenser le centre visuel de l'objet 3D
+
+  // getDiamondButtons doit utiliser ces valeurs pour placer les boutons
+  function getDiamondButtons(currentPage: string, onNavigate: (page: string, direction?: string) => void) {
+    // Par défaut : about (haut), projects (gauche), skills (bas), contact (droite)
+    const base = [
+      { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down'), direction: 'down' },
+      { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right'), direction: 'right' },
+      { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET + ICONS_OFFSET_Y, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up'), direction: 'up' },
+      { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF + ICONS_OFFSET_Y, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left'), direction: 'left' },
+    ];
+    if (currentPage === 'home') return base;
+    // Trouver le bouton opposé à la direction du slide de la page courante
+    const pageToDir = {
+      about: 'down',
+      projects: 'right',
+      skills: 'up',
+      contact: 'left',
+    };
+    const dirToOpposite = {
+      down: 'up',
+      up: 'down',
+      left: 'right',
+      right: 'left',
+    };
+    const homeButton = { icon: <Home size={28} />, onClick: () => onNavigate('home'), key: 'home' };
+    const currentDir = pageToDir[currentPage as keyof typeof pageToDir];
+    const oppositeDir = dirToOpposite[currentDir as keyof typeof dirToOpposite];
+    return base
+      .map(btn =>
+        btn.direction === oppositeDir
+          ? { ...btn, icon: homeButton.icon, onClick: homeButton.onClick, key: 'home', page: 'home' }
+          : btn
+      )
+      .filter(btn => btn.key !== currentPage);
+  }
+
+  // Correction du comportement de clic sur l'objet 3D
+  const handle3DObjectClick = () => {
+    if (currentPage === 'home') {
+      // Sur la home, on ouvre/ferme juste le menu
+      setIsMenuOpen(!isMenuOpen)
     } else {
-      setIsMenuOpen(true);
+      // Sinon, comportement normal (centré/rangé)
+      on3DObjectClick()
     }
   }
-  // Taille du conteneur principal (doit matcher le Canvas 3D)
-  const DIAMOND_SIZE = 750;
-  const DIAMOND_HALF = DIAMOND_SIZE / 2;
-  const BUTTON_OFFSET = 270; // distance du centre pour chaque bouton
-  const DIAMOND_BUTTONS = [
-    { key: 'about',    x: DIAMOND_HALF, y: DIAMOND_HALF - BUTTON_OFFSET, icon: <X size={32} />,        onClick: () => onNavigate('about', 'down') },
-    { key: 'projects', x: DIAMOND_HALF - BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Folder size={28} />,   onClick: () => onNavigate('projects', 'right') },
-    { key: 'skills',   x: DIAMOND_HALF, y: DIAMOND_HALF + BUTTON_OFFSET, icon: <Cog size={28} />,      onClick: () => onNavigate('skills', 'up') },
-    { key: 'contact',  x: DIAMOND_HALF + BUTTON_OFFSET, y: DIAMOND_HALF, icon: <Mail size={28} />,     onClick: () => onNavigate('contact', 'left') },
-  ];
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-      <div className="relative pointer-events-auto w-full max-w-[500px] aspect-square mx-auto">
-        {/* Canvas 3D devant (z-40) */}
+    <>
+      {/* Canvas 3D plein écran, fixed, pointer-events-none sauf sur l'objet 3D */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
         <Canvas
           camera={{ position: [0, 0, 8], fov: 35 }}
-          style={{ width: "100%", height: "100%", background: "transparent", position: "relative", zIndex: 40 }}
+          style={{ width: '100vw', height: '100vh', background: 'transparent' }}
           shadows
         >
           <ambientLight intensity={3} />
           <directionalLight position={[5, 5, 5]} intensity={3.5} castShadow />
           <directionalLight position={[-5, 5, 5]} intensity={2} />
           <directionalLight position={[0, -5, 5]} intensity={1.2} />
-          <RobotModel onClick={handleModelClick} />
+          <RobotModel onClick={handle3DObjectClick} targetPosition={targetPosition} targetScale={targetScale} />
         </Canvas>
+      </div>
+      {/* Menu diamond seulement si centré */}
+      {is3DCentered && (
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
@@ -192,10 +250,10 @@ export default function Navigation3D({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.2, opacity: 0 }}
               transition={{ duration: 0.5, type: "spring", stiffness: 180, damping: 22 }}
-              className="absolute inset-0 pointer-events-auto z-30"
+              className="absolute inset-0 pointer-events-none z-50" // z-50 pour être au-dessus du canvas
             >
               {/* Boutons en formation diamond autour de l'objet 3D, dynamiques selon la page */}
-              <div className={`absolute top-0 left-0 w-[750px] h-[750px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
+              <div className={`absolute top-0 left-0 w-[500px] h-[500px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
                 {getDiamondButtons(currentPage, onNavigate).map(({ key, x, y, icon, onClick }) => (
                   <button
                     key={key}
@@ -210,8 +268,8 @@ export default function Navigation3D({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
 

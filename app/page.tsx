@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SmokeBackground from "@/components/smoke-background"
 import ParticleText from "@/components/particle-text"
 import Navigation3D from "@/components/navigation-3d"
@@ -12,20 +12,49 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [slideDirection, setSlideDirection] = useState<string | null>(null)
+  // Nouvel état pour centrer ou ranger l'objet 3D
+  const [is3DCentered, setIs3DCentered] = useState(currentPage === "home")
+
+  // Synchroniser l'état centré/rangé avec la page home
+  useEffect(() => {
+    if (currentPage === "home") {
+      setIs3DCentered(true)
+      setIsMenuOpen(false)
+    } else {
+      setIs3DCentered(false)
+      setIsMenuOpen(false)
+    }
+  }, [currentPage])
 
   const handlePageChange = (newPage: string, direction?: string) => {
     if (newPage === currentPage || isTransitioning) return
-
     setIsTransitioning(true)
     setNextPage(newPage)
     setSlideDirection(direction || null)
-
     setTimeout(() => {
       setCurrentPage(newPage)
       setNextPage(null)
       setSlideDirection(null)
       setIsTransitioning(false)
     }, 300)
+  }
+
+  // Ajout de la fonction pour retour home via l'objet rangé
+  const handleRequestHome = () => {
+    handlePageChange("home")
+  }
+
+  // Gestion du clic sur l'objet 3D
+  const handle3DObjectClick = () => {
+    if (!is3DCentered) {
+      // Si rangé, on centre et on ouvre le menu
+      setIs3DCentered(true)
+      setIsMenuOpen(true)
+    } else {
+      // Si déjà centré, on range et on ferme le menu
+      setIs3DCentered(false)
+      setIsMenuOpen(false)
+    }
   }
 
   const getOppositeDirection = (direction: string) => {
@@ -226,6 +255,8 @@ export default function HomePage() {
           onNavigate={handlePageChange}
           isTransitioning={isTransitioning}
           currentPage={currentPage}
+          is3DCentered={is3DCentered}
+          on3DObjectClick={handle3DObjectClick}
         />
       </div>
     </div>
