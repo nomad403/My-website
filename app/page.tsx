@@ -80,7 +80,7 @@ export default function HomePage() {
       {/* Top Navigation - Inspired by reference */}
       <nav className="absolute top-0 left-0 right-0 z-20 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className="font-jetbrains text-black text-sm font-medium tracking-wider uppercase">NOMAD403</div>
+          <div className="font-jetbrains text-black text-sm font-medium tracking-wider uppercase ml-16">NOMAD403</div>
           <div className="hidden md:flex space-x-8 font-jetbrains text-black text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}

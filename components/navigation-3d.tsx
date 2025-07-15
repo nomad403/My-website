@@ -190,8 +190,8 @@ export default function Navigation3D({
 }: Navigation3DProps) {
   // Cibles de position/scale pour l'objet 3D
   // Centré : (0,0,0), scale 0.45 ; Rangé : ex (-10, 5, 0), scale 0.13 (à ajuster selon la scène)
-  const targetPosition: [number, number, number] = is3DCentered ? [0, 0, 0] : [-9, 4.7, 0]
-  const targetScale = is3DCentered ? 0.45 : 0.13
+  const targetPosition: [number, number, number] = is3DCentered ? [0, 0, 0] : [-10, 4.7, 0]
+  const targetScale = is3DCentered ? 0.5 : 0.13
 
   // Taille du diamond = taille du conteneur centré de l'objet 3D (500px)
   const DIAMOND_SIZE = 500
@@ -285,7 +285,7 @@ export default function Navigation3D({
       {/* Menu diamond seulement si centré */}
       {is3DCentered && (
         <AnimatePresence>
-          {isMenuOpen && (
+        {isMenuOpen && (
             <motion.div
               initial={{ scale: 0.2, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

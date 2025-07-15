@@ -1,43 +1,27 @@
-import type React from "react"
-import type { Metadata } from "next"
-import "./globals.css"
-import { Kode_Mono, JetBrains_Mono } from "next/font/google"
+import React from "react";
 
-const kodeMono = Kode_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-kode-mono",
-})
-
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-jetbrains-mono",
-})
-
-export const metadata: Metadata = {
-  title: "NOMAD403 - Développeur Frontend & IA",
-  description: "Portfolio interactif avec navigation 3D - Développement Frontend, Mobile et Intelligence Artificielle",
-  generator: "v0.dev",
-}
-
-export default function RootLayout({
+export default function LiquidGlass({
+  width = 384,
+  height = 192,
+  radius = 32,
+  style,
   children,
 }: {
-  children: React.ReactNode
+  width?: number;
+  height?: number;
+  radius?: number;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
-      <body className={`${kodeMono.variable} ${jetBrainsMono.variable} antialiased`}>
-        <svg
-          style={{ position: "absolute", width: 0, height: 0 }}
-          width="0"
-          height="0"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <filter id="displacementFilter4">
+    <div style={{ position: "relative", width, height, ...style }}>
+      <svg
+        width={width}
+        height={height}
+        style={{ position: "absolute", top: 0, left: 0, zIndex: 0 }}
+      >
+        <defs>
+          <filter id="displacementFilter4" filterUnits="userSpaceOnUse">
             <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%230001' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23FFF' style='filter:blur(5px)' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing9" id="thing9" />
             <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23FFF1' style='filter:blur(15px)' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing0" id="thing0" />
             <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23000' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing1" id="thing1" />
@@ -93,9 +77,31 @@ export default function RootLayout({
               <feComposite in2="thing1" operator="in"/>
               <feOffset dx="43" dy="43"/>
           </filter>
-        </svg>
+        </defs>
+        <rect
+          x="0"
+          y="0"
+          width={width}
+          height={height}
+          rx={radius}
+          fill="#fff"
+          filter="url(#displacementFilter4)"
+        />
+      </svg>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          padding: 24,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
         {children}
-      </body>
-    </html>
-  )
-}
+      </div>
+    </div>
+  );
+} 

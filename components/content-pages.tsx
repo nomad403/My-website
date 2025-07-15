@@ -1,6 +1,7 @@
 "use client"
 
 import { ArrowLeft } from "lucide-react"
+import LiquidGlass from "./LiquidGlass";
 
 interface ContentPagesProps {
   currentPage: string
@@ -16,17 +17,17 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
             <div className="grid grid-cols-12 gap-8 h-full">
               {/* Left side - Main content */}
               <div className="col-span-8">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">ABOUT</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16 hud-text">ABOUT</h1>
                 <div className="space-y-8">
-                  <div className="liquid-card p-8">
-                    <p className="font-jetbrains text-lg font-light text-black mb-6 leading-relaxed">
+                  <div className="p-8">
+                    <p className="font-jetbrains text-lg font-light text-black mb-6 leading-relaxed hud-text">
                       Développeur passionné par les technologies modernes et l'innovation digitale.
                     </p>
-                    <p className="font-jetbrains text-base font-light text-gray-700 mb-4 leading-relaxed">
+                    <p className="font-jetbrains text-base font-light text-gray-700 mb-4 leading-relaxed hud-text">
                       Spécialisé dans le développement frontend, mobile et l'intégration d'intelligence artificielle, je
                       crée des expériences utilisateur exceptionnelles et des solutions techniques sur-mesure.
                     </p>
-                    <p className="font-jetbrains text-base font-light text-gray-700 leading-relaxed">
+                    <p className="font-jetbrains text-base font-light text-gray-700 leading-relaxed hud-text">
                       Mon approche combine créativité technique et performance pour donner vie à vos projets les plus
                       ambitieux.
                     </p>
@@ -36,19 +37,19 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
 
               {/* Right side - Stats/Info */}
               <div className="col-span-4 space-y-6">
-                <div className="liquid-card p-6">
-                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-3">
+                <div className="p-6">
+                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-3 hud-text">
                     EXPERIENCE
                   </h3>
-                  <p className="font-jetbrains text-xs font-light text-gray-600 leading-relaxed">
+                  <p className="font-jetbrains text-xs font-light text-gray-600 leading-relaxed hud-text">
                     5+ années dans le développement web et mobile avec une expertise en technologies modernes
                   </p>
                 </div>
-                <div className="liquid-card p-6">
-                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-3">
+                <div className="p-6">
+                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-3 hud-text">
                     APPROACH
                   </h3>
-                  <p className="font-jetbrains text-xs font-light text-gray-600 leading-relaxed">
+                  <p className="font-jetbrains text-xs font-light text-gray-600 leading-relaxed hud-text">
                     Méthodologie agile, code propre et focus sur l'expérience utilisateur
                   </p>
                 </div>
@@ -62,16 +63,16 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-12">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">SPECIALIST</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16 hud-text">SPECIALIST</h1>
               </div>
 
               {/* Main skills grid */}
               <div className="col-span-8">
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="liquid-card p-8">
+                  <div className="p-8">
                     <div className="flex items-center mb-6">
-                      <div className="font-kode text-3xl text-blue-600 mr-4">{"</>"}</div>
-                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide">
+                      <div className="font-kode text-3xl text-blue-600 mr-4 hud-text">{"</>"}</div>
+                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide hud-text">
                         Frontend
                       </h3>
                     </div>
@@ -84,10 +85,10 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </ul>
                   </div>
 
-                  <div className="liquid-card p-8">
+                  <div className="p-8">
                     <div className="flex items-center mb-6">
-                      <div className="font-kode text-3xl text-green-600 mr-4">[#]</div>
-                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide">Mobile</h3>
+                      <div className="font-kode text-3xl text-green-600 mr-4 hud-text">[#]</div>
+                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide hud-text">Mobile</h3>
                     </div>
                     <ul className="space-y-2 font-jetbrains text-sm font-light text-gray-700">
                       <li>• React Native</li>
@@ -98,10 +99,10 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </ul>
                   </div>
 
-                  <div className="liquid-card p-8">
+                  <div className="p-8">
                     <div className="flex items-center mb-6">
-                      <div className="font-kode text-3xl text-purple-600 mr-4">[AI]</div>
-                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide">
+                      <div className="font-kode text-3xl text-purple-600 mr-4 hud-text">[AI]</div>
+                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide hud-text">
                         Intelligence Artificielle
                       </h3>
                     </div>
@@ -114,10 +115,10 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </ul>
                   </div>
 
-                  <div className="liquid-card p-8">
+                  <div className="p-8">
                     <div className="flex items-center mb-6">
-                      <div className="font-kode text-3xl text-yellow-600 mr-4">{"{}"}</div>
-                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide">Tools</h3>
+                      <div className="font-kode text-3xl text-yellow-600 mr-4 hud-text">{"{}"}</div>
+                      <h3 className="font-jetbrains text-lg font-medium text-black uppercase tracking-wide hud-text">Tools</h3>
                     </div>
                     <ul className="space-y-2 font-jetbrains text-sm font-light text-gray-700">
                       <li>• Git / GitHub</li>
@@ -132,15 +133,15 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
 
               {/* Right sidebar */}
               <div className="col-span-4">
-                <div className="liquid-card p-6">
-                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4">
+                <div className="p-6">
+                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4 hud-text">
                     EXPERTISE LEVEL
                   </h3>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-jetbrains text-xs font-light">Frontend</span>
-                        <span className="font-kode text-xs">95%</span>
+                        <span className="font-jetbrains text-xs font-light hud-text">Frontend</span>
+                        <span className="font-kode text-xs hud-text">95%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1">
                         <div className="bg-blue-600 h-1 rounded-full" style={{ width: "95%" }}></div>
@@ -148,8 +149,8 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-jetbrains text-xs font-light">Mobile</span>
-                        <span className="font-kode text-xs">85%</span>
+                        <span className="font-jetbrains text-xs font-light hud-text">Mobile</span>
+                        <span className="font-kode text-xs hud-text">85%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1">
                         <div className="bg-green-600 h-1 rounded-full" style={{ width: "85%" }}></div>
@@ -157,8 +158,8 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-jetbrains text-xs font-light">AI Integration</span>
-                        <span className="font-kode text-xs">80%</span>
+                        <span className="font-jetbrains text-xs font-light hud-text">AI Integration</span>
+                        <span className="font-kode text-xs hud-text">80%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1">
                         <div className="bg-purple-600 h-1 rounded-full" style={{ width: "80%" }}></div>
@@ -176,30 +177,30 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-12">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">PROJECTS</h1>
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16 hud-text">PROJECTS</h1>
               </div>
 
               {/* Featured project */}
               <div className="col-span-12">
-                <div className="liquid-card p-8 mb-8">
+                <div className="p-8 mb-8">
                   <div className="grid grid-cols-12 gap-8">
                     <div className="col-span-8">
-                      <h2 className="font-jetbrains text-2xl font-medium text-black mb-4 uppercase tracking-wide">
+                      <h2 className="font-jetbrains text-2xl font-medium text-black mb-4 uppercase tracking-wide hud-text">
                         Portfolio 3D Interactif
                       </h2>
-                      <p className="font-jetbrains text-base font-light text-gray-700 mb-6 leading-relaxed">
+                      <p className="font-jetbrains text-base font-light text-gray-700 mb-6 leading-relaxed hud-text">
                         Site web avec navigation 3D immersive, effets de particules et animations fluides pour une
                         expérience utilisateur unique. Intégration d'effets visuels avancés et d'interactions
                         intuitives.
                       </p>
-                      <div className="font-jetbrains text-xs font-light text-gray-600">
+                      <div className="font-jetbrains text-xs font-light text-gray-600 hud-text">
                         Technologies: React, Next.js, Three.js, TypeScript, Tailwind CSS
                       </div>
                     </div>
                     <div className="col-span-4 flex flex-wrap gap-2 items-start">
-                      <span className="tech-tag blue">React</span>
-                      <span className="tech-tag blue">Three.js</span>
-                      <span className="tech-tag blue">WebGL</span>
+                      <span className="tech-tag blue hud-text">React</span>
+                      <span className="tech-tag blue hud-text">Three.js</span>
+                      <span className="tech-tag blue hud-text">WebGL</span>
                     </div>
                   </div>
                 </div>
@@ -207,31 +208,31 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
 
               {/* Other projects */}
               <div className="col-span-6">
-                <div className="liquid-card p-6 mb-6">
-                  <h3 className="font-jetbrains text-lg font-medium text-black mb-3 uppercase tracking-wide">
+                <div className="p-6 mb-6">
+                  <h3 className="font-jetbrains text-lg font-medium text-black mb-3 uppercase tracking-wide hud-text">
                     App Mobile E-commerce
                   </h3>
-                  <p className="font-jetbrains text-sm font-light text-gray-700 mb-4 leading-relaxed">
+                  <p className="font-jetbrains text-sm font-light text-gray-700 mb-4 leading-relaxed hud-text">
                     Application mobile complète avec système de paiement intégré et interface utilisateur optimisée.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="tech-tag green">React Native</span>
-                    <span className="tech-tag green">Stripe</span>
+                    <span className="tech-tag green hud-text">React Native</span>
+                    <span className="tech-tag green hud-text">Stripe</span>
                   </div>
                 </div>
               </div>
 
               <div className="col-span-6">
-                <div className="liquid-card p-6 mb-6">
-                  <h3 className="font-jetbrains text-lg font-medium text-black mb-3 uppercase tracking-wide">
+                <div className="p-6 mb-6">
+                  <h3 className="font-jetbrains text-lg font-medium text-black mb-3 uppercase tracking-wide hud-text">
                     Assistant IA Personnalisé
                   </h3>
-                  <p className="font-jetbrains text-sm font-light text-gray-700 mb-4 leading-relaxed">
+                  <p className="font-jetbrains text-sm font-light text-gray-700 mb-4 leading-relaxed hud-text">
                     Chatbot intelligent avec analyse de documents et automatisation de tâches complexes.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="tech-tag purple">OpenAI</span>
-                    <span className="tech-tag purple">Python</span>
+                    <span className="tech-tag purple hud-text">OpenAI</span>
+                    <span className="tech-tag purple hud-text">Python</span>
                   </div>
                 </div>
               </div>
@@ -244,64 +245,47 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-12 gap-8">
               <div className="col-span-8">
-                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16">CONTACT</h1>
-                <div className="liquid-card p-8">
+                <h1 className="font-kode text-6xl font-bold text-black mb-12 tracking-tight mt-16 hud-text">CONTACT</h1>
+                <div className="p-8">
                   <div className="grid grid-cols-2 gap-8">
                     <div>
-                      <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4">
+                      <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4 hud-text">
                         GET IN TOUCH
                       </h3>
                       <div className="space-y-3 font-jetbrains text-sm font-light">
                         <div>
-                          <span className="text-blue-600 uppercase tracking-wide">Email</span>
-                          <p className="text-gray-700">contact@nomad403.dev</p>
+                          <span className="text-blue-600 uppercase tracking-wide hud-text">Email</span>
+                          <p className="text-gray-700 hud-text">contact@nomad403.dev</p>
                         </div>
                         <div>
-                          <span className="text-blue-600 uppercase tracking-wide">Phone</span>
-                          <p className="text-gray-700">+33 (0)1 23 45 67 89</p>
+                          <span className="text-blue-600 uppercase tracking-wide hud-text">Phone</span>
+                          <p className="text-gray-700 hud-text">+33 (0)1 23 45 67 89</p>
                         </div>
                         <div>
-                          <span className="text-blue-600 uppercase tracking-wide">Location</span>
-                          <p className="text-gray-700">France, Remote Available</p>
+                          <span className="text-blue-600 uppercase tracking-wide hud-text">Location</span>
+                          <p className="text-gray-700 hud-text">France, Remote Available</p>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4">
+                      <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4 hud-text">
                         SOCIAL LINKS
                       </h3>
                       <div className="space-y-3 font-jetbrains text-sm font-light">
                         <div>
-                          <span className="text-green-600 uppercase tracking-wide">LinkedIn</span>
-                          <p className="text-gray-700">/in/nomad403</p>
+                          <span className="text-green-600 uppercase tracking-wide hud-text">LinkedIn</span>
+                          <p className="text-gray-700 hud-text">/in/nomad403</p>
                         </div>
                         <div>
-                          <span className="text-green-600 uppercase tracking-wide">GitHub</span>
-                          <p className="text-gray-700">/nomad403</p>
+                          <span className="text-green-600 uppercase tracking-wide hud-text">GitHub</span>
+                          <p className="text-gray-700 hud-text">/nomad403</p>
                         </div>
                         <div>
-                          <span className="text-green-600 uppercase tracking-wide">Twitter</span>
-                          <p className="text-gray-700">@nomad403</p>
+                          <span className="text-green-600 uppercase tracking-wide hud-text">Twitter</span>
+                          <p className="text-gray-700 hud-text">@nomad403</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-span-4">
-                <div className="liquid-card p-6">
-                  <h3 className="font-jetbrains text-sm font-medium text-black uppercase tracking-wide mb-4">
-                    AVAILABILITY
-                  </h3>
-                  <p className="font-jetbrains text-xs font-light text-gray-700 leading-relaxed mb-4">
-                    Ouvert aux nouvelles opportunités et collaborations
-                  </p>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span className="font-jetbrains text-xs font-light text-green-600 uppercase tracking-wide">
-                      Available
-                    </span>
                   </div>
                 </div>
               </div>
@@ -315,8 +299,8 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
   }
 
   return (
-    <div className="absolute inset-0 z-25 bg-white/30 backdrop-blur-sm">
-      <div className="container mx-auto px-8 py-8 h-full overflow-y-auto">
+    <div className="absolute inset-0 z-25 bg-white/30 backdrop-blur-sm overflow-y-auto">
+      <div className="container mx-auto px-8 py-8 min-h-full">
         
 
         {getPageContent()}

@@ -37,10 +37,10 @@ export default function SmokeBackground() {
       "https://s3-us-west-2.amazonaws.com/s.cdpn.io/95637/Smoke-Element.png",
     )
     const smokeMaterial = new THREE.MeshLambertMaterial({
-      color: 0xffffff,
+      color: 0x666666, // Couleur plus sombre
       map: smokeTexture,
       transparent: true,
-      opacity: 0.10, // Encore plus clair
+      opacity: 0.25, // Opacité augmentée pour assombrir
     })
     const smokeGeo = new THREE.PlaneGeometry(300, 300)
     const smokeParticles: THREE.Mesh[] = []
