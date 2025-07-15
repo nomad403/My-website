@@ -40,7 +40,7 @@ export default function SmokeBackground() {
       color: 0x666666, // Couleur plus sombre
       map: smokeTexture,
       transparent: true,
-      opacity: 0.25, // Opacité augmentée pour assombrir
+      opacity: 0.05, // Opacité augmentée pour assombrir
     })
     const smokeGeo = new THREE.PlaneGeometry(300, 300)
     const smokeParticles: THREE.Mesh[] = []

@@ -6,11 +6,14 @@ interface HudTextProps {
   children: string
   className?: string
   duration?: number
+  delay?: number // délai en ms avant de lancer l’animation shuffle
+  scanlines?: boolean // active les scanlines HUD
 }
 
-export default function HudText({ children, className = "", duration = 0.05 }: HudTextProps) {
+export default function HudText({ children, className = "", duration = 0.05, delay = 0, scanlines = false, ...props }: HudTextProps & React.HTMLAttributes<HTMLDivElement>) {
   const textRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number>()
+  const timeoutRef = useRef<number>()
 
   const SHUFFLING_VALUES = [
     '!', '§', '$', '%', '&', '/', '(', ')', '=', '?', '_', '<', '>', '^', '°', '*', '#', '-', ':', ';', '~',
@@ -42,24 +45,31 @@ export default function HudText({ children, className = "", duration = 0.05 }: H
 
   useEffect(() => {
     if (textRef.current) {
-      shuffleText(textRef.current, children, duration)
+      if (delay > 0) {
+        timeoutRef.current = window.setTimeout(() => {
+          shuffleText(textRef.current!, children, duration)
+        }, delay)
+      } else {
+        shuffleText(textRef.current, children, duration)
+      }
     }
 
     return () => {
       if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
+        window.cancelAnimationFrame(animationRef.current)
+      }
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current)
       }
     }
-  }, [children, duration])
+  }, [children, duration, delay])
 
   return (
     <div 
       ref={textRef}
-      className={`font-jetbrains text-white ${className}`}
-      style={{
-        textShadow: '0 0 10px #D7B8F3',
-        color: '#FFF8F0'
-      }}
+      className={`hud-minimal${scanlines ? ' scanlines' : ''} ${className}`}
+      style={{ color: '#111', ...(props.style || {}) }}
+      {...props}
     >
       {children}
     </div>
