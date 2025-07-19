@@ -10,36 +10,44 @@ interface HudTextProps {
   scanlines?: boolean // active les scanlines HUD
 }
 
-export default function HudText({ children, className = "", duration = 0.05, delay = 0, scanlines = false, ...props }: HudTextProps & React.HTMLAttributes<HTMLDivElement>) {
+export default function HudText({ children, className = "", duration = 1.5, delay = 0, scanlines = false, ...props }: HudTextProps & React.HTMLAttributes<HTMLDivElement>) {
   const textRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number>()
-  const timeoutRef = useRef<number>()
+  const animationRef = useRef<number>(null)
+  const timeoutRef = useRef<number>(null)
 
   const SHUFFLING_VALUES = [
     '!', '§', '$', '%', '&', '/', '(', ')', '=', '?', '_', '<', '>', '^', '°', '*', '#', '-', ':', ';', '~',
   ]
 
-  const shuffleText = (element: HTMLElement, targetText: string, duration: number = 0.05) => {
-    const originalText = element.textContent || ""
-    const frames = duration * 60
+  // Nouvelle version : révélation progressive des lettres
+  const shuffleText = (element: HTMLElement, targetText: string, duration: number = 0.8) => {
+    const totalFrames = Math.max(1, Math.floor(duration * 60))
     let frame = 0
+    const textLength = targetText.length
+    // Pour chaque lettre, on choisit un moment aléatoire où elle sera révélée
+    const revealFrames = Array.from({ length: textLength }, (_, i) => {
+      // Distribution progressive + un peu de random
+      const base = Math.floor((i / textLength) * totalFrames)
+      return Math.min(totalFrames - 1, base + Math.floor(Math.random() * (totalFrames / 6)))
+    })
 
     const animate = () => {
       frame++
-      
-      if (frame < frames) {
-        // Shuffle effect
-        const shuffled = targetText.split('').map(() => 
-          SHUFFLING_VALUES[Math.floor(Math.random() * SHUFFLING_VALUES.length)]
-        ).join('')
-        element.textContent = shuffled
+      let displayed = ''
+      for (let i = 0; i < textLength; i++) {
+        if (frame >= revealFrames[i]) {
+          displayed += targetText[i]
+        } else {
+          displayed += SHUFFLING_VALUES[Math.floor(Math.random() * SHUFFLING_VALUES.length)]
+        }
+      }
+      element.textContent = displayed
+      if (frame < totalFrames) {
         animationRef.current = requestAnimationFrame(animate)
       } else {
-        // Show final text
         element.textContent = targetText
       }
     }
-
     animate()
   }
 

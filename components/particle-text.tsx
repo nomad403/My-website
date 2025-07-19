@@ -32,7 +32,7 @@ interface Particle {
 export default function ParticleText() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bufferCanvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number>(null)
   const particlesRef = useRef<Particle[]>([])
   const mouseRef = useRef({ x: 0, y: 0, hover: false })
   const repelRef = useRef({ x: 0, y: 0 })
@@ -41,16 +41,16 @@ export default function ParticleText() {
 
   const options: ParticleOptions = {
     mouse: {
-      lerpAmt: 0.5,
-      repelThreshold: 100,
+      lerpAmt: 0.4, // plus doux
+      repelThreshold: 120, // rayon de répulsion plus large
     },
     particles: {
-      density: 2,
+      density: 2, // densité raisonnable
       get pixelDensity() {
         return (4 - this.density) * 2
       },
-      pLerpAmt: 0.25,
-      vLerpAmt: 0.1,
+      pLerpAmt: 0.13, // interpolation plus douce
+      vLerpAmt: 0.07, // vitesse plus douce
     },
     text: {
       fontColor: [0, 0, 0, 255],
@@ -86,7 +86,7 @@ export default function ParticleText() {
       width,
       height,
       centerX: width * 0.5,
-      centerY: height * 0.65 -100,
+      centerY: height * 0.65 - 100,
     }
 
     repelRef.current = {
@@ -194,15 +194,9 @@ export default function ParticleText() {
         const y = Math.floor(particle.y)
 
         if (x >= 0 && x < width && y >= 0 && y < height) {
-          const index = (y * width + x) * 4
-          data[index] = options.text.fontColor[0]
-          data[index + 1] = options.text.fontColor[1]
-          data[index + 2] = options.text.fontColor[2]
-          data[index + 3] = options.text.fontColor[3]
-
-          // Add neighboring pixels for better visibility
-          for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
+          // Carré 2x2 pour chaque particule
+          for (let dx = 0; dx < 2; dx++) {
+            for (let dy = 0; dy < 2; dy++) {
               const nx = x + dx
               const ny = y + dy
               if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
@@ -210,7 +204,7 @@ export default function ParticleText() {
                 data[nIndex] = options.text.fontColor[0]
                 data[nIndex + 1] = options.text.fontColor[1]
                 data[nIndex + 2] = options.text.fontColor[2]
-                data[nIndex + 3] = Math.floor(options.text.fontColor[3] * 0.6)
+                data[nIndex + 3] = Math.floor(options.text.fontColor[3] * 0.7)
               }
             }
           }
@@ -220,7 +214,7 @@ export default function ParticleText() {
       bufferCtx.putImageData(imageData, 0, 0)
 
       ctx.save()
-      ctx.filter = "blur(8px) brightness(200%)"
+      ctx.filter = "blur(10px) brightness(220%)"
       ctx.drawImage(bufferCanvas, 0, 0)
       ctx.filter = "blur(0px)"
       ctx.globalCompositeOperation = "lighter"

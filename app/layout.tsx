@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import "./globals.css"
+import '../styles/globals.css'
 import { Kode_Mono, JetBrains_Mono } from "next/font/google"
 
 const kodeMono = Kode_Mono({
@@ -29,69 +29,54 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${kodeMono.variable} ${jetBrainsMono.variable} antialiased`}>
-        <svg
-          style={{ position: "absolute", width: 0, height: 0 }}
-          width="0"
-          height="0"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <filter id="displacementFilter4">
-            <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%230001' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23FFF' style='filter:blur(5px)' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing9" id="thing9" />
-            <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23FFF1' style='filter:blur(15px)' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing0" id="thing0" />
-            <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23000' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing1" id="thing1" />
-            <feImage href="data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='gradient1' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%23000'/%3E%3Cstop offset='100%25' stop-color='%2300F'/%3E%3C/linearGradient%3E%3ClinearGradient id='gradient2' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23000'/%3E%3Cstop offset='100%25' stop-color='%230F0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='0' y='0' width='200' height='200' rx='25' fill='%237F7F7F' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%23000' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='url(%23gradient1)' style='mix-blend-mode: screen' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='url(%23gradient2)' style='mix-blend-mode: screen' /%3E%3Crect x='50' y='50' width='100' height='100' rx='25' fill='%237F7F7FBB' style='filter:blur(5px)' /%3E%3C/svg%3E" x="0%" y="0%" width="100%" height="100%" result="thing2" id="thing2" />
-            <feGaussianBlur  stdDeviation="0.7" id="preblur" in="SourceGraphic" result="preblur" />
+        <svg style={{ display: "none" }}>
+          <filter
+            id="glass-distortion"
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+            filterUnits="objectBoundingBox"
+          >
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.01 0.01"
+              numOctaves="1"
+              seed="5"
+              result="turbulence"
+            />
+            <feComponentTransfer in="turbulence" result="mapped">
+              <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+              <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+              <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+            </feComponentTransfer>
+            <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+            <feSpecularLighting
+              in="softMap"
+              surfaceScale="5"
+              specularConstant="1"
+              specularExponent="100"
+              lightingColor="white"
+              result="specLight"
+            >
+              <fePointLight x="-200" y="-200" z="300" />
+            </feSpecularLighting>
+            <feComposite
+              in="specLight"
+              operator="arithmetic"
+              k1="0"
+              k2="1"
+              k3="1"
+              k4="0"
+              result="litImage"
+            />
             <feDisplacementMap
-              id="dispR"
-              in2="thing2"
-              in="preblur"
-              scale="-148"
-              xChannelSelector="B"
+              in="SourceGraphic"
+              in2="softMap"
+              scale="150"
+              xChannelSelector="R"
               yChannelSelector="G"
-              />
-              <feColorMatrix
-              type="matrix"
-              values="1 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 0 1 0"  result="disp1" />
-            <feDisplacementMap
-              id="dispG"
-              in2="thing2"
-              in="preblur"
-              scale="-150"
-              xChannelSelector="B"
-              yChannelSelector="G"
-               />
-              <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0
-                      0 1 0 0 0
-                      0 0 0 0 0
-                      0 0 0 1 0"  result="disp2" />
-            <feDisplacementMap
-              id="dispB"
-              in2="thing2"
-              in="preblur"
-              scale="-152"
-              xChannelSelector="B"
-              yChannelSelector="G"
-               />
-              <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0
-                      0 0 0 0 0
-                      0 0 1 0 0
-                      0 0 0 1 0"  result="disp3" />
-              <feBlend  in2="disp2" mode="screen"/>
-              <feBlend  in2="disp1" mode="screen"/>
-              <feGaussianBlur  stdDeviation="0.0" id="postblur" />
-              <feBlend  in2="thing0" mode="screen"/>
-              <feBlend  in2="thing9" mode="multiply"/>
-              <feComposite in2="thing1" operator="in"/>
-              <feOffset dx="43" dy="43"/>
+            />
           </filter>
         </svg>
         {children}
