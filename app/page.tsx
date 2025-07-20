@@ -18,6 +18,7 @@ export default function HomePage() {
   // Synchroniser l'état centré/rangé avec la page home
   useEffect(() => {
     if (currentPage === "home") {
+      
       setIs3DCentered(true)
       setIsMenuOpen(false)
     } else {
@@ -78,9 +79,9 @@ export default function HomePage() {
       <SmokeBackground />
 
       {/* Top Navigation - Inspired by reference */}
-      <nav className="absolute top-0 left-0 right-0 z-20 p-8">
+      <nav className="absolute top-0 left-0 right-0 z-50 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className="font-jetbrains text-black text-sm font-medium tracking-wider uppercase ml-16">NOMAD403</div>
+          <div className="font-kode text-black text-sm font-medium tracking-wider uppercase">NOMAD403</div>
           <div className="hidden md:flex space-x-8 font-jetbrains text-black text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}
@@ -117,10 +118,10 @@ export default function HomePage() {
       </nav>
 
       {/* Main Content Container */}
-      <div className="relative w-full h-full overflow-hidden">
+      <div className="relative w-full min-h-screen">
         {/* Current Page Content */}
         <div
-          className={`page-content absolute inset-0 ${
+          className={`page-content absolute inset-0 overflow-y-auto max-h-screen ${
             isTransitioning && slideDirection ? `slide-out-${slideDirection}` : ""
           }`}
         >
@@ -248,7 +249,11 @@ export default function HomePage() {
       </div>
 
       {/* 3D Navigation - Always present on top */}
-      <div className="absolute inset-0 z-30">
+      <div 
+        className={`absolute inset-0 transition-all duration-500 ${
+          currentPage === "home" ? "z-30" : "z-5"
+        }`}
+      >
         <Navigation3D
           isMenuOpen={isMenuOpen}
           setIsMenuOpen={setIsMenuOpen}

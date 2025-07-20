@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Html, useGLTF } from "@react-three/drei"
 import type { Group, Object3D, Box3, Vector3 } from "three"
-import { PerspectiveCamera, Vector3 as ThreeVector3 } from "three"
+import { PerspectiveCamera, Vector3 as ThreeVector3, Vector2 } from "three"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Folder, Mail, Cog, Home } from "lucide-react"
 
@@ -57,15 +57,14 @@ function RobotModel({ onClick, targetPosition, targetScale }: { onClick: () => v
       group.current.scale.lerp(new ThreeVector3(targetScale, targetScale, targetScale), 0.1)
       // Animation de rotation/flottement
       group.current.rotation.x = Math.sin(Date.now() * 0.0005) * 0.2
-      group.current.rotation.y += 0.01
+ 
       group.current.position.y += Math.sin(Date.now() * 0.0015) * 0.01
     }
   })
 
-  // Correction : pointerEvents/cursor sur <primitive> (pas sur <group>)
   return (
-    <group ref={group} onPointerDown={onClick}>
-      <primitive object={scene} pointerOver={true} />
+    <group ref={group}>
+      <primitive object={scene} />
     </group>
   )
 }
@@ -188,9 +187,7 @@ export default function Navigation3D({
   is3DCentered,
   on3DObjectClick,
 }: Navigation3DProps) {
-  // Cibles de position/scale pour l'objet 3D
-  // Centré : (0,0,0), scale 0.45 ; Rangé : ex (-10, 5, 0), scale 0.13 (à ajuster selon la scène)
-  const targetPosition: [number, number, number] = is3DCentered ? [0, 0, 0] : [-10, 4.7, 0]
+  const targetPosition: [number, number, number] = is3DCentered ? [0, 0, 0] : [-11, 4.7, 0]
   const targetScale = is3DCentered ? 0.5 : 0.13
 
   // Taille du diamond = taille du conteneur centré de l'objet 3D (500px)
@@ -268,30 +265,89 @@ export default function Navigation3D({
 
   return (
     <>
-      {/* Canvas 3D plein écran, fixed, pointer-events-none sauf sur l'objet 3D */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 40, pointerEvents: 'none' }}>
+      {/* Canvas 3D plein écran, fixed, pointer-events none */}
+      <div style={{ 
+        position: 'fixed', 
+        inset: 0, 
+        zIndex: 30, 
+        pointerEvents: 'none' // Canvas non-interactif
+      }}>
         <Canvas
           camera={{ position: [0, 0, 8], fov: 35 }}
-          style={{ width: '100vw', height: '100vh', background: 'transparent' }}
+          style={{ 
+            width: '100vw', 
+            height: '100vh', 
+            pointerEvents: 'none' // Canvas non-interactif
+          }}
           shadows
         >
           <ambientLight intensity={3} />
           <directionalLight position={[5, 5, 5]} intensity={3.5} castShadow />
           <directionalLight position={[-5, 5, 5]} intensity={2} />
           <directionalLight position={[0, -5, 5]} intensity={1.2} />
-          <RobotModel onClick={handle3DObjectClick} targetPosition={targetPosition} targetScale={targetScale} />
+          <RobotModel 
+            onClick={handle3DObjectClick} 
+            targetPosition={targetPosition} 
+            targetScale={targetScale}
+          />
         </Canvas>
       </div>
+
+      {/* Zone d'interaction pour l'objet 3D centré */}
+      {is3DCentered && (
+        <div 
+          className="absolute z-40 pointer-events-auto"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '200px',
+            height: '200px',
+            pointerEvents: 'auto'
+          }}
+          onClick={handle3DObjectClick}
+          onPointerOver={() => {
+            document.body.style.cursor = 'pointer'
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'default'
+          }}
+        />
+      )}
+
+      {/* Zone d'interaction pour l'objet 3D rangé */}
+      {!is3DCentered && (
+        <div 
+          className="absolute z-40 pointer-events-auto"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            width: '150px',
+            height: '150px',
+            pointerEvents: 'auto'
+          }}
+          onClick={handle3DObjectClick}
+          onPointerOver={() => {
+            document.body.style.cursor = 'pointer'
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'default'
+          }}
+        />
+      )}
+      
       {/* Menu diamond seulement si centré */}
       {is3DCentered && (
         <AnimatePresence>
-        {isMenuOpen && (
+          {isMenuOpen && (
             <motion.div
               initial={{ scale: 0.2, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.2, opacity: 0 }}
               transition={{ duration: 0.5, type: "spring", stiffness: 180, damping: 22 }}
-              className="absolute inset-0 pointer-events-none z-50" // z-50 pour être au-dessus du canvas
+              className="absolute inset-0 pointer-events-none z-50" // z-50 pour être au-dessus du canvas 3D
             >
               {/* Boutons en formation diamond autour de l'objet 3D, dynamiques selon la page */}
               <div className={`absolute top-0 left-0 w-[500px] h-[500px] mx-auto pointer-events-none`} style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute' }}>
@@ -300,7 +356,18 @@ export default function Navigation3D({
                     key={key}
                     className="absolute text-white drop-shadow-lg pointer-events-auto hover:scale-110 transition-transform"
                     style={{ left: `${x}px`, top: `${y}px`, transform: 'translate(-50%, -50%)' }}
-                    onClick={onClick}
+                    onClick={(e) => {
+                      e.stopPropagation() // Empêche que le clic passe à travers
+                      onClick()
+                    }}
+                    onPointerOver={(e) => {
+                      e.stopPropagation()
+                      document.body.style.cursor = 'pointer'
+                    }}
+                    onPointerOut={(e) => {
+                      e.stopPropagation()
+                      document.body.style.cursor = 'default'
+                    }}
                   >
                     {icon}
                   </button>
@@ -314,7 +381,3 @@ export default function Navigation3D({
   )
 }
 
-// Nécessaire pour le chargement GLTF avec @react-three/drei
-// (à placer dans un fichier global, ex: app/layout.tsx ou _app.tsx)
-// import { useGLTF } from "@react-three/drei"
-// useGLTF.preload("/cyberpunk_head_robot_random_represent.glb")
