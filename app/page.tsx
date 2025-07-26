@@ -5,6 +5,7 @@ import SmokeBackground from "@/components/smoke-background"
 import ParticleText from "@/components/particle-text"
 import Navigation3D from "@/components/navigation-3d"
 import ContentPages from "@/components/content-pages"
+import EnergySphereBackground from "@/components/EnergySphereBackground"
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home")
@@ -12,14 +13,13 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [slideDirection, setSlideDirection] = useState<string | null>(null)
-  // Nouvel état pour centrer ou ranger l'objet 3D
-  const [is3DCentered, setIs3DCentered] = useState(currentPage === "home")
+  // Nouvel état pour centrer ou ranger l'objet 3D (rangé par défaut)
+  const [is3DCentered, setIs3DCentered] = useState(false)
 
   // Synchroniser l'état centré/rangé avec la page home
   useEffect(() => {
     if (currentPage === "home") {
-      
-      setIs3DCentered(true)
+      setIs3DCentered(false)
       setIsMenuOpen(false)
     } else {
       setIs3DCentered(false)
@@ -75,8 +75,8 @@ export default function HomePage() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white">
-      {/* Smoke Background - ALWAYS PRESENT */}
-      <SmokeBackground />
+      
+      <EnergySphereBackground />
 
       {/* Top Navigation - Inspired by reference */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-8">

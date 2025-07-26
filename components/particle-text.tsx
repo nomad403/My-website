@@ -54,8 +54,8 @@ export default function ParticleText() {
     },
     text: {
       fontColor: [0, 0, 0, 255],
-      fontSize: 300,
-      message: "NOMAD403",
+      fontSize: 130,
+      message: "AUGMENTED DEVELOPER",
     },
   }
 

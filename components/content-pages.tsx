@@ -6,6 +6,7 @@ import LiquidGlassBackground from "./LiquidGlassBackground";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import ShuffleText from "./ShuffleText";
+import SphereAlignedProjectList from "./SphereAlignedProjectList";
 
 interface ContentPagesProps {
   currentPage: string
@@ -222,40 +223,32 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           )
           
       case "projects":
-        // Nouvelle disposition : 3 colonnes
         return (
-          <div className="max-w-7xl mx-auto mt-32 px-4">
-            <div className="grid grid-cols-12 gap-8 min-h-[600px]">
-              {/* Colonne gauche : liste des projets */}
-              <div className="col-span-3 flex flex-col items-start border-r border-gray-200 pr-4 relative z-20 pointer-events-auto">
-                <div className="font-kode text-lg mb-8 text-left pl-0">PROJECTS</div>
-                {/* Liste des projets */}
-                {projectList.map((proj, idx) => (
-                  <button
-                    key={proj.id}
-                    onClick={() => {
-                      setPrevSelected(selected);
-                      setSelected(idx);
-                      setSelectedImage(0); // Réinitialiser l'index d'image quand on change de projet
-                    }}
-                    className={`text-left font-kode text-base mb-4 transition-all ${selected === idx ? 'text-blue-600 scale-105' : 'text-gray-700 hover:text-blue-500'} focus:outline-none`}
-                  >
-                    {proj.name}
-                  </button>
-                ))}
-              </div>
+          <div className="relative w-full h-full">
+            {/* Liste des projets en arc alignée avec la sphère */}
+            <SphereAlignedProjectList
+              projects={projectList}
+              selected={selected}
+              onSelect={(idx) => {
+                setPrevSelected(selected);
+                setSelected(idx);
+                setSelectedImage(0);
+              }}
+              maxVisible={7}
+            />
 
-              {/* Colonne centrale : affichage des images en 9:16 */}
-              <div className="col-span-5 flex items-start justify-center relative pt-8">
-                <div className="w-full h-[420px] flex items-start justify-center">
-                  {/* Zone d'affichage des images centrée en format 9:16 */}
-                  <div className="w-full h-full flex items-start justify-center">
+            {/* Contenu principal du projet sélectionné */}
+            <div className="max-w-5xl mx-auto mt-32 px-4 relative z-10">
+              <div className="grid grid-cols-12 gap-8 min-h-[600px]">
+                {/* Zone centrale : affichage de l'image */}
+                <div className="col-span-6 flex items-start justify-center relative pt-8">
+                  <div className="w-full h-[420px] flex items-start justify-center">
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.div
                         key={projectList[selected].images[selectedImage]}
-                        initial={{ y: 60 * slideDirection, opacity: 0 }}
+                        initial={{ y: 60, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -60 * slideDirection, opacity: 0 }}
+                        exit={{ y: -60, opacity: 0 }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
                         className="rounded-xl shadow-lg overflow-hidden bg-white/10 backdrop-blur-sm"
                         style={{ maxHeight: '420px', maxWidth: '100%' }}
@@ -277,10 +270,9 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     </AnimatePresence>
                   </div>
                 </div>
-              </div>
 
-              {/* Colonne droite : description détaillée */}
-              <div className="col-span-4 flex flex-col items-start pl-4">
+                {/* Zone droite : description détaillée */}
+                <div className="col-span-6 flex flex-col items-start pl-4">
                 <div className="mb-6">
                   <div className="font-kode text-lg text-blue-700">{projectList[selected].name}</div>
                   <div className="glass-container mt-2" style={{ minWidth: 'fit-content', maxWidth: '100%' }}>
@@ -308,6 +300,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                   {selected !== 0 && (
                     <p><ShuffleText text={projectList[selected].description} /></p>
                   )}
+                </div>
                 </div>
               </div>
             </div>
