@@ -85,13 +85,13 @@ export default function SphereAlignedProjectList({
 
     const { centerX, centerY, radius } = sphereMetrics
     
-    // Distance de la liste par rapport à la surface de la sphère
-    const listOffset = 60 // Distance depuis la surface de la sphère
+         // Distance de la liste par rapport à la surface de la sphère
+     const listOffset = 100 // Distance depuis la surface de la sphère (augmentée pour éviter la superposition)
     const arcRadius = radius + listOffset
     
-    // Arc vertical centré sur la sphère (côté gauche)
-    // Angle total pour distribuer les projets
-    const totalArcAngle = Math.PI * 0.5 // 90 degrés pour une courbure douce
+         // Arc vertical centré sur la sphère (côté gauche)
+     // Angle total pour distribuer les projets
+     const totalArcAngle = Math.PI * 0.35 // 63 degrés pour un espacement vertical réduit
     const angleStep = visibleProjects.length > 1 ? totalArcAngle / (visibleProjects.length - 1) : 0
     
     // Angle de départ pour centrer l'arc verticalement
@@ -116,8 +116,8 @@ export default function SphereAlignedProjectList({
         scale = 0.95
       }
       
-      const isSelected = selected === firstVisible + index
-      const isClickable = opacity > 0.5
+             const isSelected = selected === firstVisible + index
+       const isClickable = true // Tous les éléments visibles sont cliquables
       
       return {
         project,
@@ -138,52 +138,16 @@ export default function SphereAlignedProjectList({
     <div
       ref={containerRef}
       onWheel={handleWheel}
-      className="absolute left-0 top-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 25 }}
+             className="absolute left-0 top-0 w-full h-full pointer-events-none"
+       style={{ zIndex: 30 }}
     >
-      {/* Repères visuels de debug (en mode développement uniquement) */}
-      {process.env.NODE_ENV === 'development' && (
-        <>
-          {/* Centre de la sphère */}
-          <div
-            className="absolute w-3 h-3 bg-red-500 rounded-full border border-white"
-            style={{
-              left: sphereMetrics.centerX - 6,
-              top: sphereMetrics.centerY - 6,
-              zIndex: 1000,
-            }}
-            title="Centre sphère"
-          />
-          
-          {/* Périmètre de la sphère */}
-          <div
-            className="absolute border border-red-500 rounded-full opacity-30 pointer-events-none"
-            style={{
-              left: sphereMetrics.centerX - sphereMetrics.radius,
-              top: sphereMetrics.centerY - sphereMetrics.radius,
-              width: sphereMetrics.radius * 2,
-              height: sphereMetrics.radius * 2,
-              zIndex: 999,
-            }}
-          />
-          
-          {/* Point de référence pour l'arc (côté gauche) */}
-          <div
-            className="absolute w-2 h-2 bg-green-500 rounded-full border border-white"
-            style={{
-              left: sphereMetrics.centerX - sphereMetrics.radius - 60 - 4,
-              top: sphereMetrics.centerY - 4,
-              zIndex: 1000,
-            }}
-            title="Position arc"
-          />
-        </>
-      )}
+      
 
-      <AnimatePresence>
-        {projectPositions.map((item, index) => (
-          <motion.div
-            key={`${item.project.id}-${firstVisible}`}
+             <AnimatePresence>
+         {projectPositions.map((item, index) => (
+           <motion.div
+             key={`${item.project.id}-${firstVisible}`}
+             title={`${item.project.name} - Index: ${item.globalIndex} - Clickable: ${item.isClickable}`}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: item.opacity,
@@ -197,39 +161,30 @@ export default function SphereAlignedProjectList({
               ease: [0.25, 0.46, 0.45, 0.94],
               opacity: { duration: 0.3 },
             }}
-            className={`
-              absolute pointer-events-auto cursor-pointer select-none
-              font-jetbrains uppercase tracking-wider text-right
-              transition-all duration-300 ease-out
-              ${
-                item.isSelected
-                  ? "text-white font-semibold text-lg drop-shadow-lg"
-                  : "text-gray-800 hover:text-orange-600 font-medium text-base"
-              }
-              ${!item.isClickable ? "pointer-events-none" : ""}
-            `}
+                         className={`
+               absolute pointer-events-auto cursor-pointer select-none
+               font-jetbrains uppercase tracking-wider text-right
+               transition-all duration-300 ease-out
+               ${
+                 item.isSelected
+                   ? "text-orange-500 font-bold text-xl drop-shadow-lg"
+                   : "text-gray-800 hover:text-orange-600 font-medium text-base"
+               }
+             `}
             style={{
               transformOrigin: "right center",
               transform: "translateX(-100%)", // Alignement à droite du point
-              textShadow: item.isSelected ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
+              textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
             }}
-            onClick={() => item.isClickable && onSelect(item.globalIndex)}
-            whileHover={
-              item.isClickable
-                ? {
-                    scale: item.scale * 1.05,
-                    transition: { duration: 0.2 },
-                  }
-                : {}
-            }
-            whileTap={
-              item.isClickable
-                ? {
-                    scale: item.scale * 0.95,
-                    transition: { duration: 0.1 },
-                  }
-                : {}
-            }
+                         onClick={() => onSelect(item.globalIndex)}
+                         whileHover={{
+               scale: item.scale * 1.05,
+               transition: { duration: 0.2 },
+             }}
+             whileTap={{
+               scale: item.scale * 0.95,
+               transition: { duration: 0.1 },
+             }}
           >
             {item.project.name}
 
@@ -238,7 +193,7 @@ export default function SphereAlignedProjectList({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-lg"
+                className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
               />
             )}
           </motion.div>
@@ -247,13 +202,13 @@ export default function SphereAlignedProjectList({
 
       {/* Indicateurs de scroll */}
       {projects.length > maxVisible && (
-        <div 
-          className="absolute flex flex-col space-y-2 pointer-events-auto"
-          style={{
-            left: sphereMetrics.centerX - sphereMetrics.radius - 120,
-            top: sphereMetrics.centerY - 20,
-          }}
-        >
+                 <div 
+           className="absolute flex flex-col space-y-2 pointer-events-auto"
+           style={{
+             left: sphereMetrics.centerX - sphereMetrics.radius - 160,
+             top: sphereMetrics.centerY - 20,
+           }}
+         >
           {firstVisible > 0 && (
             <motion.button
               initial={{ opacity: 0 }}

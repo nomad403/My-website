@@ -89,9 +89,9 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
 
   const getPageContent = () => {
     switch (currentPage) {
-      case "about":
-        return (
-          <div className="max-w-4xl mx-auto mt-32 px-4">
+             case "about":
+         return (
+           <div className="max-w-4xl mx-auto mt-32 px-8">
             <div className="grid grid-cols-12 gap-8">
               {/* Left side - Main content */}
               <div className="col-span-8">
@@ -123,9 +123,9 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           </div>
         )
 
-        case "skills":
-          return (
-            <div className="max-w-6xl mx-auto mt-32 px-4">
+                 case "skills":
+           return (
+             <div className="max-w-6xl mx-auto mt-32 px-8">
               <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12">
                   <div className="wrapper">
@@ -224,7 +224,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
           
       case "projects":
         return (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-screen overflow-hidden">
             {/* Liste des projets en arc alignée avec la sphère */}
             <SphereAlignedProjectList
               projects={projectList}
@@ -237,79 +237,41 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
               maxVisible={7}
             />
 
-            {/* Contenu principal du projet sélectionné */}
-            <div className="max-w-5xl mx-auto mt-32 px-4 relative z-10">
-              <div className="grid grid-cols-12 gap-8 min-h-[600px]">
-                {/* Zone centrale : affichage de l'image */}
-                <div className="col-span-6 flex items-start justify-center relative pt-8">
-                  <div className="w-full h-[420px] flex items-start justify-center">
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.div
-                        key={projectList[selected].images[selectedImage]}
-                        initial={{ y: 60, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -60, opacity: 0 }}
-                        transition={{ duration: 0.5, ease: "easeInOut" }}
-                        className="rounded-xl shadow-lg overflow-hidden bg-white/10 backdrop-blur-sm"
-                        style={{ maxHeight: '420px', maxWidth: '100%' }}
-                      >
-                        <img
-                          src={projectList[selected].images[selectedImage]}
-                          alt={projectList[selected].name}
-                          className="w-full h-full object-contain"
-                          onLoad={(e) => {
-                            const img = e.target as HTMLImageElement;
-                            const container = img.parentElement;
-                            if (container) {
-                              const aspectRatio = img.naturalWidth / img.naturalHeight;
-                              container.style.aspectRatio = aspectRatio.toString();
-                            }
-                          }}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
-
-                {/* Zone droite : description détaillée */}
-                <div className="col-span-6 flex flex-col items-start pl-4">
-                <div className="mb-6">
-                  <div className="font-kode text-lg text-blue-700">{projectList[selected].name}</div>
-                  <div className="glass-container mt-2" style={{ minWidth: 'fit-content', maxWidth: '100%' }}>
-                    <LiquidGlassBackground />
-                    <div className="glass-filter"></div>
-                    <div className="glass-overlay"></div>
-                    <div className="glass-specular"></div>
-                    <div className="glass-content font-mono text-xs stack-accent px-3 py-1 rounded shadow-inner inline-block" style={{padding: '0.5rem 1.2rem'}}>
-                      {projectList[selected].stack.map((tech, i) => (
-                        <span key={tech}>{i > 0 && ' | '}<span className="">{tech}</span></span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="font-jetbrains text-base text-[#111] leading-relaxed project-description">
-                  {selected === 0 && (
-                    <p>
-                      <ShuffleText text={
-                        "Les journées ne suivent jamais le plan. Elles dérapent, s'accélèrent, changent d'ordre.\n" +
-                        "Monday transforme cette réalité en avantage. L’app anticipe les imprévus, réajuste vos priorités en temps réel, et orchestre votre journée avec une logique aussi souple que précise.\n" +
-                        "Pas de surcharge mentale, pas de friction. Juste un agenda qui s’adapte à vous, naturellement."
-                      } />
-                    </p>
-                  )}
-                  {selected !== 0 && (
-                    <p><ShuffleText text={projectList[selected].description} /></p>
-                  )}
-                </div>
-                </div>
-              </div>
-            </div>
+                         {/* Image à droite */}
+             <div className="absolute right-24 top-1/2 transform -translate-y-1/2 pointer-events-auto">
+               <div className="w-[26rem] max-w-[45vw] h-[55vh] max-h-[450px] flex items-center justify-center">
+                 <AnimatePresence mode="wait" initial={false}>
+                   <motion.div
+                     key={projectList[selected].images[selectedImage]}
+                     initial={{ y: 60, opacity: 0 }}
+                     animate={{ y: 0, opacity: 1 }}
+                     exit={{ y: -60, opacity: 0 }}
+                     transition={{ duration: 0.5, ease: "easeInOut" }}
+                     className="rounded-xl shadow-lg overflow-hidden bg-white/10 backdrop-blur-sm max-w-full max-h-full"
+                   >
+                     <img
+                       src={projectList[selected].images[selectedImage]}
+                       alt={projectList[selected].name}
+                       className="w-full h-full object-contain"
+                       onLoad={(e) => {
+                         const img = e.target as HTMLImageElement;
+                         const container = img.parentElement;
+                         if (container) {
+                           const aspectRatio = img.naturalWidth / img.naturalHeight;
+                           container.style.aspectRatio = aspectRatio.toString();
+                         }
+                       }}
+                     />
+                   </motion.div>
+                 </AnimatePresence>
+               </div>
+             </div>
           </div>
         )
 
-      case "contact":
-        return (
-          <div className="max-w-4xl mx-auto mt-32 px-4">
+             case "contact":
+         return (
+           <div className="max-w-4xl mx-auto mt-32 px-8">
             <div className="grid grid-cols-12 gap-8">
               {/* Left side - Main content */}
               <div className="col-span-8">
@@ -364,9 +326,9 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
   // Détermine la direction du slide
   const slideDirection = selected > prevSelected ? 1 : -1;
 
-  return (
-    <div className="relative w-full min-h-screen z-20 overflow-y-auto">
-      <div className="container mx-auto px-8 py-8 min-h-full">
+     return (
+     <div className="relative w-full h-screen z-20 overflow-hidden">
+       <div className="w-full h-full">
         
 
         {getPageContent()}
