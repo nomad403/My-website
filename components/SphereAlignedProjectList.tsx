@@ -154,12 +154,12 @@ export default function SphereAlignedProjectList({
                   : "text-gray-800 hover:text-orange-600 font-medium text-base"
               }
             `}
-            style={{
-              transformOrigin: "right center",
-              transform: "translateX(-100%)", // Align right edge of text
-              textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
-              whiteSpace: "nowrap",
-            }}
+                         style={{
+               transformOrigin: "left center",
+               transform: "translateX(0%)", // Align left edge of text
+               textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
+               whiteSpace: "nowrap",
+             }}
             onClick={() => {
               const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
               const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
