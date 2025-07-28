@@ -154,10 +154,11 @@ export default function SphereAlignedProjectList({
                absolute pointer-events-auto cursor-pointer select-none
                font-jetbrains uppercase tracking-wider text-left
                transition-all duration-300 ease-out z-[110]
+               bg-blue-500/50 px-4 py-2 rounded
                ${
                  item.isSelected
-                   ? "text-orange-500 font-bold text-xl drop-shadow-lg"
-                   : "text-gray-800 hover:text-orange-600 font-medium text-base"
+                   ? "text-white font-bold text-xl drop-shadow-lg"
+                   : "text-white hover:text-yellow-300 font-medium text-base"
                }
              `}
                          style={{
