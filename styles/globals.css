@@ -526,14 +526,21 @@ body {
 
 @media screen and (min-width: 576px) {
   .container-carrousel {
-    --widthItem: 350px;
-    --heightItem: 230px;
+    --widthItem: 250px;
+    --heightItem: 160px;
   }
 }
 
 @media screen and (min-width: 768px) {
   .container-carrousel {
-    --widthItem: 450px;
-    --heightItem: 280px;
+    --widthItem: 300px;
+    --heightItem: 190px;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .container-carrousel {
+    --widthItem: 350px;
+    --heightItem: 220px;
   }
 }
