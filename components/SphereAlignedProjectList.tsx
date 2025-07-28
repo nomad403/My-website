@@ -111,7 +111,7 @@ export default function SphereAlignedProjectList({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-10"
+      className="fixed inset-0 z-50"
       onWheel={handleWheel}
       style={{ pointerEvents: 'none' }}
     >
