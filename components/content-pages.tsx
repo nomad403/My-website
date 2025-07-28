@@ -27,12 +27,13 @@ const projectList = [
     solution: "Développement d'une application mobile de planification adaptative : l'IA ajuste l'emploi du temps en temps réel, propose des recommandations personnalisées et intègre des flows interactifs, des sliders custom et des statistiques gamifiées pour une expérience engageante.",
     impact: "Démonstration concrète d'un système IA connecté au contexte utilisateur. L'application a permis de valider des choix d'architecture modernes et d'explorer l'UX de la planification intelligente.",
   },
-  {
-    id: 2,
-    name: "TurnUpSphere",
-    images: [
-      "/images/turnupsphere.png"
-    ],
+     {
+     id: 2,
+     name: "TurnUpSphere",
+     images: [
+       "/images/turnupsphere.png",
+       "/placeholder-logo.png"
+     ],
     stack: ["Kotlin", "Jetpack Compose", "Firebase", "Google Maps API"],
     description: "Application mobile dédiée à la scène musicale underground, pensée pour les organisateurs et participants d'événements. Elle permet de créer et gérer des événements sur mesure avec géolocalisation, interface fluide et gestion cloud, dans un univers où la réactivité et la confidentialité sont clés.",
     context: "Projet personnel dédié à la scène musicale underground, pensé pour les organisateurs et participants d'événements.",
