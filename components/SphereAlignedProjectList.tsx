@@ -182,7 +182,7 @@ export default function SphereAlignedProjectList({
               transition: { duration: 0.1 },
             }}
           >
-            {item.project.name}
+            {truncateTitle(item.project.name)}
             {item.isSelected && (
               <motion.div
                 initial={{ scale: 0 }}
