@@ -237,35 +237,118 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
               maxVisible={5}
             />
 
-            {/* Image au centre */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-              <div className="w-[28rem] max-w-[40vw] h-[60vh] max-h-[500px] flex items-center justify-center">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={projectList[selected].images[selectedImage]}
-                    initial={{ y: 60, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -60, opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    className="rounded-xl shadow-lg overflow-hidden bg-white/10 backdrop-blur-sm max-w-full max-h-full"
-                  >
-                    <img
-                      src={projectList[selected].images[selectedImage]}
-                      alt={projectList[selected].name}
-                      className="w-full h-full object-contain"
-                      onLoad={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        const container = img.parentElement;
-                        if (container) {
-                          const aspectRatio = img.naturalWidth / img.naturalHeight;
-                          container.style.aspectRatio = aspectRatio.toString();
-                        }
-                      }}
-                    />
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </div>
+                         {/* Carrousel d'images au centre */}
+             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+               <div className="w-[32rem] max-w-[45vw] h-[65vh] max-h-[550px] flex items-center justify-center overflow-hidden">
+                 <div className="relative w-full h-full perspective-1000">
+                   <AnimatePresence mode="wait" initial={false}>
+                     <motion.div
+                       key={projectList[selected].images[selectedImage]}
+                       initial={{ 
+                         rotateY: selectedImage > 0 ? -50 : 50,
+                         scale: 0.8,
+                         opacity: 0,
+                         z: -100 
+                       }}
+                       animate={{ 
+                         rotateY: 0,
+                         scale: 1,
+                         opacity: 1,
+                         z: 0 
+                       }}
+                       exit={{ 
+                         rotateY: selectedImage > 0 ? 50 : -50,
+                         scale: 0.8,
+                         opacity: 0,
+                         z: -100 
+                       }}
+                       transition={{ 
+                         duration: 0.6, 
+                         ease: [0.25, 0.46, 0.45, 0.94],
+                         type: "spring",
+                         stiffness: 300,
+                         damping: 30
+                       }}
+                       className="absolute inset-0 transform-gpu"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                       }}
+                     >
+                       <div className="relative w-full h-full rounded-xl shadow-2xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                         <img
+                           src={projectList[selected].images[selectedImage]}
+                           alt={projectList[selected].name}
+                           className="w-full h-full object-cover"
+                         />
+                         
+                         {/* Overlay d'informations inspiré du design Swiper */}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
+                           <div className="absolute bottom-0 left-0 right-0 p-6">
+                             <div className="space-y-2">
+                               <div className="flex items-center space-x-2 text-white/90">
+                                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                 <span className="text-sm font-jetbrains uppercase tracking-wider">
+                                   {projectList[selected].name}
+                                 </span>
+                               </div>
+                               <div className="flex items-center space-x-2 text-white/70">
+                                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                 <span className="text-xs font-jetbrains">
+                                   Image {selectedImage + 1} / {projectList[selected].images.length}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+
+                         {/* Indicateurs de navigation si plusieurs images */}
+                         {projectList[selected].images.length > 1 && (
+                           <div className="absolute top-4 right-4 flex gap-1">
+                             {projectList[selected].images.map((_, index) => (
+                               <button
+                                 key={index}
+                                 onClick={() => setSelectedImage(index)}
+                                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                   index === selectedImage
+                                     ? "bg-orange-500 scale-125"
+                                     : "bg-white/50 hover:bg-white/70"
+                                 }`}
+                               />
+                             ))}
+                           </div>
+                         )}
+                       </div>
+                     </motion.div>
+                   </AnimatePresence>
+
+                   {/* Navigation latérale pour les images multiples */}
+                   {projectList[selected].images.length > 1 && (
+                     <>
+                       <button
+                         onClick={() => setSelectedImage((prev) => 
+                           prev > 0 ? prev - 1 : projectList[selected].images.length - 1
+                         )}
+                         className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm"
+                       >
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                         </svg>
+                       </button>
+                       <button
+                         onClick={() => setSelectedImage((prev) => 
+                           prev < projectList[selected].images.length - 1 ? prev + 1 : 0
+                         )}
+                         className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm"
+                       >
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                         </svg>
+                       </button>
+                     </>
+                   )}
+                 </div>
+               </div>
+             </div>
 
                          {/* Bloc de description à droite */}
              <div className="absolute right-16 top-1/2 transform -translate-y-1/2 pointer-events-auto">
