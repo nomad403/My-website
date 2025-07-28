@@ -560,15 +560,14 @@ body {
 
 .carousel-layout-box {
   position: absolute;
-  bottom: 0;
-  left: 30px;
+  bottom: 10px;
+  right: 10px;
   color: #fff;
-  transform-origin: 0% 10%;
-  transform: rotate(-90deg);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.4;
   text-transform: uppercase;
-  opacity: .4;
+  opacity: .6;
+  font-family: var(--font-jetbrains-mono);
 }
 
 .carousel-cursor {
