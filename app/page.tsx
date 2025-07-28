@@ -304,7 +304,7 @@ export default function HomePage() {
 
       {/* 3D Navigation - Always present on top */}
       <div 
-        className={`absolute inset-0 transition-all duration-500 ${
+        className={`absolute inset-0 transition-all duration-500 pointer-events-none ${
           currentPage === "home" ? "z-30" : "z-5"
         }`}
         style={{
