@@ -455,9 +455,9 @@ body {
 }
 
 .container-carrousel {
-  --widthItem: 250px;
-  --heightItem: 300px;
-  width: var(--widthItem);
+  --widthItem: 200px;
+  --heightItem: 130px;
+  width: calc(var(--widthItem) * 3);
   height: var(--heightItem);
   perspective: 1000px;
 }
