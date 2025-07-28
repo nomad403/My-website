@@ -166,6 +166,9 @@ export default function SphereAlignedProjectList({
                transform: "translateX(0%)", // Align left edge of text
                textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
                whiteSpace: "nowrap",
+               maxWidth: "200px", // Largeur maximale pour éviter le débordement
+               overflow: "hidden",
+               textOverflow: "ellipsis",
              }}
                          onClick={(e) => {
                e.stopPropagation()
