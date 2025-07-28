@@ -155,7 +155,7 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
 
   // Animation continue
   const update = () => {
-    if (!carrouselRef.current || isAnimatingToTarget) return;
+    if (!carrouselRef.current || isAnimatingRef.current) return;
     
     setLastMoveTo(prev => {
       const newValue = lerp(moveTo, prev, 0.05);
