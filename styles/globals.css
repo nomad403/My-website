@@ -463,9 +463,9 @@ body {
   --items: 10;
   --width: clamp(250px, 30vw, 450px);
   --height: calc(var(--width) / 16 * 9);
-  --x: calc(var(--offset) * 60px);
-  --y: calc(var(--offset) * 30px);
-  --rot: calc(var(--offset) * 8deg);
+  --x: calc(var(--offset) * 80px);
+  --y: calc(var(--offset) * 40px);
+  --rot: calc(var(--offset) * 10deg);
   --scale: calc(1 - var(--offset) * var(--offset) * 0.01);
   --opacity: calc(1 - var(--offset) * var(--offset) * 0.05);
   overflow: hidden;
