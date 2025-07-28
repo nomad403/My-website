@@ -275,7 +275,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                          transformStyle: 'preserve-3d',
                        }}
                      >
-                       <div className="relative w-full h-full rounded-xl shadow-lg overflow-hidden bg-transparent border border-gray-200/20">
+                       <div className="relative w-full h-full overflow-hidden">
                          <img
                            src={projectList[selected].images[selectedImage]}
                            alt={projectList[selected].name}
