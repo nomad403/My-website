@@ -92,8 +92,49 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     });
   };
 
+  // Calcule l'angle de rotation pour afficher un projet spécifique
+  const calculateTargetRotation = (index: number) => {
+    const degreesPerItem = 360 / items.length;
+    return -degreesPerItem * index;
+  };
+
+  // Anime vers le projet sélectionné
+  const animateToProject = (index: number) => {
+    const targetAngle = calculateTargetRotation(index);
+    setTargetRotation(targetAngle);
+    setIsAnimatingToTarget(true);
+    
+    // Animation progressive vers l'angle cible
+    const animateStep = () => {
+      setLastMoveTo(prev => {
+        const diff = targetAngle - prev;
+        
+        // Si on est proche de la cible, on s'arrête
+        if (Math.abs(diff) < 0.5) {
+          setIsAnimatingToTarget(false);
+          return targetAngle;
+        }
+        
+        // Sinon on continue l'animation
+        return prev + diff * 0.1;
+      });
+    };
+    
+    const animate = () => {
+      animateStep();
+      if (isAnimatingToTarget) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    animate();
+  };
+
   // Gestion de la position X
   const getPosX = (x: number) => {
+    // Annule l'animation automatique si l'utilisateur interagit
+    setIsAnimatingToTarget(false);
+    
     setCurrentMousePos(x);
     setMoveTo(prev => currentMousePos < lastMousePos ? prev - 2 : prev + 2);
     setLastMousePos(currentMousePos);
