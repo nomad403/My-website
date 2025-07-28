@@ -119,7 +119,7 @@ export default function SphereAlignedProjectList({
         backgroundColor: 'rgba(0, 255, 0, 0.1)' // Zone verte temporaire pour voir la zone cliquable
       }}
     >
-      <AnimatePresence mode="wait">
+             <AnimatePresence>
         {projectPositions.map((item, index) => (
           <motion.div
             key={index} // Unique key for position in carousel
