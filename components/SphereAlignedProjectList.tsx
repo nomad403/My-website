@@ -166,12 +166,14 @@ export default function SphereAlignedProjectList({
                textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
                whiteSpace: "nowrap",
              }}
-            onClick={() => {
-              const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
-              const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
-              setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
-              onSelect(item.globalIndex)
-            }}
+                         onClick={(e) => {
+               console.log('Clic détecté sur:', item.project.name)
+               e.stopPropagation()
+               const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
+               const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
+               setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
+               onSelect(item.globalIndex)
+             }}
             whileHover={{
               scale: item.scale * 1.05,
               transition: { duration: 0.2 },
