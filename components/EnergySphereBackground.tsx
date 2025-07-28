@@ -371,6 +371,11 @@ export default function WaterSphereBackground({
     let mouseThrottleTime = 0
 
     function onMouseMove(event: MouseEvent) {
+      // Exclure la zone du menu (400px de gauche) pour éviter d'interférer
+      if (event.clientX < 400) {
+        return // Laisser le menu gérer les interactions
+      }
+      
       // Ajuster les coordonnées selon les transformations appliquées
       let x = event.clientX
       let y = event.clientY
