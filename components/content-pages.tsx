@@ -283,7 +283,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                          />
                          
                          {/* Overlay d'informations */}
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
                            <div className="absolute bottom-0 left-0 right-0 p-6">
                              <div className="space-y-2">
                                <div className="flex items-center space-x-2 text-white/90">
