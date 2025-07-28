@@ -2,7 +2,17 @@
 import { useEffect, useRef } from "react"
 import * as THREE from "three"
 
-export default function WaterSphereBackground() {
+interface EnergySphereProps {
+  scale?: number
+  translateY?: number
+  isTransitioning?: boolean
+}
+
+export default function WaterSphereBackground({ 
+  scale = 1, 
+  translateY = 0, 
+  isTransitioning = false 
+}: EnergySphereProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -361,9 +371,23 @@ export default function WaterSphereBackground() {
     let mouseThrottleTime = 0
 
     function onMouseMove(event: MouseEvent) {
-      // Utiliser directement les coordonnées de la fenêtre (pas du canvas)
-      const x = event.clientX
-      const y = event.clientY
+          // Exclure la zone du menu (320px de gauche) pour éviter d'interférer
+    if (event.clientX < 320) {
+        return // Laisser le menu gérer les interactions
+      }
+      
+      // Ajuster les coordonnées selon les transformations appliquées
+      let x = event.clientX
+      let y = event.clientY
+      
+      // Compenser le translateY - décaler la souris dans le sens opposé
+      y = y - translateY
+      
+      // Compenser le scale - ajuster les coordonnées par rapport au centre
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      x = centerX + (x - centerX) / scale
+      y = centerY + (y - centerY) / scale
       const now = performance.now()
 
       if (now - mouseThrottleTime < 8) return
@@ -389,9 +413,23 @@ export default function WaterSphereBackground() {
     }
 
     function onMouseClick(event: MouseEvent) {
-      // Utiliser directement les coordonnées de la fenêtre
-      const x = event.clientX
-      const y = event.clientY
+          // Exclure la zone du menu (320px de gauche) pour éviter de bloquer les clics
+    if (event.clientX < 320) {
+        return // Laisser le menu gérer ce clic
+      }
+      
+      // Ajuster les coordonnées selon les transformations appliquées
+      let x = event.clientX
+      let y = event.clientY
+      
+      // Compenser le translateY - décaler la souris dans le sens opposé
+      y = y - translateY
+      
+      // Compenser le scale - ajuster les coordonnées par rapport au centre
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      x = centerX + (x - centerX) / scale
+      y = centerY + (y - centerY) / scale
       addRipple(x, y, waterSettings.clickIntensity)
       const clickX = x / window.innerWidth
       const clickY = 1.0 - y / window.innerHeight
@@ -403,8 +441,17 @@ export default function WaterSphereBackground() {
     function onTouchMove(event: TouchEvent) {
       event.preventDefault()
       const touch = event.touches[0]
-      const x = touch.clientX
-      const y = touch.clientY
+      let x = touch.clientX
+      let y = touch.clientY
+      
+      // Compenser le translateY - décaler la souris dans le sens opposé
+      y = y - translateY
+      
+      // Compenser le scale - ajuster les coordonnées par rapport au centre
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      x = centerX + (x - centerX) / scale
+      y = centerY + (y - centerY) / scale
       const now = performance.now()
 
       if (now - mouseThrottleTime < 8) return
@@ -432,8 +479,17 @@ export default function WaterSphereBackground() {
     function onTouchStart(event: TouchEvent) {
       event.preventDefault()
       const touch = event.touches[0]
-      const x = touch.clientX
-      const y = touch.clientY
+      let x = touch.clientX
+      let y = touch.clientY
+      
+      // Compenser le translateY - décaler la souris dans le sens opposé
+      y = y - translateY
+      
+      // Compenser le scale - ajuster les coordonnées par rapport au centre
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      x = centerX + (x - centerX) / scale
+      y = centerY + (y - centerY) / scale
       addRipple(x, y, waterSettings.clickIntensity)
       const clickX = x / window.innerWidth
       const clickY = 1.0 - y / window.innerHeight
@@ -514,6 +570,9 @@ export default function WaterSphereBackground() {
         height: "100vh",
         zIndex: 0,
         pointerEvents: "auto", // CRUCIAL: permet les interactions même en arrière-plan
+        transform: `translateY(${translateY}px) scale(${scale})`,
+        transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
+        transformOrigin: "center center", // Pour que l'agrandissement soit centré
       }}
     />
   )

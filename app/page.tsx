@@ -15,29 +15,50 @@ export default function HomePage() {
   const [slideDirection, setSlideDirection] = useState<string | null>(null)
   // Nouvel état pour centrer ou ranger l'objet 3D (rangé par défaut)
   const [is3DCentered, setIs3DCentered] = useState(false)
+  // États pour l'animation de la sphère
+  const [sphereScale, setSphereScale] = useState(1)
+  const [sphereTranslateY, setSphereTranslateY] = useState(0)
+  const [isSphereTransitioning, setIsSphereTransitioning] = useState(false)
 
   // Synchroniser l'état centré/rangé avec la page home
   useEffect(() => {
-    if (currentPage === "home") {
-      setIs3DCentered(false)
-      setIsMenuOpen(false)
-    } else {
-      setIs3DCentered(false)
-      setIsMenuOpen(false)
-    }
+    // Gérer seulement les changements de menu, pas la sphère
+    setIs3DCentered(false)
+    setIsMenuOpen(false)
   }, [currentPage])
 
   const handlePageChange = (newPage: string, direction?: string) => {
     if (newPage === currentPage || isTransitioning) return
+    
     setIsTransitioning(true)
     setNextPage(newPage)
     setSlideDirection(direction || null)
+    
+    // Animation spéciale pour la transition vers "projects"
+    if (newPage === "projects" && currentPage === "home") {
+      setIsSphereTransitioning(true)
+      // La sphère grandit et descend pour créer l'effet horizon planétaire
+      setSphereScale(6) // Sphère beaucoup plus étendue pour un horizon large
+      setSphereTranslateY(1600) // Descend encore plus pour un horizon très bas
+    }
+    
+    // Animation inverse pour retourner à home depuis projects
+    if (newPage === "home" && currentPage === "projects") {
+      setIsSphereTransitioning(true)
+      setSphereScale(1) // Remet la taille normale
+      setSphereTranslateY(0) // Remet en position centrale
+    }
+    
     setTimeout(() => {
       setCurrentPage(newPage)
       setNextPage(null)
       setSlideDirection(null)
       setIsTransitioning(false)
-    }, 300)
+      // Reset de la transition sphère après l'animation
+      setTimeout(() => {
+        setIsSphereTransitioning(false)
+      }, 200)
+    }, 1200) // Augmenté pour laisser le temps aux animations de se terminer
   }
 
   // Ajout de la fonction pour retour home via l'objet rangé
@@ -76,7 +97,11 @@ export default function HomePage() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white">
       
-      <EnergySphereBackground />
+      <EnergySphereBackground 
+        scale={sphereScale}
+        translateY={sphereTranslateY}
+        isTransitioning={isSphereTransitioning}
+      />
 
       {/* Top Navigation - Inspired by reference */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-8">
@@ -121,19 +146,26 @@ export default function HomePage() {
       <div className="relative w-full min-h-screen">
         {/* Current Page Content */}
         <div
-          className={`page-content absolute inset-0 overflow-y-auto max-h-screen ${
+          className={`page-content absolute inset-0 overflow-y-auto max-h-screen pointer-events-none ${
             isTransitioning && slideDirection ? `slide-out-${slideDirection}` : ""
           }`}
         >
           {currentPage === "home" && (
-            <>
+            <div 
+              className={`home-page-content w-full h-full`}
+              style={{
+                transform: nextPage === "projects" && isTransitioning ? "translateY(-100vh)" : "translateY(0)",
+                opacity: nextPage === "projects" && isTransitioning ? 0 : 1,
+                transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.8s ease-out" : "none"
+              }}
+            >
               {/* Particle Text - Large central text like reference */}
-              <div className="absolute inset-0 z-10">
+              <div className="absolute inset-0 z-10 pointer-events-none">
                 <ParticleText />
               </div>
 
               {/* Minimal content positioning - inspired by reference layout */}
-              <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto">
+              <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto pointer-events-none">
                 {/* Top tagline */}
                 <div className="flex justify-center pt-20">
                   <p className="font-jetbrains text-black text-xs font-light tracking-widest uppercase">
@@ -162,24 +194,35 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
-          {currentPage !== "home" && <ContentPages currentPage={currentPage} onBack={() => handlePageChange("home")} />}
+          {currentPage !== "home" && (
+            <div 
+              className={`page-content w-full h-full pointer-events-auto`}
+              style={{
+                transform: currentPage === "projects" && isTransitioning ? "translateY(100vh)" : "translateY(0)",
+                opacity: currentPage === "projects" && isTransitioning ? 0 : 1,
+                transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.8s ease-in" : "none"
+              }}
+            >
+              <ContentPages currentPage={currentPage} onBack={() => handlePageChange("home")} />
+            </div>
+          )}
         </div>
 
         {/* Next Page Content (during transition) */}
         {isTransitioning && nextPage && slideDirection && (
-          <div className={`page-content absolute inset-0 slide-in-${getOppositeDirection(slideDirection)}`}>
+          <div className={`page-content absolute inset-0 slide-in-${getOppositeDirection(slideDirection)} pointer-events-none`}>
             {nextPage === "home" && (
               <>
                 {/* Particle Text - Large central text like reference */}
-                <div className="absolute inset-0 z-10">
+                <div className="absolute inset-0 z-10 pointer-events-none">
                   <ParticleText />
                 </div>
 
                 {/* Minimal content positioning - inspired by reference layout */}
-                <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto">
+                <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto pointer-events-none">
                   {/* Top tagline */}
                   <div className="flex justify-center pt-20">
                     <p className="font-jetbrains text-black text-xs font-light tracking-widest uppercase">
@@ -243,16 +286,31 @@ export default function HomePage() {
               </>
             )}
 
-            {nextPage !== "home" && <ContentPages currentPage={nextPage} onBack={() => handlePageChange("home")} />}
+            {nextPage !== "home" && (
+              <div 
+                className={`next-page-content w-full h-full pointer-events-auto`}
+                style={{
+                  transform: nextPage === "projects" && isTransitioning ? "translateY(0)" : "translateY(100vh)",
+                  opacity: nextPage === "projects" && isTransitioning ? 1 : 0,
+                  transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.8s ease-in 0.4s" : "none"
+                }}
+              >
+                <ContentPages currentPage={nextPage} onBack={() => handlePageChange("home")} />
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* 3D Navigation - Always present on top */}
       <div 
-        className={`absolute inset-0 transition-all duration-500 ${
+        className={`absolute inset-0 transition-all duration-500 pointer-events-none ${
           currentPage === "home" ? "z-30" : "z-5"
         }`}
+        style={{
+          opacity: nextPage === "projects" && isTransitioning ? 0 : 1,
+          transition: "opacity 0.6s ease-out"
+        }}
       >
         <Navigation3D
           isMenuOpen={isMenuOpen}

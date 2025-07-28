@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import ShuffleText from "./ShuffleText";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
+import CylinderCarousel from "./CylinderCarousel";
 
 interface ContentPagesProps {
   currentPage: string
@@ -27,12 +28,13 @@ const projectList = [
     solution: "Développement d'une application mobile de planification adaptative : l'IA ajuste l'emploi du temps en temps réel, propose des recommandations personnalisées et intègre des flows interactifs, des sliders custom et des statistiques gamifiées pour une expérience engageante.",
     impact: "Démonstration concrète d'un système IA connecté au contexte utilisateur. L'application a permis de valider des choix d'architecture modernes et d'explorer l'UX de la planification intelligente.",
   },
-  {
-    id: 2,
-    name: "TurnUpSphere",
-    images: [
-      "/images/turnupsphere.png"
-    ],
+     {
+     id: 2,
+     name: "TurnUpSphere",
+     images: [
+       "/images/turnupsphere.png",
+       "/placeholder-logo.png"
+     ],
     stack: ["Kotlin", "Jetpack Compose", "Firebase", "Google Maps API"],
     description: "Application mobile dédiée à la scène musicale underground, pensée pour les organisateurs et participants d'événements. Elle permet de créer et gérer des événements sur mesure avec géolocalisation, interface fluide et gestion cloud, dans un univers où la réactivité et la confidentialité sont clés.",
     context: "Projet personnel dédié à la scène musicale underground, pensé pour les organisateurs et participants d'événements.",
@@ -225,7 +227,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
       case "projects":
         return (
           <div className="relative w-full h-screen overflow-hidden">
-            {/* Liste des projets en arc alignée avec la sphère */}
+            {/* Menu liste à gauche */}
             <SphereAlignedProjectList
               projects={projectList}
               selected={selected}
@@ -234,38 +236,46 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                 setSelected(idx);
                 setSelectedImage(0);
               }}
-              maxVisible={7}
+              maxVisible={5}
             />
 
-                         {/* Image à droite */}
-             <div className="absolute right-24 top-1/2 transform -translate-y-1/2 pointer-events-auto">
-               <div className="w-[26rem] max-w-[45vw] h-[55vh] max-h-[450px] flex items-center justify-center">
-                 <AnimatePresence mode="wait" initial={false}>
-                   <motion.div
-                     key={projectList[selected].images[selectedImage]}
-                     initial={{ y: 60, opacity: 0 }}
-                     animate={{ y: 0, opacity: 1 }}
-                     exit={{ y: -60, opacity: 0 }}
-                     transition={{ duration: 0.5, ease: "easeInOut" }}
-                     className="rounded-xl shadow-lg overflow-hidden bg-white/10 backdrop-blur-sm max-w-full max-h-full"
-                   >
-                     <img
-                       src={projectList[selected].images[selectedImage]}
-                       alt={projectList[selected].name}
-                       className="w-full h-full object-contain"
-                       onLoad={(e) => {
-                         const img = e.target as HTMLImageElement;
-                         const container = img.parentElement;
-                         if (container) {
-                           const aspectRatio = img.naturalWidth / img.naturalHeight;
-                           container.style.aspectRatio = aspectRatio.toString();
-                         }
-                       }}
-                     />
-                   </motion.div>
-                 </AnimatePresence>
-               </div>
+                                     {/* Carrousel cylindrique 3D au centre */}
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
+              <div className="w-[800px] h-[500px] max-w-[70vw] max-h-[70vh]">
+                <CylinderCarousel
+                  items={projectList}
+                  selectedIndex={selected}
+                  onItemChange={(index: number) => {
+                    setPrevSelected(selected);
+                    setSelected(index);
+                    setSelectedImage(0);
+                  }}
+                />
+              </div>
+            </div>
+
+                                                  {/* Bloc de description à droite */}
+            <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-auto z-20">
+              <div className="w-80 max-w-[28vw] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+               <AnimatePresence mode="wait" initial={false}>
+                 <motion.div
+                   key={selected}
+                   initial={{ x: 30, opacity: 0 }}
+                   animate={{ x: 0, opacity: 1 }}
+                   exit={{ x: -30, opacity: 0 }}
+                   transition={{ duration: 0.4, ease: "easeInOut" }}
+                   className="p-6 backdrop-blur-sm bg-white/5 rounded-lg"
+                 >
+                   <h3 className="font-kode text-xl text-orange-500 mb-4 tracking-wide">
+                     {projectList[selected].name}
+                   </h3>
+                                        <p className="font-jetbrains text-sm text-gray-900 leading-relaxed mb-6">
+                      {projectList[selected].description}
+                    </p>
+                 </motion.div>
+               </AnimatePresence>
              </div>
+           </div>
           </div>
         )
 
@@ -327,7 +337,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
   const slideDirection = selected > prevSelected ? 1 : -1;
 
      return (
-     <div className="relative w-full h-screen z-20 overflow-hidden">
+     <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">
        <div className="w-full h-full">
         
 
