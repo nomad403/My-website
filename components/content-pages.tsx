@@ -351,9 +351,9 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                </div>
              </div>
 
-                         {/* Bloc de description à droite */}
-             <div className="absolute right-16 top-1/2 transform -translate-y-1/2 pointer-events-auto">
-                             <div className="w-72 max-w-[22vw] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+                                      {/* Bloc de description à droite */}
+             <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-auto">
+               <div className="w-80 max-w-[28vw] max-h-[70vh] overflow-y-auto overflow-x-hidden">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={selected}
