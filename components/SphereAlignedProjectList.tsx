@@ -160,6 +160,7 @@ export default function SphereAlignedProjectList({
                    : "text-gray-800 hover:text-orange-600 font-medium text-base"
                }
              `}
+            title={item.project.name} // Tooltip avec le titre complet
                          style={{
                transformOrigin: "left center",
                transform: "translateX(0%)", // Align left edge of text
