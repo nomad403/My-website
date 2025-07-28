@@ -490,7 +490,8 @@ body {
 }
 
 .carrousel-item:hover {
-  opacity: 1;
+  opacity: 0.9;
+  transform: rotatey(var(--rotatey)) translatez(var(--tz)) scale(1.05);
 }
 
 .carrousel-item img {
