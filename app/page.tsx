@@ -288,7 +288,7 @@ export default function HomePage() {
 
             {nextPage !== "home" && (
               <div 
-                className={`next-page-content w-full h-full`}
+                className={`next-page-content w-full h-full pointer-events-auto`}
                 style={{
                   transform: nextPage === "projects" && isTransitioning ? "translateY(0)" : "translateY(100vh)",
                   opacity: nextPage === "projects" && isTransitioning ? 1 : 0,
