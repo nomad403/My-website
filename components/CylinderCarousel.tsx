@@ -222,6 +222,16 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     update();
   }, [moveTo]);
 
+  // Animation vers le projet sélectionné
+  useEffect(() => {
+    if (selectedIndex >= 0 && selectedIndex < items.length) {
+      // Petit délai pour laisser le carrousel se créer
+      setTimeout(() => {
+        animateToProject(selectedIndex);
+      }, 200);
+    }
+  }, [selectedIndex, items.length]);
+
   return (
     <div 
       ref={containerRef}
