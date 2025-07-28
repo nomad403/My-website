@@ -239,7 +239,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
             />
 
                          {/* Carrousel d'images au centre */}
-             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+             <div className="absolute left-[55%] top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
                <div className="w-[32rem] max-w-[45vw] h-[65vh] max-h-[550px] flex items-center justify-center overflow-hidden">
                  <div className="relative w-full h-full perspective-1000">
                    <AnimatePresence mode="wait" initial={false}>
