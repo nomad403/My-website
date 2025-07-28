@@ -239,13 +239,13 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
               maxVisible={5}
             />
 
-                                     {/* Nouveau carrousel au centre */}
+                                     {/* Carrousel cylindrique 3D au centre */}
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
-              <div className="w-[1200px] h-[800px] max-w-[75vw] max-h-[85vh]">
-                <NewCarousel
+              <div className="w-[600px] h-[400px] max-w-[60vw] max-h-[60vh]">
+                <CylinderCarousel
                   items={projectList}
                   selectedIndex={selected}
-                  onItemChange={(index) => {
+                  onItemChange={(index: number) => {
                     setPrevSelected(selected);
                     setSelected(index);
                     setSelectedImage(0);
