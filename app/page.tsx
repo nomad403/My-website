@@ -199,7 +199,7 @@ export default function HomePage() {
 
           {currentPage !== "home" && (
             <div 
-              className={`page-content w-full h-full`}
+              className={`page-content w-full h-full pointer-events-auto`}
               style={{
                 transform: currentPage === "projects" && isTransitioning ? "translateY(100vh)" : "translateY(0)",
                 opacity: currentPage === "projects" && isTransitioning ? 0 : 1,
