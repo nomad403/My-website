@@ -217,12 +217,12 @@ export default function HomePage() {
             {nextPage === "home" && (
               <>
                 {/* Particle Text - Large central text like reference */}
-                <div className="absolute inset-0 z-10">
+                <div className="absolute inset-0 z-10 pointer-events-none">
                   <ParticleText />
                 </div>
 
                 {/* Minimal content positioning - inspired by reference layout */}
-                <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto">
+                <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 max-w-7xl mx-auto pointer-events-none">
                   {/* Top tagline */}
                   <div className="flex justify-center pt-20">
                     <p className="font-jetbrains text-black text-xs font-light tracking-widest uppercase">
