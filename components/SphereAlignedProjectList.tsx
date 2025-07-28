@@ -109,12 +109,12 @@ export default function SphereAlignedProjectList({
   const projectPositions = createProjectPositions()
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-50"
-      onWheel={handleWheel}
-      style={{ pointerEvents: 'none' }}
-    >
+         <div
+       ref={containerRef}
+       className="fixed inset-0 z-50"
+       onWheel={handleWheel}
+       style={{ pointerEvents: 'auto' }}
+     >
       <AnimatePresence mode="wait">
         {projectPositions.map((item, index) => (
           <motion.div
