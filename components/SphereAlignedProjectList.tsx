@@ -117,7 +117,7 @@ export default function SphereAlignedProjectList({
   return (
               <div
        ref={containerRef}
-       className="absolute left-16 top-0 w-[280px] h-full z-[100]"
+       className="absolute left-16 top-0 w-[240px] h-full z-[100]"
        onWheel={handleWheel}
        style={{ pointerEvents: 'auto' }}
             >        
