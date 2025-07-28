@@ -20,7 +20,7 @@ export default function SphereAlignedProjectList({
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Fonction pour tronquer les titres trop longs
-  const truncateTitle = (title: string, maxLength: number = 18) => {
+  const truncateTitle = (title: string, maxLength: number = 15) => {
     if (title.length <= maxLength) return title
     return title.substring(0, maxLength - 3) + '...'
   }
