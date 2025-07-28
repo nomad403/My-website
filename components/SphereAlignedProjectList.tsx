@@ -77,8 +77,8 @@ export default function SphereAlignedProjectList({
       const yOffset = (index - centerIndex) * itemHeight
       const y = window.innerHeight / 2 + yOffset
 
-      // Position X fixe à droite
-      const x = window.innerWidth - 280 // 280px du bord droit
+             // Position X fixe à gauche
+       const x = 280 // 280px du bord gauche
 
       // Positions pour les animations slide
       const slideUpY = y - slideOffset
