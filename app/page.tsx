@@ -213,7 +213,7 @@ export default function HomePage() {
 
         {/* Next Page Content (during transition) */}
         {isTransitioning && nextPage && slideDirection && (
-          <div className={`page-content absolute inset-0 slide-in-${getOppositeDirection(slideDirection)}`}>
+          <div className={`page-content absolute inset-0 slide-in-${getOppositeDirection(slideDirection)} pointer-events-none`}>
             {nextPage === "home" && (
               <>
                 {/* Particle Text - Large central text like reference */}
