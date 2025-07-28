@@ -114,14 +114,8 @@ export default function SphereAlignedProjectList({
        className="fixed inset-0 z-[100]"
        onWheel={handleWheel}
        style={{ pointerEvents: 'auto' }}
-     >
-       {/* Zone spécifique cliquable pour le menu */}
-       <div 
-         className="absolute left-0 top-0 w-[400px] h-full z-10"
-         style={{ pointerEvents: 'auto' }}
-       />
-       
-       <AnimatePresence mode="wait">
+            >        
+        <AnimatePresence mode="wait">
         {projectPositions.map((item, index) => (
           <motion.div
             key={index} // Unique key for position in carousel
