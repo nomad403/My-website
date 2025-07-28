@@ -38,7 +38,6 @@ const NewCarousel: React.FC<NewCarouselProps> = ({ items, selectedIndex, onItemC
       
       // Calculer les propriétés CSS custom
       const active = absOffset === 0 ? 1 : 0;
-      const zIndex = items.length - absOffset;
       
       // Calculer la position relative par rapport à l'élément actif
       let relativePosition = offset;
@@ -47,6 +46,9 @@ const NewCarousel: React.FC<NewCarouselProps> = ({ items, selectedIndex, onItemC
       } else if (offset < -items.length / 2) {
         relativePosition = offset + items.length;
       }
+      
+      // Z-index basé sur la distance à l'élément actif
+      const zIndex = items.length - Math.abs(relativePosition);
       
       item.style.setProperty('--active', active.toString());
       item.style.setProperty('--offset', relativePosition.toString());
