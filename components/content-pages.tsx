@@ -361,7 +361,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: -30, opacity: 0 }}
                     transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="bg-white/90 rounded-xl p-6 border border-gray-200 shadow-lg"
+                    className="p-6"
                   >
                     <h3 className="font-kode text-xl text-orange-500 mb-4 tracking-wide">
                       {projectList[selected].name}
