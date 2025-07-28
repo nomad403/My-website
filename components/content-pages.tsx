@@ -224,60 +224,37 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
             </div>
           )
           
-      case "projects":
-        return (
-          <div className="relative w-full h-screen overflow-hidden">
-            {/* Menu liste à gauche */}
-            <SphereAlignedProjectList
-              projects={projectList}
-              selected={selected}
-              onSelect={(idx) => {
-                setPrevSelected(selected);
-                setSelected(idx);
-                setSelectedImage(0);
-              }}
-              maxVisible={5}
-            />
+             case "projects":
+         return (
+           <div className="relative w-full h-screen overflow-hidden">
+             {/* Menu liste à gauche - repositionné plus au centre */}
+             <SphereAlignedProjectList
+               projects={projectList}
+               selected={selected}
+               onSelect={(idx) => {
+                 setPrevSelected(selected);
+                 setSelected(idx);
+                 setSelectedImage(0);
+               }}
+               maxVisible={5}
+             />
 
-                                     {/* Carrousel cylindrique 3D au centre */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
-              <div className="w-[800px] h-[500px] max-w-[70vw] max-h-[70vh]">
-                <CylinderCarousel
-                  items={projectList}
-                  selectedIndex={selected}
-                  onItemChange={(index: number) => {
-                    setPrevSelected(selected);
-                    setSelected(index);
-                    setSelectedImage(0);
-                  }}
-                />
-              </div>
-            </div>
-
-                                                  {/* Bloc de description à droite */}
-            <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-auto z-20">
-              <div className="w-80 max-w-[28vw] max-h-[70vh] overflow-y-auto overflow-x-hidden">
-               <AnimatePresence mode="wait" initial={false}>
-                 <motion.div
-                   key={selected}
-                   initial={{ x: 30, opacity: 0 }}
-                   animate={{ x: 0, opacity: 1 }}
-                   exit={{ x: -30, opacity: 0 }}
-                   transition={{ duration: 0.4, ease: "easeInOut" }}
-                   className="p-6 backdrop-blur-sm bg-white/5 rounded-lg"
-                 >
-                   <h3 className="font-kode text-xl text-orange-500 mb-4 tracking-wide">
-                     {projectList[selected].name}
-                   </h3>
-                                        <p className="font-jetbrains text-sm text-gray-900 leading-relaxed mb-6">
-                      {projectList[selected].description}
-                    </p>
-                 </motion.div>
-               </AnimatePresence>
+                           {/* Carrousel cylindrique 3D au centre */}
+              <div className="absolute left-[55%] top-1/2 transform -translate-x-1/2 -translate-y-1/3 pointer-events-auto z-10">
+               <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
+                 <CylinderCarousel
+                   items={projectList}
+                   selectedIndex={selected}
+                   onItemChange={(index: number) => {
+                     setPrevSelected(selected);
+                     setSelected(index);
+                     setSelectedImage(0);
+                   }}
+                 />
+               </div>
              </div>
            </div>
-          </div>
-        )
+         )
 
              case "contact":
          return (

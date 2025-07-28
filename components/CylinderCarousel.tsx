@@ -94,25 +94,35 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
   };
 
   // Calcule l'angle de rotation pour afficher un projet spécifique
-  const calculateTargetRotation = (index: number) => {
+  const calculateTargetRotation = (index: number, currentAngle: number) => {
     const degreesPerItem = 360 / items.length;
-    return -degreesPerItem * index;
+    const baseTargetAngle = -degreesPerItem * index;
+    
+    // Normalise la différence pour choisir le chemin le plus court
+    let diff = baseTargetAngle - currentAngle;
+    
+    // Ajuste la différence pour éviter les rotations de plus de 180°
+    while (diff > 180) diff -= 360;
+    while (diff < -180) diff += 360;
+    
+    return currentAngle + diff;
   };
 
   // Anime vers le projet sélectionné
   const animateToProject = (index: number) => {
     if (!carrouselRef.current) return;
     
-    const targetAngle = calculateTargetRotation(index);
+    const currentAngle = lastMoveTo;
+    const targetAngle = calculateTargetRotation(index, currentAngle);
     setTargetRotation(targetAngle);
     setIsAnimatingToTarget(true);
     isAnimatingRef.current = true;
     
-    let currentAngle = lastMoveTo;
+    let animationAngle = currentAngle;
     
     // Animation progressive vers l'angle cible
     const animate = () => {
-      const diff = targetAngle - currentAngle;
+      const diff = targetAngle - animationAngle;
       
       // Si on est proche de la cible, on s'arrête
       if (Math.abs(diff) < 0.5) {
@@ -127,11 +137,11 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
       }
       
       // Sinon on continue l'animation
-      currentAngle += diff * 0.15;
-      setLastMoveTo(currentAngle);
+      animationAngle += diff * 0.15;
+      setLastMoveTo(animationAngle);
       
       if (carrouselRef.current) {
-        carrouselRef.current.style.setProperty("--rotatey", currentAngle + "deg");
+        carrouselRef.current.style.setProperty("--rotatey", animationAngle + "deg");
       }
       
       if (isAnimatingRef.current) {
@@ -262,12 +272,12 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {items.map((item, index) => (
-            <div 
-              key={item.id}
-              className="carrousel-item"
-              onClick={() => onItemChange?.(index)}
-            >
+                     {items.map((item, index) => (
+             <div 
+               key={item.id}
+               className={`carrousel-item ${index === selectedIndex ? 'selected' : ''}`}
+               onClick={() => onItemChange?.(index)}
+             >
               <img src={item.images[0]} alt={item.name} />
               <div className="item-overlay">
                 <h3>{item.name}</h3>

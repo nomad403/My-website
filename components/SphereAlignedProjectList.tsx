@@ -75,13 +75,13 @@ export default function SphereAlignedProjectList({
   // Calcul des positions en colonne verticale simple
   const createProjectPositions = () => {
     const centerIndex = Math.floor(maxVisible / 2)
-    const itemHeight = 60 // Espacement vertical entre les éléments
+    const itemHeight = 70 // Espacement vertical entre les éléments (augmenté)
     const slideOffset = itemHeight * 0.8 // Décalage pour l'animation
 
     return visibleProjects.map((project, index) => {
-      // Position Y centrée autour du milieu de l'écran
+      // Position Y centrée autour du milieu du conteneur (400px de hauteur)
       const yOffset = (index - centerIndex) * itemHeight
-      const y = window.innerHeight / 2 + yOffset
+      const y = 200 + yOffset // 200px = milieu du conteneur h-[400px]
 
              // Position X fixe à gauche
        const x = 180 // Position relative au conteneur plus étroit
@@ -117,7 +117,7 @@ export default function SphereAlignedProjectList({
   return (
               <div
        ref={containerRef}
-       className="absolute left-16 top-0 w-[240px] h-full z-[200]"
+       className="absolute left-32 top-1/2 transform -translate-y-1/2 w-[240px] h-[400px] z-[200]"
        onWheel={handleWheel}
        style={{ pointerEvents: 'auto' }}
             >        
@@ -153,11 +153,11 @@ export default function SphereAlignedProjectList({
                                       className={`
                absolute pointer-events-auto cursor-pointer select-none
                font-jetbrains uppercase tracking-wider text-left
-               transition-all duration-300 ease-out z-[110]
+               transition-all duration-300 ease-out z-[110] negative-blend
                ${
                  item.isSelected
-                   ? "text-orange-500 font-bold text-xl drop-shadow-lg"
-                   : "text-gray-800 hover:text-orange-600 font-medium text-base"
+                   ? "font-bold text-xl drop-shadow-lg"
+                   : "hover:opacity-80 font-medium text-base"
                }
              `}
             title={item.project.name} // Tooltip avec le titre complet
