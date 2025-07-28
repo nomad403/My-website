@@ -146,7 +146,7 @@ export default function HomePage() {
       <div className="relative w-full min-h-screen">
         {/* Current Page Content */}
         <div
-          className={`page-content absolute inset-0 overflow-y-auto max-h-screen ${
+          className={`page-content absolute inset-0 overflow-y-auto max-h-screen pointer-events-none ${
             isTransitioning && slideDirection ? `slide-out-${slideDirection}` : ""
           }`}
         >
