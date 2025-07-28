@@ -510,8 +510,8 @@ body {
   right: 0;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
   color: white;
-  padding: 10px;
-  border-radius: 0 0 8px 8px;
+  padding: 12px;
+  border-radius: 0 0 12px 12px;
   opacity: 0;
   transition: opacity 0.3s;
 }
