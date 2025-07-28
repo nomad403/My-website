@@ -534,6 +534,7 @@ body {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  aspect-ratio: 16 / 9;
 }
 
 .carousel-layout {
