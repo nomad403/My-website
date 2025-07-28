@@ -77,8 +77,8 @@ export default function SphereAlignedProjectList({
       const yOffset = (index - centerIndex) * itemHeight
       const y = window.innerHeight / 2 + yOffset
 
-             // Position X fixe à gauche
-       const x = 280 // 280px du bord gauche
+      // Position X fixe à gauche
+      const x = 280 // 280px du bord gauche
 
       // Positions pour les animations slide
       const slideUpY = y - slideOffset
@@ -109,19 +109,17 @@ export default function SphereAlignedProjectList({
   const projectPositions = createProjectPositions()
 
   return (
-              <div
-       ref={containerRef}
-       className="fixed inset-0 z-[100]"
-       onWheel={handleWheel}
-       style={{ pointerEvents: 'none' }}
-     >
-       {/* Zone spécifique cliquable pour le menu */}
-       <div 
-         className="absolute left-0 top-0 w-[400px] h-full z-10"
-         style={{ pointerEvents: 'auto' }}
-       />
-       
-       <AnimatePresence mode="wait">
+    // NOUVELLE APPROCHE : Conteneur simple avec zone cliquable délimitée
+    <div
+      ref={containerRef}
+      className="absolute left-0 top-0 w-[400px] h-full z-[999]"
+      onWheel={handleWheel}
+      style={{ 
+        pointerEvents: 'auto',
+        backgroundColor: 'rgba(0, 255, 0, 0.1)' // Zone verte temporaire pour voir la zone cliquable
+      }}
+    >
+      <AnimatePresence mode="wait">
         {projectPositions.map((item, index) => (
           <motion.div
             key={index} // Unique key for position in carousel
@@ -150,33 +148,33 @@ export default function SphereAlignedProjectList({
               scale: { duration: 0.5 },
             }}
             onAnimationComplete={() => setSlideDirection(null)}
-                                      className={`
-               absolute pointer-events-auto cursor-pointer select-none
-               font-jetbrains uppercase tracking-wider text-left
-               transition-all duration-300 ease-out z-[110]
-               bg-blue-500/50 px-4 py-2 rounded
-               ${
-                 item.isSelected
-                   ? "text-white font-bold text-xl drop-shadow-lg"
-                   : "text-white hover:text-yellow-300 font-medium text-base"
-               }
-             `}
-                         style={{
-               transformOrigin: "left center",
-               transform: "translateX(0%)", // Align left edge of text
-               textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
-               whiteSpace: "nowrap",
-             }}
-                         onClick={(e) => {
-               alert(`Clic sur ${item.project.name}!`)
-               e.stopPropagation()
-               const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
-               const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
-               setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
-               onSelect(item.globalIndex)
-             }}
+            className={`
+              absolute cursor-pointer select-none
+              font-jetbrains uppercase tracking-wider text-left
+              transition-all duration-300 ease-out
+              bg-blue-500/80 px-4 py-2 rounded
+              ${
+                item.isSelected
+                  ? "text-white font-bold text-xl drop-shadow-lg"
+                  : "text-white hover:text-yellow-300 font-medium text-base"
+              }
+            `}
+            style={{
+              transformOrigin: "left center",
+              transform: "translateX(0%)", // Align left edge of text
+              textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
+              whiteSpace: "nowrap",
+            }}
+            onClick={(e) => {
+              alert(`CLIC DÉTECTÉ : ${item.project.name}!`)
+              e.stopPropagation()
+              const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
+              const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
+              setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
+              onSelect(item.globalIndex)
+            }}
             whileHover={{
-              scale: item.scale * 1.05,
+              scale: item.scale * 1.1,
               transition: { duration: 0.2 },
             }}
             whileTap={{
@@ -189,7 +187,7 @@ export default function SphereAlignedProjectList({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                                 className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
+                className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
               />
             )}
           </motion.div>
