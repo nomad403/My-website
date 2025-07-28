@@ -144,16 +144,16 @@ export default function SphereAlignedProjectList({
               scale: { duration: 0.5 },
             }}
             onAnimationComplete={() => setSlideDirection(null)}
-                         className={`
+                                      className={`
                absolute pointer-events-auto cursor-pointer select-none
                font-jetbrains uppercase tracking-wider text-left
-               transition-all duration-300 ease-out
-              ${
-                item.isSelected
-                  ? "text-orange-500 font-bold text-xl drop-shadow-lg"
-                  : "text-gray-800 hover:text-orange-600 font-medium text-base"
-              }
-            `}
+               transition-all duration-300 ease-out z-10
+               ${
+                 item.isSelected
+                   ? "text-orange-500 font-bold text-xl drop-shadow-lg"
+                   : "text-gray-800 hover:text-orange-600 font-medium text-base"
+               }
+             `}
                          style={{
                transformOrigin: "left center",
                transform: "translateX(0%)", // Align left edge of text
