@@ -100,28 +100,37 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
 
   // Anime vers le projet sélectionné
   const animateToProject = (index: number) => {
+    if (!carrouselRef.current) return;
+    
     const targetAngle = calculateTargetRotation(index);
     setTargetRotation(targetAngle);
     setIsAnimatingToTarget(true);
     
-    // Animation progressive vers l'angle cible
-    const animateStep = () => {
-      setLastMoveTo(prev => {
-        const diff = targetAngle - prev;
-        
-        // Si on est proche de la cible, on s'arrête
-        if (Math.abs(diff) < 0.5) {
-          setIsAnimatingToTarget(false);
-          return targetAngle;
-        }
-        
-        // Sinon on continue l'animation
-        return prev + diff * 0.1;
-      });
-    };
+    let currentAngle = lastMoveTo;
     
+    // Animation progressive vers l'angle cible
     const animate = () => {
-      animateStep();
+      const diff = targetAngle - currentAngle;
+      
+      // Si on est proche de la cible, on s'arrête
+      if (Math.abs(diff) < 0.5) {
+        setIsAnimatingToTarget(false);
+        setLastMoveTo(targetAngle);
+        setMoveTo(targetAngle);
+        if (carrouselRef.current) {
+          carrouselRef.current.style.setProperty("--rotatey", targetAngle + "deg");
+        }
+        return;
+      }
+      
+      // Sinon on continue l'animation
+      currentAngle += diff * 0.1;
+      setLastMoveTo(currentAngle);
+      
+      if (carrouselRef.current) {
+        carrouselRef.current.style.setProperty("--rotatey", currentAngle + "deg");
+      }
+      
       if (isAnimatingToTarget) {
         requestAnimationFrame(animate);
       }
