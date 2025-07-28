@@ -529,24 +529,27 @@ body {
 
 @media screen and (min-width: 576px) {
   .container-carrousel {
-    --widthItem: 400px;
-    --heightItem: 250px;
-    perspective: 1400px;
+    --widthItem: 250px;
+    --heightItem: 160px;
+    width: calc(var(--widthItem) * 3.5);
+    perspective: 1200px;
   }
 }
 
 @media screen and (min-width: 768px) {
   .container-carrousel {
-    --widthItem: 500px;
-    --heightItem: 315px;
-    perspective: 1600px;
+    --widthItem: 300px;
+    --heightItem: 190px;
+    width: calc(var(--widthItem) * 4);
+    perspective: 1400px;
   }
 }
 
 @media screen and (min-width: 1024px) {
   .container-carrousel {
-    --widthItem: 600px;
-    --heightItem: 380px;
-    perspective: 1800px;
+    --widthItem: 350px;
+    --heightItem: 220px;
+    width: calc(var(--widthItem) * 4.5);
+    perspective: 1600px;
   }
 }
