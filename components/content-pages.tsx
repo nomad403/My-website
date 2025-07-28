@@ -339,7 +339,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                          onClick={() => setSelectedImage((prev) => 
                            prev < projectList[selected].images.length - 1 ? prev + 1 : 0
                          )}
-                         className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
+                         className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/50 text-white p-2 transition-all duration-200"
                        >
                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
