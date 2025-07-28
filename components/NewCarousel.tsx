@@ -122,6 +122,7 @@ const NewCarousel: React.FC<NewCarouselProps> = ({ items, selectedIndex, onItemC
           onClick={() => handleItemClick(index)}
           style={{
             '--active': index === currentIndex ? '1' : '0',
+            '--offset': '0', // Sera mis à jour par updateCarousel
             '--zIndex': items.length - Math.abs(index - currentIndex),
             '--items': items.length,
           } as React.CSSProperties}
