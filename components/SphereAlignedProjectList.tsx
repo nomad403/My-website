@@ -118,7 +118,10 @@ export default function SphereAlignedProjectList({
        {/* Zone spécifique cliquable pour le menu */}
        <div 
          className="absolute left-0 top-0 w-[400px] h-full z-10"
-         style={{ pointerEvents: 'auto' }}
+         style={{ 
+           pointerEvents: 'auto',
+           backgroundColor: 'rgba(255, 0, 0, 0.1)' // Zone rouge temporaire pour débogage
+         }}
        />
        
        <AnimatePresence mode="wait">
