@@ -551,12 +551,10 @@ body {
   position: absolute;
   z-index: 1;
   top: 0;
-  left: 90px;
-  width: 10px;
+  right: 20px;
+  width: 2px;
   height: 100%;
-  border: 1px solid #fff;
-  border-top: none;
-  border-bottom: none;
+  background: #fff;
   opacity: .15;
 }
 
