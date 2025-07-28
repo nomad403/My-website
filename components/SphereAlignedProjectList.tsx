@@ -144,10 +144,10 @@ export default function SphereAlignedProjectList({
               scale: { duration: 0.5 },
             }}
             onAnimationComplete={() => setSlideDirection(null)}
-            className={`
-              absolute pointer-events-auto cursor-pointer select-none
-              font-jetbrains uppercase tracking-wider text-right
-              transition-all duration-300 ease-out
+                         className={`
+               absolute pointer-events-auto cursor-pointer select-none
+               font-jetbrains uppercase tracking-wider text-left
+               transition-all duration-300 ease-out
               ${
                 item.isSelected
                   ? "text-orange-500 font-bold text-xl drop-shadow-lg"
