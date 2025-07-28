@@ -366,7 +366,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
                     <h3 className="font-kode text-xl text-orange-500 mb-4 tracking-wide">
                       {projectList[selected].name}
                     </h3>
-                                         <p className="font-jetbrains text-sm text-gray-700 leading-relaxed mb-6">
+                                         <p className="font-jetbrains text-sm text-gray-900 leading-relaxed mb-6">
                        {projectList[selected].description}
                      </p>
                   </motion.div>
