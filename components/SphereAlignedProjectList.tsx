@@ -161,7 +161,6 @@ export default function SphereAlignedProjectList({
                whiteSpace: "nowrap",
              }}
                          onClick={(e) => {
-               alert(`CLIC FONCTIONNE : ${item.project.name}!`)
                e.stopPropagation()
                const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
                const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
