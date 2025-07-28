@@ -153,7 +153,7 @@ export default function SphereAlignedProjectList({
                                       className={`
                absolute pointer-events-auto cursor-pointer select-none
                font-jetbrains uppercase tracking-wider text-left
-               transition-all duration-300 ease-out z-10
+               transition-all duration-300 ease-out z-[110]
                ${
                  item.isSelected
                    ? "text-orange-500 font-bold text-xl drop-shadow-lg"
