@@ -466,8 +466,8 @@ body {
   --x: calc(var(--offset) * 80px);
   --y: calc(var(--offset) * 20px);
   --rot: calc(var(--offset) * 15deg);
-  --scale: calc(1 - abs(var(--offset)) * 0.1);
-  --opacity: calc(1 - abs(var(--offset)) * 0.2);
+  --scale: calc(1 - var(--offset) * var(--offset) * 0.01);
+  --opacity: calc(1 - var(--offset) * var(--offset) * 0.05);
   overflow: hidden;
   position: absolute;
   z-index: calc(var(--items) - abs(var(--offset)));
