@@ -13,7 +13,7 @@ export default function SphereAlignedProjectList({
   projects,
   selected,
   onSelect,
-  maxVisible = 5, // Réduit à 5 éléments max
+  maxVisible = 5,
 }: SphereAlignedProjectListProps) {
   const [firstVisible, setFirstVisible] = useState(0)
   const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null)
@@ -21,10 +21,9 @@ export default function SphereAlignedProjectList({
 
   // Auto-centrage : l'élément sélectionné glisse toujours au centre
   useEffect(() => {
-    const centerIndex = Math.floor(maxVisible / 2) // Position centrale (ex: index 2 pour 5 éléments)
+    const centerIndex = Math.floor(maxVisible / 2)
     let newFirstVisible = selected - centerIndex
 
-    // Ajustement pour la boucle infinie
     while (newFirstVisible < 0) {
       newFirstVisible += projects.length
     }
@@ -39,19 +38,17 @@ export default function SphereAlignedProjectList({
     e.stopPropagation()
 
     if (e.deltaY > 0) {
-      // Scroll vers le bas = projet suivant (slide up)
       setSlideDirection('up')
       const nextSelected = (selected + 1) % projects.length
       onSelect(nextSelected)
     } else if (e.deltaY < 0) {
-      // Scroll vers le haut = projet précédent (slide down)
       setSlideDirection('down')
       const prevSelected = (selected - 1 + projects.length) % projects.length
       onSelect(prevSelected)
     }
   }
 
-  // Création d'une liste circulaire pour le carousel infini
+  // Création d'une liste circulaire simple
   const createCircularProjects = () => {
     const result = []
     for (let i = 0; i < maxVisible; i++) {
@@ -66,133 +63,51 @@ export default function SphereAlignedProjectList({
 
   const visibleProjects = createCircularProjects()
 
-  // Calcul des positions en colonne verticale simple
-  const createProjectPositions = () => {
-    const centerIndex = Math.floor(maxVisible / 2)
-    const itemHeight = 60 // Espacement vertical entre les éléments
-    const slideOffset = itemHeight * 0.8 // Décalage pour l'animation
-
-    return visibleProjects.map((project, index) => {
-      // Position Y centrée autour du milieu de l'écran
-      const yOffset = (index - centerIndex) * itemHeight
-      const y = window.innerHeight / 2 + yOffset
-
-      // Position X fixe à gauche
-      const x = 280 // 280px du bord gauche
-
-      // Positions pour les animations slide
-      const slideUpY = y - slideOffset
-      const slideDownY = y + slideOffset
-
-      // Calcul de l'opacité et de l'échelle
-      const distanceFromCenter = Math.abs(index - centerIndex)
-      const maxDistance = Math.floor(maxVisible / 2)
-      const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7 // De 1.0 à 0.3
-      const scale = 1 - (distanceFromCenter / maxDistance) * 0.3 // De 1.0 à 0.7
-
-      const isSelected = project.originalIndex === selected
-
-      return {
-        project,
-        x,
-        y,
-        slideUpY,
-        slideDownY,
-        opacity: Math.max(opacity, 0.3),
-        scale: Math.max(scale, 0.7),
-        isSelected,
-        globalIndex: project.originalIndex
-      }
-    })
-  }
-
-  const projectPositions = createProjectPositions()
-
   return (
-    // NOUVELLE APPROCHE : Conteneur simple avec zone cliquable délimitée
+    // APPROCHE ULTRA-SIMPLE : Container fixe à gauche avec flex column
     <div
       ref={containerRef}
-      className="absolute left-0 top-0 w-[400px] h-full z-[999]"
+      className="fixed left-8 top-1/2 -translate-y-1/2 z-[999] w-80"
       onWheel={handleWheel}
       style={{ 
         pointerEvents: 'auto',
-        backgroundColor: 'rgba(0, 255, 0, 0.1)' // Zone verte temporaire pour voir la zone cliquable
+        backgroundColor: 'rgba(0, 255, 0, 0.2)' // Zone verte bien visible
       }}
     >
-             <AnimatePresence>
-        {projectPositions.map((item, index) => (
-          <motion.div
-            key={index} // Unique key for position in carousel
-            initial={{
-              opacity: 0,
-              scale: 0.8,
-              x: item.x,
-              y: slideDirection === 'up' ? item.slideDownY : slideDirection === 'down' ? item.slideUpY : item.y,
-            }}
-            animate={{
-              opacity: item.opacity,
-              scale: item.scale,
-              x: item.x,
-              y: item.y,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.8,
-              x: item.x,
-              y: slideDirection === 'up' ? item.slideUpY : slideDirection === 'down' ? item.slideDownY : item.y,
-            }}
-            transition={{
-              duration: 0.6,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              opacity: { duration: 0.4 },
-              scale: { duration: 0.5 },
-            }}
-            onAnimationComplete={() => setSlideDirection(null)}
-            className={`
-              absolute cursor-pointer select-none
-              font-jetbrains uppercase tracking-wider text-left
-              transition-all duration-300 ease-out
-              bg-blue-500/80 px-4 py-2 rounded
-              ${
-                item.isSelected
-                  ? "text-white font-bold text-xl drop-shadow-lg"
-                  : "text-white hover:text-yellow-300 font-medium text-base"
-              }
-            `}
-            style={{
-              transformOrigin: "left center",
-              transform: "translateX(0%)", // Align left edge of text
-              textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
-              whiteSpace: "nowrap",
-            }}
-            onClick={(e) => {
-              alert(`CLIC DÉTECTÉ : ${item.project.name}!`)
-              e.stopPropagation()
-              const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
-              const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
-              setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
-              onSelect(item.globalIndex)
-            }}
-            whileHover={{
-              scale: item.scale * 1.1,
-              transition: { duration: 0.2 },
-            }}
-            whileTap={{
-              scale: item.scale * 0.95,
-              transition: { duration: 0.1 },
-            }}
-          >
-            {item.project.name}
-            {item.isSelected && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
-              />
-            )}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      <div className="flex flex-col space-y-4">
+        {visibleProjects.map((project, index) => {
+          const centerIndex = Math.floor(maxVisible / 2)
+          const distanceFromCenter = Math.abs(index - centerIndex)
+          const isSelected = project.originalIndex === selected
+          const opacity = isSelected ? 1 : 0.6 - (distanceFromCenter * 0.1)
+          
+          return (
+            <div
+              key={`${project.originalIndex}-${index}`}
+              className={`
+                cursor-pointer select-none font-jetbrains uppercase tracking-wider
+                px-6 py-3 rounded-lg transition-all duration-300
+                bg-blue-500/90 text-white
+                ${isSelected ? 'bg-orange-500/90 font-bold text-lg' : 'hover:bg-blue-400/90'}
+              `}
+              style={{ opacity }}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                alert(`SIMPLE CLIC : ${project.name}!`)
+                onSelect(project.originalIndex)
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span>{project.name}</span>
+                {isSelected && (
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 } 
