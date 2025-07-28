@@ -463,8 +463,8 @@ body {
   --items: 10;
   --width: clamp(200px, 35vw, 400px);
   --height: calc(var(--width) / 16 * 9);
-  --x: calc(var(--active) * 600%);
-  --y: calc(var(--active) * 150%);
+  --x: calc(var(--active) * 400%);
+  --y: calc(var(--active) * 100%);
   --rot: calc(var(--active) * 120deg);
   --opacity: calc(var(--zIndex) / var(--items) * 3 - 2);
   overflow: hidden;
