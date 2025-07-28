@@ -146,6 +146,7 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
   const getPosX = (x: number) => {
     // Annule l'animation automatique si l'utilisateur interagit
     setIsAnimatingToTarget(false);
+    isAnimatingRef.current = false;
     
     setCurrentMousePos(x);
     setMoveTo(prev => currentMousePos < lastMousePos ? prev - 2 : prev + 2);
