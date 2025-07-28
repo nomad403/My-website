@@ -413,8 +413,8 @@ export default function WaterSphereBackground({
     }
 
     function onMouseClick(event: MouseEvent) {
-          // Exclure la zone du menu (360px de gauche) pour éviter de bloquer les clics
-    if (event.clientX < 360) {
+          // Exclure la zone du menu (320px de gauche) pour éviter de bloquer les clics
+    if (event.clientX < 320) {
         return // Laisser le menu gérer ce clic
       }
       
