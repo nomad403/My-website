@@ -240,7 +240,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
              />
 
                            {/* Carrousel cylindrique 3D au centre */}
-              <div className="absolute left-[55%] top-1/2 transform -translate-x-1/2 -translate-y-1/3 pointer-events-auto z-10">
+              <div className="absolute left-[56%] top-[45%] transform -translate-x-1/2 -translate-y-1/3 pointer-events-auto z-10">
                <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
                  <CylinderCarousel
                    items={projectList}
