@@ -16,7 +16,7 @@ export default function SphereAlignedProjectList({
   maxVisible = 5, // Réduit à 5 éléments max
 }: SphereAlignedProjectListProps) {
   const [firstVisible, setFirstVisible] = useState(0)
-  const [slideDirection, setSlideDirection] = useState<'up' | 'down' | null>(null)
+
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Fonction pour tronquer les titres trop longs
@@ -45,13 +45,11 @@ export default function SphereAlignedProjectList({
     e.stopPropagation()
 
     if (e.deltaY > 0) {
-      // Scroll vers le bas = projet suivant (slide up)
-      setSlideDirection('up')
+      // Scroll vers le bas = projet suivant (PLUS de slide)
       const nextSelected = (selected + 1) % projects.length
       onSelect(nextSelected)
     } else if (e.deltaY < 0) {
-      // Scroll vers le haut = projet précédent (slide down)
-      setSlideDirection('down')
+      // Scroll vers le haut = projet précédent (PLUS de slide)
       const prevSelected = (selected - 1 + projects.length) % projects.length
       onSelect(prevSelected)
     }
@@ -76,7 +74,7 @@ export default function SphereAlignedProjectList({
   const createProjectPositions = () => {
     const centerIndex = Math.floor(maxVisible / 2)
     const itemHeight = 70 // Espacement vertical entre les éléments (augmenté)
-    const slideOffset = itemHeight * 0.8 // Décalage pour l'animation
+    // Plus de slideOffset - supprimé
 
     return visibleProjects.map((project, index) => {
       // Position Y centrée autour du milieu du conteneur (400px de hauteur)
@@ -86,9 +84,7 @@ export default function SphereAlignedProjectList({
              // Position X fixe à gauche
        const x = 180 // Position relative au conteneur plus étroit
 
-      // Positions pour les animations slide
-      const slideUpY = y - slideOffset
-      const slideDownY = y + slideOffset
+      // Plus de slide positions - supprimées
 
       // Calcul de l'opacité et de l'échelle
       const distanceFromCenter = Math.abs(index - centerIndex)
@@ -102,8 +98,7 @@ export default function SphereAlignedProjectList({
         project,
         x,
         y,
-        slideUpY,
-        slideDownY,
+
         opacity: Math.max(opacity, 0.3),
         scale: Math.max(scale, 0.7),
         isSelected,
@@ -121,7 +116,7 @@ export default function SphereAlignedProjectList({
        onWheel={handleWheel}
        style={{ pointerEvents: 'auto' }}
             >        
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync">
         {projectPositions.map((item, index) => (
           <motion.div
             key={index} // Unique key for position in carousel
@@ -129,7 +124,7 @@ export default function SphereAlignedProjectList({
               opacity: 0,
               scale: 0.8,
               x: item.x,
-              y: slideDirection === 'up' ? item.slideDownY : slideDirection === 'down' ? item.slideUpY : item.y,
+              y: item.y, // FIXE - plus de slideDirection
             }}
             animate={{
               opacity: item.opacity,
@@ -141,7 +136,7 @@ export default function SphereAlignedProjectList({
               opacity: 0,
               scale: 0.8,
               x: item.x,
-              y: slideDirection === 'up' ? item.slideUpY : slideDirection === 'down' ? item.slideDownY : item.y,
+              y: item.y, // FIXE - plus de slideDirection
             }}
             transition={{
               duration: 0.6,
@@ -149,7 +144,7 @@ export default function SphereAlignedProjectList({
               opacity: { duration: 0.4 },
               scale: { duration: 0.5 },
             }}
-            onAnimationComplete={() => setSlideDirection(null)}
+            onAnimationComplete={() => {}}
                                       className={`
                absolute pointer-events-auto cursor-pointer select-none
                font-jetbrains uppercase tracking-wider text-left
@@ -172,10 +167,8 @@ export default function SphereAlignedProjectList({
              }}
                          onClick={(e) => {
                e.stopPropagation()
-               const forwardDistance = (item.globalIndex - selected + projects.length) % projects.length
-               const backwardDistance = (selected - item.globalIndex + projects.length) % projects.length
-               setSlideDirection(forwardDistance <= backwardDistance ? 'up' : 'down')
-               onSelect(item.globalIndex)
+                             // Click direct - PLUS de slide logic
+              onSelect(item.globalIndex)
              }}
             whileHover={{
               scale: item.scale * 1.05,

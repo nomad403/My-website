@@ -1,13 +1,11 @@
 "use client"
 
 import { ArrowLeft } from "lucide-react"
-import LiquidGlass from "./LiquidGlass";
-import LiquidGlassBackground from "./LiquidGlassBackground";
+
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import ShuffleText from "./ShuffleText";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
+import StarField from "./StarField";
 
 interface ContentPagesProps {
   currentPage: string
@@ -91,136 +89,13 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
 
   const getPageContent = () => {
     switch (currentPage) {
-             case "about":
-         return (
-           <div className="max-w-4xl mx-auto mt-32 px-8">
-            <div className="grid grid-cols-12 gap-8">
-              {/* Left side - Main content */}
-              <div className="col-span-8">
-                <div className="space-y-8">
-                  <div className="p-8">
-                    <div className="space-y-2 font-jetbrains text-base text-[#111] leading-relaxed mb-4">
-                      <p>Développeur passionné par les technologies modernes et l'innovation digitale.</p>
-                      <p>Spécialisé dans le développement frontend, mobile et l'intégration d'intelligence artificielle, je crée des expériences utilisateur exceptionnelles et des solutions techniques sur-mesure.</p>
-                      <p>Mon approche combine créativité technique et performance pour donner vie à vos projets les plus ambitieux.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+             
 
-              {/* Right side - Stats/Info */}
-              <div className="col-span-4 space-y-6">
-                <div className="p-6">
-                  <div className="space-y-2 font-jetbrains text-base text-[#111] leading-relaxed mb-4">
-                    <p>5+ années dans le développement web et mobile avec une expertise en technologies modernes</p>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-2 font-jetbrains text-base text-[#111] leading-relaxed mb-4">
-                    <p>Méthodologie agile, code propre et focus sur l'expérience utilisateur</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-
-                 case "skills":
-           return (
-             <div className="max-w-6xl mx-auto mt-32 px-8">
-              <div className="grid grid-cols-12 gap-8">
-                <div className="col-span-12">
-                  <div className="wrapper">
-                    <div className="grid grid-cols-2 gap-12">
-                      {/* Bloc Frontend */}
-                      <div className="liquidGlass-wrapper menu">
-                        <div className="liquidGlass-effect"></div>
-                        <div className="liquidGlass-tint"></div>
-                        <div className="liquidGlass-shine"></div>
-                        <div className="liquidGlass-text">
-                          <div className="flex items-center mb-6">
-                            <div className="font-kode text-base text-blue-600 mr-4 hud-text">{'</>'}</div>
-                            <div className="font-kode text-base">Frontend</div>
-                          </div>
-                          <ul className="space-y-2 font-jetbrains text-sm text-[#111] leading-relaxed list-disc pl-6 mb-4">
-                            <li>React / Next.js</li>
-                            <li>TypeScript / JavaScript</li>
-                            <li>Tailwind CSS</li>
-                            <li>Three.js / WebGL</li>
-                            <li>Animations & Interactions</li>
-                          </ul>
-                        </div>
-                      </div>
-                      {/* Bloc Mobile */}
-                      <div className="liquidGlass-wrapper menu">
-                        <div className="liquidGlass-effect"></div>
-                        <div className="liquidGlass-tint"></div>
-                        <div className="liquidGlass-shine"></div>
-                        <div className="liquidGlass-text">
-                          <div className="flex items-center mb-6">
-                            <div className="font-kode text-base text-green-600 mr-4 hud-text">[#]</div>
-                            <div className="font-kode text-base">Mobile</div>
-                          </div>
-                          <ul className="space-y-2 font-jetbrains text-sm text-[#111] leading-relaxed list-disc pl-6 mb-4">
-                            <li>React Native</li>
-                            <li>Flutter</li>
-                            <li>Applications hybrides</li>
-                            <li>Intégration API</li>
-                            <li>Notifications push</li>
-                          </ul>
-                        </div>
-                      </div>
-                      {/* Bloc Intelligence Artificielle */}
-                      <div className="liquidGlass-wrapper menu">
-                        <div className="liquidGlass-effect"></div>
-                        <div className="liquidGlass-tint"></div>
-                        <div className="liquidGlass-shine"></div>
-                        <div className="liquidGlass-text">
-                          <div className="flex items-center mb-6">
-                            <div className="font-kode text-base text-purple-600 mr-4 hud-text">[AI]</div>
-                            <div className="font-kode text-base">Intelligence Artificielle</div>
-                          </div>
-                          <ul className="space-y-2 font-jetbrains text-sm text-[#111] leading-relaxed list-disc pl-6 mb-4">
-                            <li>Intégration OpenAI GPT</li>
-                            <li>Vision par ordinateur</li>
-                            <li>Chatbots intelligents</li>
-                            <li>Outils d'automatisation</li>
-                            <li>Machine Learning</li>
-                          </ul>
-                        </div>
-                      </div>
-                      {/* Bloc Tools */}
-                      <div className="liquidGlass-wrapper menu">
-                        <div className="liquidGlass-effect"></div>
-                        <div className="liquidGlass-tint"></div>
-                        <div className="liquidGlass-shine"></div>
-                        <div className="liquidGlass-text">
-                          <div className="flex items-center mb-6">
-                            <div className="font-kode text-base text-yellow-600 mr-4 hud-text">{'{}'}</div>
-                            <div className="font-kode text-base">Tools</div>
-                          </div>
-                          <ul className="space-y-2 font-jetbrains text-sm text-[#111] leading-relaxed list-disc pl-6 mb-4">
-                            <li>Git / GitHub</li>
-                            <li>Docker & CI/CD</li>
-                            <li>Méthodes Agiles</li>
-                            <li>Tests automatisés</li>
-                            <li>Optimisation performance</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* Right sidebar */}
-                <div className="col-span-4">
-                  <div className="p-6">
-                    <div className="font-kode text-lg">EXPERTISE LEVEL</div>
-                    <div className="space-y-4">
-                      {/* ...barres de compétences... */}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                                  case "skills":
+          return (
+            <div className="relative w-full h-screen overflow-hidden">
+              {/* Ciel étoilé interactif avec mouse tracking - chargement optimisé */}
+              <StarField />
             </div>
           )
           
@@ -310,8 +185,7 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
     }
   }
 
-  // Détermine la direction du slide
-  const slideDirection = selected > prevSelected ? 1 : -1;
+  // Plus de slide - supprimé
 
      return (
      <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">

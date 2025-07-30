@@ -29,4 +29,4 @@ export default function ShuffleText({ text, duration = 700, className = "" }: Sh
   }, [text, duration]);
 
   return <span className={className}>{display}</span>;
-} 
+}

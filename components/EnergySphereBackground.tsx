@@ -561,14 +561,17 @@ export default function WaterSphereBackground({
     <div
       ref={containerRef}
       style={{
-        position: "fixed",
-        inset: 0,
+        position: "absolute",
+        // Centré dans le container élargi (500vw x 500vh)
+        top: '200vh', // = -200vh du container + 200vh pour centrer
+        left: '200vw', // = -200vw du container + 200vw pour centrer  
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         width: "100vw",
         height: "100vh",
         zIndex: 0,
+        background: 'transparent', // CRUCIAL: fond transparent pour éviter démarcations
         pointerEvents: "auto", // CRUCIAL: permet les interactions même en arrière-plan
         transform: `translateY(${translateY}px) scale(${scale})`,
         transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
