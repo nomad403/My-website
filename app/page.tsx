@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import ParticleText from "@/components/particle-text"
 import ContentPages from "@/components/content-pages"
 import EnergySphereBackground from "@/components/EnergySphereBackground"
@@ -78,6 +79,33 @@ export default function HomePage() {
           setContentVisible(true)
         }, 800) // Délai pour laisser la sphère descendre complètement
       }, 300)
+    } else if (currentPage === "skills" && newPage !== "skills") {
+      // Logique spéciale pour les transitions depuis specialist
+      setIsSphereDescending(true)
+      
+      // Délai pour laisser le fade se terminer (comme dans projects to specialist)
+      setTimeout(() => {
+        // D'abord déplacer la sphère vers le haut
+        setSphereTranslateY(newConfig.sphere.translateY)
+        setSphereScale(newConfig.sphere.scale)
+        
+        // Changer de page IMMÉDIATEMENT pour permettre le fade AnimatePresence
+        setCurrentPage(newPage)
+        
+        // Gérer la visibilité selon la page
+        if (newPage === "home") {
+          setHomeVisible(true)
+          setContentVisible(false)
+        } else {
+          setHomeVisible(false)
+          setContentVisible(true)
+        }
+        
+        // Une fois la sphère montée, finir la transition
+        setTimeout(() => {
+          setIsSphereDescending(false)
+        }, 800) // Délai pour laisser la sphère monter complètement
+      }, 200) // Délai réduit pour commencer pendant le fade
     } else {
       // Transitions normales pour les autres pages
       setIsSphereDescending(false)
@@ -144,29 +172,41 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className="font-kode text-black text-base font-medium tracking-[0.15em] uppercase">NOMAD403</div>
-          <div className="hidden md:flex space-x-8 font-jetbrains text-black text-sm font-light">
+          <div className={`font-kode text-base font-medium tracking-[0.15em] uppercase transition-colors duration-300 ${
+            mode === 'night' ? 'text-white' : 'text-black'
+          }`}>
+            NOMAD403
+          </div>
+          <div className="hidden md:flex space-x-8 font-jetbrains text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}
-              className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""}`}
+              className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""} ${
+                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+              }`}
             >
               HOME
             </button>
             <button
               onClick={() => handlePageChange("projects")}
-              className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""}`}
+              className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""} ${
+                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+              }`}
             >
               PROJECTS
             </button>
             <button
               onClick={() => handlePageChange("skills")}
-              className={`nav-link transition-all duration-300 ${currentPage === "skills" ? "active" : ""}`}
+              className={`nav-link transition-all duration-300 ${currentPage === "skills" ? "active" : ""} ${
+                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+              }`}
             >
               SPECIALIST
             </button>
             <button
               onClick={() => handlePageChange("contact")}
-              className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""}`}
+              className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""} ${
+                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+              }`}
             >
               CONTACT
             </button>
@@ -178,20 +218,22 @@ export default function HomePage() {
       <div className="relative w-full min-h-screen z-20">
         
         {/* Particle Text - visible seulement sur home */}
-        <div 
-          className={`absolute inset-0 z-10 transition-opacity duration-1000 ease-in-out ${
-            isPreloaded && homeVisible ? "opacity-100" : "opacity-0"
-          }`}
+        <motion.div 
+          className="absolute inset-0 z-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isPreloaded && homeVisible ? 1 : 0 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{ pointerEvents: homeVisible ? "auto" : "none" }}
         >
           <ParticleText />
-        </div>
+        </motion.div>
 
         {/* Home Content - visible seulement sur home */}
-        <div 
-          className={`absolute inset-0 z-20 transition-opacity duration-1000 ease-in-out ${
-            isPreloaded && homeVisible ? "opacity-100" : "opacity-0"
-          }`}
+        <motion.div 
+          className="absolute inset-0 z-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isPreloaded && homeVisible ? 1 : 0 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{ pointerEvents: homeVisible ? "auto" : "none" }}
         >
           <div className="flex flex-col justify-between p-8 max-w-7xl mx-auto h-full pointer-events-none">
@@ -220,19 +262,32 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Content Pages - visible sur projects, skills, contact */}
-        <div 
-          className={`absolute inset-0 z-10 transition-opacity duration-1000 ease-in-out ${
-            isPreloaded && contentVisible ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ pointerEvents: contentVisible ? "auto" : "none" }}
-        >
-          <div className="relative w-full h-full">
-            <ContentPages currentPage={currentPage} onBack={() => handlePageChange("home")} />
-          </div>
-        </div>
+        <AnimatePresence mode="wait">
+          {contentVisible && (
+            <motion.div 
+              key={currentPage}
+              className="absolute inset-0 z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              style={{ 
+                pointerEvents: contentVisible ? "auto" : "none"
+              }}
+            >
+              <div className="relative w-full h-full">
+                <ContentPages 
+                  currentPage={currentPage} 
+                  onBack={() => handlePageChange("home")} 
+                  isVisible={contentVisible}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

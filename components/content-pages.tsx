@@ -2,7 +2,8 @@
 
 import { ArrowLeft } from "lucide-react"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
 import StarField from "./StarField";
@@ -10,6 +11,7 @@ import StarField from "./StarField";
 interface ContentPagesProps {
   currentPage: string
   onBack: () => void
+  isVisible?: boolean
 }
 
 const projectList = [
@@ -81,11 +83,54 @@ const projectList = [
   },
 ];
 
-export default function ContentPages({ currentPage, onBack }: ContentPagesProps) {
+export default function ContentPages({ currentPage, onBack, isVisible = true }: ContentPagesProps) {
   const [selected, setSelected] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0); // Nouvel état pour la navigation entre images
   // Ajoute un état pour mémoriser l'index précédent
   const [prevSelected, setPrevSelected] = useState(0);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
+
+  // Fonction pour créer l'effet shuffle
+  const shuffleText = (text: string) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    return text.split('').map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+  };
+
+  // Effet pour gérer le shuffle lors de la disparition
+  useEffect(() => {
+    if (!isVisible && currentPage === "skills") {
+      setIsShuffling(true);
+      
+      // Créer des versions shuffle de tous les textes
+      const texts = [
+        "Développeur polyvalent spécialisé dans les technologies modernes.",
+        "Expertise en frontend, mobile, IA et design 3D.",
+        "Approche centrée sur l'expérience utilisateur et l'innovation technique.",
+        "Frontend", "Backend / API", "Mobile", "IA & Automation", "3D & Design", "DevOps / Déploiement",
+        "React.js", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "Three.js", "React Three Fiber", "Radix UI",
+        "Node.js", "Express.js", "Firebase", "JSON API",
+        "Kotlin", "Jetpack Compose", "SwiftUI",
+        "Azure OpenAI API", "CrewAI", "LangChain", "Ollama", "Power Automate",
+        "GLSL", "Figma", "Photoshop", "Illustrator", "After Effects",
+        "Vercel", "GitHub"
+      ];
+      
+      const shuffled: {[key: string]: string} = {};
+      texts.forEach(text => {
+        shuffled[text] = shuffleText(text);
+      });
+      setShuffledTexts(shuffled);
+      
+      // Faire disparaître après le shuffle
+      setTimeout(() => {
+        setIsShuffling(false);
+      }, 500);
+    } else {
+      setIsShuffling(false);
+      setShuffledTexts({});
+    }
+  }, [isVisible, currentPage]);
 
   const getPageContent = () => {
     switch (currentPage) {
@@ -96,36 +141,160 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
             <div className="relative w-full h-screen overflow-hidden">
               {/* Ciel étoilé interactif avec mouse tracking - chargement optimisé */}
               <StarField />
+              
+              {/* Contenu principal */}
+              <div className="relative z-10 w-full h-full flex items-start">
+                <div className="max-w-7xl mx-auto w-full pt-40 pl-0">
+                  <div className="grid grid-cols-12 gap-8">
+                    
+                    {/* Colonne Description */}
+                    <div className="col-span-5 pr-8">
+                      <div className="text-white">
+                        <p className="font-jetbrains text-xl leading-relaxed opacity-90">
+                          Développeur polyvalent spécialisé dans les technologies modernes.
+                          <br /><br />
+                          Expertise en frontend, mobile, IA et design 3D.
+                          <br /><br />
+                          Approche centrée sur l'expérience utilisateur et l'innovation technique.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Colonnes Stacks */}
+                    <div className="col-span-7 pl-16">
+                      <div className="grid grid-cols-3 gap-8 w-full">
+                        
+                        {/* Colonne 1 : Frontend + Backend + Mobile */}
+                        <div className="space-y-8">
+                          {/* Frontend */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["Frontend"] || "Frontend" : "Frontend"}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Next.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">TypeScript</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Tailwind CSS</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Framer Motion</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Three.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React Three Fiber</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Radix UI</div>
+                            </div>
+                          </div>
+                          
+                          {/* Backend / API */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["Backend / API"] || "Backend / API" : "Backend / API"}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Node.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Express.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">JSON API</div>
+                            </div>
+                          </div>
+                          
+                          {/* Mobile */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["Mobile"] || "Mobile" : "Mobile"}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Kotlin</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Jetpack Compose</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Swift</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">SwiftUI</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Colonne 2 : IA + 3D & Design */}
+                        <div className="space-y-8">
+                          {/* IA & Automation */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["IA & Automation"] || "IA & Automation" : "IA & Automation"}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Azure OpenAI API</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">CrewAI</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">LangChain</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Ollama</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Power Automate</div>
+                            </div>
+                          </div>
+                          
+                          {/* 3D & Design */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["3D & Design"] || "3D & Design" : "3D & Design"}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Three.js</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React Three Fiber</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GLSL</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Figma</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Photoshop</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Illustrator</div>
+                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">After Effects</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Colonne 3 : DevOps */}
+                        <div className="space-y-3">
+                          <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
+                          </h3>
+                          <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Vercel</div>
+                            <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GitHub</div>
+                          </div>
+                        </div>
+                        
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
             </div>
           )
           
              case "projects":
          return (
            <div className="relative w-full h-screen overflow-hidden">
-             {/* Menu liste à gauche - repositionné plus au centre */}
-             <SphereAlignedProjectList
-               projects={projectList}
-               selected={selected}
-               onSelect={(idx) => {
-                 setPrevSelected(selected);
-                 setSelected(idx);
-                 setSelectedImage(0);
-               }}
-               maxVisible={5}
-             />
-
-                           {/* Carrousel cylindrique 3D au centre */}
-              <div className="absolute left-[56%] top-[45%] transform -translate-x-1/2 -translate-y-1/3 pointer-events-auto z-10">
-               <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
-                 <CylinderCarousel
-                   items={projectList}
-                   selectedIndex={selected}
-                   onItemChange={(index: number) => {
+             {/* Container aligné comme le header */}
+             <div className="max-w-7xl mx-auto h-full flex items-center gap-16">
+               {/* Liste à gauche */}
+               <div className="min-w-[180px]">
+                 <SphereAlignedProjectList
+                   projects={projectList}
+                   selected={selected}
+                   onSelect={(idx) => {
                      setPrevSelected(selected);
-                     setSelected(index);
+                     setSelected(idx);
                      setSelectedImage(0);
                    }}
+                   maxVisible={5}
                  />
+               </div>
+               {/* Carrousel au centre, prend tout le reste */}
+               <div className="flex-1 flex justify-center items-start">
+                 <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
+                   <CylinderCarousel
+                     items={projectList}
+                     selectedIndex={selected}
+                     onItemChange={(index: number) => {
+                       setPrevSelected(selected);
+                       setSelected(index);
+                       setSelectedImage(0);
+                     }}
+                   />
+                 </div>
                </div>
              </div>
            </div>
@@ -188,12 +357,8 @@ export default function ContentPages({ currentPage, onBack }: ContentPagesProps)
   // Plus de slide - supprimé
 
      return (
-     <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">
-       <div className="w-full h-full">
-        
-
-        {getPageContent()}
-      </div>
+    <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">
+      {getPageContent()}
     </div>
   )
 }

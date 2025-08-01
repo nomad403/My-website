@@ -81,6 +81,27 @@ export default function WaterSphereBackground({
     camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10)
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     
+    // Gérer la perte de contexte WebGL
+    renderer.domElement.addEventListener('webglcontextlost', (event) => {
+      console.warn("WebGL Context Lost in EnergySphereBackground:", event)
+      event.preventDefault()
+      
+      // Arrêter l'animation pendant la récupération
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+        animationId = 0
+      }
+    })
+    
+    renderer.domElement.addEventListener('webglcontextrestored', () => {
+      console.log("WebGL Context Restored in EnergySphereBackground")
+      
+      // Redémarrer l'animation après récupération
+      if (!animationId) {
+        animate()
+      }
+    })
+    
     if (containerRef.current) {
       const { width, height } = containerRef.current.getBoundingClientRect()
       renderer.setSize(width, height)
@@ -539,21 +560,33 @@ export default function WaterSphereBackground({
       addRipple(window.innerWidth / 2, window.innerHeight / 2, 1.5)
     }, 500)
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      cancelAnimationFrame(animationId)
-      if (resizeObserver && containerRef.current) {
-        resizeObserver.unobserve(containerRef.current)
+      if (animationId) {
+        cancelAnimationFrame(animationId)
       }
-      window.removeEventListener("resize", handleResize)
-      window.removeEventListener("mousemove", onMouseMove)
-      window.removeEventListener("click", onMouseClick)
-      window.removeEventListener("touchmove", onTouchMove)
-      window.removeEventListener("touchstart", onTouchStart)
-      if (renderer && containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement)
+      
+      // Nettoyer les textures et matériaux
+      if (material) {
+        material.dispose()
       }
-      renderer.dispose()
+      if (mesh) {
+        mesh.geometry.dispose()
+      }
+      if (renderer) {
+        renderer.dispose()
+      }
+      
+      // Nettoyer les textures d'eau
+      if (waterTexture) {
+        waterTexture.dispose()
+      }
+      
+      // Supprimer les event listeners
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener('webglcontextlost', () => {})
+        renderer.domElement.removeEventListener('webglcontextrestored', () => {})
+      }
     }
   }, [])
 

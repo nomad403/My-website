@@ -1,6 +1,7 @@
 "use client"
 import { useRef, useState, useEffect, type WheelEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useBackground } from "@/app/contexts/BackgroundContext"
 
 interface SphereAlignedProjectListProps {
   projects: { id: number; name: string }[]
@@ -16,8 +17,24 @@ export default function SphereAlignedProjectList({
   maxVisible = 5, // Réduit à 5 éléments max
 }: SphereAlignedProjectListProps) {
   const [firstVisible, setFirstVisible] = useState(0)
+  const { mode } = useBackground()
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Fonction pour déterminer la couleur du texte basée sur la position
+  const getTextColor = (y: number): string => {
+    // Position relative au centre de la liste (200px)
+    const centerY = 200
+    const distanceFromCenter = Math.abs(y - centerY)
+    const maxDistance = 140 // 2 éléments de chaque côté
+    
+    // Plus proche du centre = plus clair (texte noir)
+    // Plus loin du centre = plus sombre (texte blanc)
+    const brightness = 1 - (distanceFromCenter / maxDistance)
+    
+    // Seuil pour déterminer la couleur
+    return brightness > 0.3 ? 'black' : 'white'
+  }
 
   // Fonction pour tronquer les titres trop longs
   const truncateTitle = (title: string, maxLength: number = 15) => {
@@ -73,18 +90,17 @@ export default function SphereAlignedProjectList({
   // Calcul des positions en colonne verticale simple
   const createProjectPositions = () => {
     const centerIndex = Math.floor(maxVisible / 2)
-    const itemHeight = 70 // Espacement vertical entre les éléments (augmenté)
-    // Plus de slideOffset - supprimé
+    const itemHeight = 70 // Espacement vertical entre les éléments
+    const containerHeight = 400 // Hauteur du conteneur
+    const totalListHeight = maxVisible * itemHeight // Hauteur totale de la liste
+    const startY = (containerHeight - totalListHeight) / 2 // Position de départ centrée
 
     return visibleProjects.map((project, index) => {
-      // Position Y centrée autour du milieu du conteneur (400px de hauteur)
-      const yOffset = (index - centerIndex) * itemHeight
-      const y = 200 + yOffset // 200px = milieu du conteneur h-[400px]
+      // Position Y centrée dans le conteneur
+      const y = startY + (index * itemHeight)
 
-             // Position X fixe à gauche
-       const x = 180 // Position relative au conteneur plus étroit
-
-      // Plus de slide positions - supprimées
+      // Position X fixe à gauche (gérée par le flex parent)
+      const x = 0
 
       // Calcul de l'opacité et de l'échelle
       const distanceFromCenter = Math.abs(index - centerIndex)
@@ -98,7 +114,6 @@ export default function SphereAlignedProjectList({
         project,
         x,
         y,
-
         opacity: Math.max(opacity, 0.3),
         scale: Math.max(scale, 0.7),
         isSelected,
@@ -110,86 +125,68 @@ export default function SphereAlignedProjectList({
   const projectPositions = createProjectPositions()
 
   return (
-              <div
-       ref={containerRef}
-       className="absolute left-16 top-[45%] transform -translate-y-1/2 w-[240px] h-[400px] z-[200]"
-       onWheel={handleWheel}
-       style={{ pointerEvents: 'auto' }}
-            >        
-        <AnimatePresence mode="sync">
-        {projectPositions.map((item, index) => (
-          <motion.div
-            key={index} // Unique key for position in carousel
-            initial={{
-              opacity: 0,
-              scale: 0.8,
-              x: item.x,
-              y: item.y, // FIXE - plus de slideDirection
-            }}
-            animate={{
-              opacity: item.opacity,
-              scale: item.scale,
-              x: item.x,
-              y: item.y,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.8,
-              x: item.x,
-              y: item.y, // FIXE - plus de slideDirection
-            }}
-            transition={{
-              duration: 0.6,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              opacity: { duration: 0.4 },
-              scale: { duration: 0.5 },
-            }}
-            onAnimationComplete={() => {}}
-                                      className={`
-               absolute pointer-events-auto cursor-pointer select-none
-               font-jetbrains uppercase tracking-wider text-left
-               transition-all duration-300 ease-out z-[110] negative-blend
-               ${
-                 item.isSelected
-                   ? "font-bold text-xl drop-shadow-lg"
-                   : "hover:opacity-80 font-medium text-base"
-               }
-             `}
-            title={item.project.name} // Tooltip avec le titre complet
-                         style={{
-               transformOrigin: "left center",
-               transform: "translateX(0%)", // Align left edge of text
-               textShadow: item.isSelected ? "0 2px 12px rgba(249,115,22,0.6), 0 0 8px rgba(0,0,0,0.4)" : "none",
-               whiteSpace: "nowrap",
-               maxWidth: "200px", // Largeur maximale pour éviter le débordement
-               overflow: "hidden",
-               textOverflow: "ellipsis",
-             }}
-                         onClick={(e) => {
-               e.stopPropagation()
-                             // Click direct - PLUS de slide logic
-              onSelect(item.globalIndex)
-             }}
-            whileHover={{
-              scale: item.scale * 1.05,
-              transition: { duration: 0.2 },
-            }}
-            whileTap={{
-              scale: item.scale * 0.95,
-              transition: { duration: 0.1 },
-            }}
-          >
-            {truncateTitle(item.project.name)}
-            {item.isSelected && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                                 className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
-              />
-            )}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+    <div
+      ref={containerRef}
+      className="relative min-w-[180px] h-[400px]"
+      onWheel={handleWheel}
+      style={{ pointerEvents: 'auto' }}
+    >
+      {projectPositions.map((item, index) => (
+        <motion.div
+          key={`${item.project.id}-${item.globalIndex}`}
+          initial={{
+            opacity: 0,
+            scale: 0.8,
+            x: item.x,
+            y: item.y,
+          }}
+          animate={{
+            opacity: item.opacity,
+            scale: item.scale,
+            x: item.x,
+            y: item.y,
+          }}
+          transition={{
+            duration: 0.6,
+            ease: [0.25, 0.46, 0.45, 0.94],
+            opacity: { duration: 0.4 },
+            scale: { duration: 0.5 },
+          }}
+          className={`
+             absolute pointer-events-auto cursor-pointer select-none
+             font-kode uppercase tracking-wider text-left
+             transition-all duration-300 ease-out z-10
+             ${
+               item.isSelected
+                 ? "font-bold text-xl"
+                 : "font-medium text-base"
+             }
+           `}
+          title={item.project.name}
+          style={{
+             transformOrigin: "left center",
+             transform: "translateX(0%)",
+             whiteSpace: "nowrap",
+             maxWidth: "200px",
+             overflow: "hidden",
+             textOverflow: "ellipsis",
+             color: getTextColor(item.y), // Couleur dynamique
+           }}
+          onClick={(e) => {
+             e.stopPropagation()
+             onSelect(item.globalIndex)
+           }}
+        >
+          {truncateTitle(item.project.name)}
+          {item.isSelected && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
+            />
+          )}
+        </motion.div>
+      ))}
     </div>
   )
 } 

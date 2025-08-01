@@ -22,6 +22,29 @@ function Stars() {
     }
   }
 
+  // Créer une texture circulaire pour les étoiles
+  const starTexture = useRef<THREE.Texture>(null)
+  
+  if (!starTexture.current) {
+    const canvas = document.createElement('canvas')
+    canvas.width = 32
+    canvas.height = 32
+    const ctx = canvas.getContext('2d')!
+    
+    // Dessiner un cercle blanc
+    ctx.fillStyle = 'white'
+    ctx.beginPath()
+    ctx.arc(16, 16, 12, 0, Math.PI * 2)
+    ctx.fill()
+    
+    // Ajouter un effet de glow
+    ctx.shadowColor = 'white'
+    ctx.shadowBlur = 8
+    ctx.fill()
+    
+    starTexture.current = new THREE.CanvasTexture(canvas)
+  }
+
   // Animation des étoiles basée sur la position de la souris
   useFrame(() => {
     if (starsRef.current) {
@@ -30,7 +53,7 @@ function Stars() {
       starsRef.current.rotation.y += 0.0003
       
       // Mouvement basé sur la souris (augmenté pour être plus visible)
-      const mouseInfluence = 0.002
+      const mouseInfluence = 0.008 // Augmenté de 0.002 à 0.008
       starsRef.current.rotation.x = mousePosition.y * mouseInfluence
       starsRef.current.rotation.y = mousePosition.x * mouseInfluence
     }
@@ -65,6 +88,7 @@ function Stars() {
         sizeAttenuation={true}
         transparent={true}
         opacity={1.0}
+        map={starTexture.current}
       />
     </points>
   )
@@ -75,31 +99,23 @@ export default function StarField() {
   const [isLoaded, setIsLoaded] = useState(true) // Chargé immédiatement
 
   return (
-    <div className="absolute inset-0 w-full h-full z-[-3]">
-      {isLoaded && (
-        <Canvas
-          camera={{ 
-            position: [0, 0, 5], 
-            fov: 45,
-            near: 0.1,
-            far: 1000
-          }}
-          style={{ 
-            background: 'transparent',
-            opacity: isLoaded ? 1 : 0,
-            transition: 'opacity 1s ease-in'
-          }}
-        >
-          {/* Lumière ambiante */}
-          <ambientLight intensity={0.1} />
-          
-          {/* Lumière ponctuelle */}
-          <pointLight position={[5, 5, 5]} intensity={0.5} />
-          
-          {/* Ciel étoilé */}
-          <Stars />
-        </Canvas>
-      )}
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      <Canvas
+        camera={{ position: [0, 0, 5], fov: 75 }}
+        gl={{ 
+          preserveDrawingBuffer: false,
+          powerPreference: "high-performance",
+          antialias: true,
+          alpha: true
+        }}
+        onCreated={({ gl }) => {
+          // Configuration pour éviter la perte de contexte
+          gl.setClearColor(0x000000, 0)
+          gl.outputColorSpace = THREE.SRGBColorSpace
+        }}
+      >
+        <Stars />
+      </Canvas>
     </div>
   )
 }

@@ -245,7 +245,7 @@ body {
 }
 
 .nav-link::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 0;
@@ -253,6 +253,15 @@ body {
   height: 1px;
   background: #000;
   transition: width 0.3s ease;
+}
+
+/* Indicateur adaptatif selon le mode */
+.nav-link.day-mode::after {
+  background: #000;
+}
+
+.nav-link.night-mode::after {
+  background: #fff;
 }
 
 .nav-link:hover::after,

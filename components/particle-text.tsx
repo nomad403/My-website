@@ -101,7 +101,7 @@ export default function ParticleText() {
     const bufferCanvas = bufferCanvasRef.current
     if (!bufferCanvas) return
 
-    const ctx = bufferCanvas.getContext("2d")
+    const ctx = bufferCanvas.getContext("2d", { willReadFrequently: true })
     if (!ctx) return
 
     const { width, height, centerX, centerY } = dimensionsRef.current
@@ -176,7 +176,7 @@ export default function ParticleText() {
     if (!canvas || !bufferCanvas) return
 
     const ctx = canvas.getContext("2d")
-    const bufferCtx = bufferCanvas.getContext("2d")
+    const bufferCtx = bufferCanvas.getContext("2d", { willReadFrequently: true })
     if (!ctx || !bufferCtx) return
 
     const { width, height } = dimensionsRef.current
