@@ -55,6 +55,7 @@ body {
   padding: 0;
   font-family: 'JetBrains Mono', monospace;
   overflow-x: hidden;
+  cursor: none; /* Cache le curseur natif */
 }
 
 @layer utilities {
@@ -236,6 +237,10 @@ body {
 
 .font-jetbrains {
   font-family: var(--font-jetbrains-mono);
+}
+
+.font-enigma {
+  font-family: var(--font-enigma-display);
 }
 
 .nav-link {

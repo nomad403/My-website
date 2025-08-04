@@ -152,7 +152,7 @@ export default function SphereAlignedProjectList({
             opacity: { duration: 0.4 },
             scale: { duration: 0.5 },
           }}
-          className={`
+                    className={`
              absolute pointer-events-auto cursor-pointer select-none
              font-kode uppercase tracking-wider text-left
              transition-all duration-300 ease-out z-10
@@ -162,15 +162,16 @@ export default function SphereAlignedProjectList({
                  : "font-medium text-base"
              }
            `}
-          title={item.project.name}
-          style={{
+            title={item.project.name}
+            style={{
              transformOrigin: "left center",
              transform: "translateX(0%)",
              whiteSpace: "nowrap",
              maxWidth: "200px",
              overflow: "hidden",
              textOverflow: "ellipsis",
-             color: getTextColor(item.y), // Couleur dynamique
+             color: "black", // Texte noir
+             textShadow: "0 0 3px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.6)", // Ombre portée blanche pour la lisibilité
            }}
           onClick={(e) => {
              e.stopPropagation()
