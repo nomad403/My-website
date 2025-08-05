@@ -5,12 +5,14 @@ import * as THREE from "three"
 interface EnergySphereProps {
   scale?: number
   translateY?: number
+  translateX?: number
   isTransitioning?: boolean
 }
 
 export default function WaterSphereBackground({ 
   scale = 1, 
   translateY = 0, 
+  translateX = 0,
   isTransitioning = false 
 }: EnergySphereProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -606,7 +608,7 @@ export default function WaterSphereBackground({
         zIndex: 0,
         background: 'transparent', // CRUCIAL: fond transparent pour éviter démarcations
         pointerEvents: "auto", // CRUCIAL: permet les interactions même en arrière-plan
-        transform: `translateY(${translateY}px) scale(${scale})`,
+        transform: `translateX(${translateX}px) translateY(${translateY}px) scale(${scale})`,
         transition: isTransitioning ? "transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)" : "none",
         transformOrigin: "center center", // Pour que l'agrandissement soit centré
       }}

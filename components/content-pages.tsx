@@ -304,47 +304,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
          return (
            <div className="max-w-4xl mx-auto mt-32 px-8">
             <div className="grid grid-cols-12 gap-8">
-              {/* Left side - Main content */}
-              <div className="col-span-8">
-                <div className="font-kode text-lg">CONTACT</div>
-                <div className="p-8">
-                  <div className="font-kode">GET IN TOUCH</div>
-                  <div className="space-y-3 font-jetbrains text-sm font-light mt-8">
-                    <div>
-                      <span className="text-blue-600 uppercase tracking-wide">Email</span>
-                      <span className="block mt-1">contact@nomad403.dev</span>
-                    </div>
-                    <div>
-                      <span className="text-blue-600 uppercase tracking-wide">Phone</span>
-                      <span className="block mt-1">+33 (0)1 23 45 67 89</span>
-                    </div>
-                    <div>
-                      <span className="text-blue-600 uppercase tracking-wide">Location</span>
-                      <span className="block mt-1">France, Remote Available</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Right side - Social links */}
-              <div className="col-span-4 space-y-6">
-                <div className="p-8">
-                  <div className="font-kode text-lg">SOCIAL LINKS</div>
-                  <div className="space-y-3 font-jetbrains text-sm font-light mt-8">
-                    <div>
-                      <span className="text-green-600 uppercase tracking-wide">LinkedIn</span>
-                      <span className="block mt-1">/in/nomad403</span>
-                    </div>
-                    <div>
-                      <span className="text-green-600 uppercase tracking-wide">GitHub</span>
-                      <span className="block mt-1">/nomad403</span>
-                    </div>
-                    <div>
-                      <span className="text-green-600 uppercase tracking-wide">Twitter</span>
-                      <span className="block mt-1">@nomad403</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              
             </div>
           </div>
         )

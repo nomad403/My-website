@@ -5,29 +5,30 @@ import { motion, AnimatePresence } from "framer-motion"
 import ParticleText from "@/components/particle-text"
 import ContentPages from "@/components/content-pages"
 import EnergySphereBackground from "@/components/EnergySphereBackground"
+import CyberpunkModel from "@/components/CyberpunkModel"
 import { useBackground } from "./contexts/BackgroundContext"
 
 // Configuration déclarative des états par page
 const pageConfig = {
   home: {
-    sphere: { scale: 1, translateY: 0 },
+    sphere: { scale: 1, translateX: 0, translateY: 0 },
     background: 'day' as const,
     elements: ['particleText', 'homeContent']
   },
   projects: {
-    sphere: { scale: 6, translateY: 1500 },
+    sphere: { scale: 6, translateX: 0, translateY: 1500 },
     background: 'day' as const,
     elements: ['contentPages']
   },
   skills: {
-    sphere: { scale: 1, translateY: 2500 },
+    sphere: { scale: 1, translateX: 0, translateY: 2500 },
     background: 'night' as const,
     elements: ['contentPages']
   },
   contact: {
-    sphere: { scale: 1, translateY: 0 },
+    sphere: { scale: 0, translateX: -2000, translateY: 0 },
     background: 'day' as const,
-    elements: ['contentPages']
+    elements: []
   }
 }
 
@@ -36,6 +37,7 @@ export default function HomePage() {
   const [isPreloaded, setIsPreloaded] = useState(false)
   const [sphereScale, setSphereScale] = useState(1)
   const [sphereTranslateY, setSphereTranslateY] = useState(0)
+  const [sphereTranslateX, setSphereTranslateX] = useState(0)
   
   // États de visibilité pour une vraie SPA
   const [homeVisible, setHomeVisible] = useState(true)
@@ -66,6 +68,7 @@ export default function HomePage() {
       // Animation fluide : taille et position simultanément
       setSphereScale(newConfig.sphere.scale)
       setSphereTranslateY(newConfig.sphere.translateY)
+      setSphereTranslateX(newConfig.sphere.translateX || 0)
       
       // Une fois la sphère descendue, révéler le fond de specialist
       setTimeout(() => {
@@ -82,6 +85,7 @@ export default function HomePage() {
       // Animation fluide : taille et position simultanément
       setSphereTranslateY(newConfig.sphere.translateY)
       setSphereScale(newConfig.sphere.scale)
+      setSphereTranslateX(newConfig.sphere.translateX)
       
       // Changer de page IMMÉDIATEMENT pour permettre le fade AnimatePresence
       setCurrentPage(newPage)
@@ -104,6 +108,7 @@ export default function HomePage() {
       setIsSphereDescending(false)
       setSphereScale(newConfig.sphere.scale)
       setSphereTranslateY(newConfig.sphere.translateY)
+      setSphereTranslateX(newConfig.sphere.translateX)
       
       // Changer de page immédiatement pour les autres pages
       setCurrentPage(newPage)
@@ -157,6 +162,7 @@ export default function HomePage() {
       >
         <EnergySphereBackground 
           scale={sphereScale}
+          translateX={sphereTranslateX}
           translateY={sphereTranslateY}
           isTransitioning={transitioning}
         />
@@ -282,6 +288,17 @@ export default function HomePage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Cyberpunk Model - visible seulement sur contact */}
+      <motion.div 
+        className="absolute inset-0 z-30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isPreloaded && currentPage === "contact" ? 1 : 0 }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        style={{ pointerEvents: currentPage === "contact" ? "auto" : "none" }}
+      >
+        <CyberpunkModel isVisible={currentPage === "contact"} />
+      </motion.div>
     </div>
   )
 }
