@@ -233,7 +233,7 @@ export default function WaterSphereBackground({
           containerRef.current?.getBoundingClientRect().width || window.innerWidth,
           containerRef.current?.getBoundingClientRect().height || window.innerHeight
         ) },
-        u_speed: { value: 1.3 },
+        u_speed: { value: 0.6 },
         u_color1: { value: new THREE.Vector3(1.0, 0.4, 0.1) }, // Orange vif
         u_color2: { value: new THREE.Vector3(1.0, 0.8, 0.0) }, // Jaune doré
         u_color3: { value: new THREE.Vector3(0.2, 0.6, 1.0) }, // Bleu électrique
@@ -607,7 +607,7 @@ export default function WaterSphereBackground({
         background: 'transparent', // CRUCIAL: fond transparent pour éviter démarcations
         pointerEvents: "auto", // CRUCIAL: permet les interactions même en arrière-plan
         transform: `translateY(${translateY}px) scale(${scale})`,
-        transition: isTransitioning ? "transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
+        transition: isTransitioning ? "transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)" : "none",
         transformOrigin: "center center", // Pour que l'agrandissement soit centré
       }}
     />

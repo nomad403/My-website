@@ -56,19 +56,34 @@ export default function SphereAlignedProjectList({
     setFirstVisible(newFirstVisible)
   }, [selected, maxVisible, projects.length])
 
-  // Gestion du scroll - carousel infini
+  // Gestion du scroll - carousel infini (vertical et horizontal)
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
-    if (e.deltaY > 0) {
-      // Scroll vers le bas = projet suivant (PLUS de slide)
-      const nextSelected = (selected + 1) % projects.length
-      onSelect(nextSelected)
-    } else if (e.deltaY < 0) {
-      // Scroll vers le haut = projet précédent (PLUS de slide)
-      const prevSelected = (selected - 1 + projects.length) % projects.length
-      onSelect(prevSelected)
+    // Gestion du scroll vertical
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      if (e.deltaY > 0) {
+        // Scroll vers le bas = projet suivant
+        const nextSelected = (selected + 1) % projects.length
+        onSelect(nextSelected)
+      } else if (e.deltaY < 0) {
+        // Scroll vers le haut = projet précédent
+        const prevSelected = (selected - 1 + projects.length) % projects.length
+        onSelect(prevSelected)
+      }
+    }
+    // Gestion du scroll horizontal
+    else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      if (e.deltaX > 0) {
+        // Scroll vers la droite = projet suivant
+        const nextSelected = (selected + 1) % projects.length
+        onSelect(nextSelected)
+      } else if (e.deltaX < 0) {
+        // Scroll vers la gauche = projet précédent
+        const prevSelected = (selected - 1 + projects.length) % projects.length
+        onSelect(prevSelected)
+      }
     }
   }
 
@@ -124,12 +139,33 @@ export default function SphereAlignedProjectList({
 
   const projectPositions = createProjectPositions()
 
+  // Gestion des touches clavier
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      const nextSelected = (selected + 1) % projects.length
+      onSelect(nextSelected)
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      const prevSelected = (selected - 1 + projects.length) % projects.length
+      onSelect(prevSelected)
+    }
+  }
+
+  // Ajouter les event listeners pour les touches
+  useEffect(() => {
+    const handleKeyDownWrapper = (e: KeyboardEvent) => handleKeyDown(e)
+    window.addEventListener('keydown', handleKeyDownWrapper)
+    return () => window.removeEventListener('keydown', handleKeyDownWrapper)
+  }, [selected, projects.length])
+
   return (
     <div
       ref={containerRef}
       className="relative min-w-[180px] h-[400px]"
       onWheel={handleWheel}
       style={{ pointerEvents: 'auto' }}
+      tabIndex={0} // Pour permettre le focus et les événements clavier
     >
       {projectPositions.map((item, index) => (
         <motion.div

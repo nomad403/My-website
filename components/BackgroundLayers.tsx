@@ -46,8 +46,11 @@ export default function BackgroundLayers() {
             zIndex: -1,
             pointerEvents: "none",
             background: mode === "night" 
-              ? "linear-gradient(to bottom, #0a0a1a, #1a1a3a, #000000)" 
-              : "white"
+              ? "linear-gradient(to bottom, #1a0a2e, #2d1b4e, #4a1b6a, #000000)" 
+              : "white",
+            boxShadow: mode === "night" 
+              ? "inset 0 0 100px rgba(147, 51, 234, 0.1), inset 0 0 200px rgba(88, 28, 135, 0.05)" 
+              : "none"
           }}
         />
       </AnimatePresence>

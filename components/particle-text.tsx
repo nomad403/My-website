@@ -54,7 +54,14 @@ export default function ParticleText() {
     },
     text: {
       fontColor: [0, 0, 0, 255],
-      fontSize: 130,
+      get fontSize() {
+        // Taille responsive basée sur la largeur de l'écran
+        const width = window.innerWidth
+        if (width < 768) return 40 // Mobile
+        if (width < 1024) return 60 // Tablet
+        if (width < 1440) return 80 // Desktop
+        return 100 // Large screens
+      },
       message: "AUGMENTED DEVELOPER",
     },
   }
@@ -86,7 +93,7 @@ export default function ParticleText() {
       width,
       height,
       centerX: width * 0.5,
-      centerY: height * 0.65 - 100,
+      centerY: height * 0.5, // Parfaitement centré
     }
 
     repelRef.current = {
@@ -109,7 +116,7 @@ export default function ParticleText() {
 
     try {
       ctx.clearRect(0, 0, width, height)
-      ctx.font = `${options.text.fontSize}px 'Kode Mono', monospace`
+      ctx.font = `${options.text.fontSize}px 'Enigma Regular'`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"

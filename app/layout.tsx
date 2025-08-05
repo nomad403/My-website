@@ -7,9 +7,14 @@ import { BackgroundProvider } from "./contexts/BackgroundContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
 import CustomCursor from "@/components/CustomCursor"
 
-const kodeMono = Kode_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// const kodeMono = Kode_Mono({
+//   subsets: ["latin"],
+//   weight: ["400", "500", "600", "700"],
+//   variable: "--font-kode-mono",
+// })
+
+const kodeMono = localFont({
+  src: "../fonts/EnigmaRegular.woff2",
   variable: "--font-kode-mono",
 })
 
@@ -20,7 +25,7 @@ const jetBrainsMono = JetBrains_Mono({
 })
 
 const enigmaDisplay = localFont({
-  src: "../public/fonts/EnigmaRegular.woff2",
+  src: "../fonts/EnigmaRegular.woff2",
   variable: "--font-enigma-display",
 })
 

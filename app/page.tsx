@@ -63,49 +63,42 @@ export default function HomePage() {
       // Masquer le fond blanc pendant la descente
       setIsSphereDescending(true)
       
-      // D'abord réduire la taille pour éviter les artefacts
-      setSphereScale(0.5)
+      // Animation fluide : taille et position simultanément
+      setSphereScale(newConfig.sphere.scale)
+      setSphereTranslateY(newConfig.sphere.translateY)
+      
+      // Une fois la sphère descendue, révéler le fond de specialist
       setTimeout(() => {
-        // Puis déplacer vers le bas
-        setSphereTranslateY(newConfig.sphere.translateY)
-        setSphereScale(newConfig.sphere.scale)
-        
-        // Une fois la sphère descendue, révéler le fond de specialist
-        setTimeout(() => {
-          setIsSphereDescending(false)
-          // Changer de page APRÈS le fade
-          setCurrentPage(newPage)
-          setHomeVisible(false)
-          setContentVisible(true)
-        }, 800) // Délai pour laisser la sphère descendre complètement
-      }, 300)
+        setIsSphereDescending(false)
+        // Changer de page APRÈS le fade
+        setCurrentPage(newPage)
+        setHomeVisible(false)
+        setContentVisible(true)
+      }, 1800) // Délai pour laisser la sphère descendre complètement
     } else if (currentPage === "skills" && newPage !== "skills") {
       // Logique spéciale pour les transitions depuis specialist
       setIsSphereDescending(true)
       
-      // Délai pour laisser le fade se terminer (comme dans projects to specialist)
+      // Animation fluide : taille et position simultanément
+      setSphereTranslateY(newConfig.sphere.translateY)
+      setSphereScale(newConfig.sphere.scale)
+      
+      // Changer de page IMMÉDIATEMENT pour permettre le fade AnimatePresence
+      setCurrentPage(newPage)
+      
+      // Gérer la visibilité selon la page
+      if (newPage === "home") {
+        setHomeVisible(true)
+        setContentVisible(false)
+      } else {
+        setHomeVisible(false)
+        setContentVisible(true)
+      }
+      
+      // Une fois la sphère montée, finir la transition
       setTimeout(() => {
-        // D'abord déplacer la sphère vers le haut
-        setSphereTranslateY(newConfig.sphere.translateY)
-        setSphereScale(newConfig.sphere.scale)
-        
-        // Changer de page IMMÉDIATEMENT pour permettre le fade AnimatePresence
-        setCurrentPage(newPage)
-        
-        // Gérer la visibilité selon la page
-        if (newPage === "home") {
-          setHomeVisible(true)
-          setContentVisible(false)
-        } else {
-          setHomeVisible(false)
-          setContentVisible(true)
-        }
-        
-        // Une fois la sphère montée, finir la transition
-        setTimeout(() => {
-          setIsSphereDescending(false)
-        }, 800) // Délai pour laisser la sphère monter complètement
-      }, 200) // Délai réduit pour commencer pendant le fade
+        setIsSphereDescending(false)
+      }, 1800) // Délai pour laisser la sphère monter complètement
     } else {
       // Transitions normales pour les autres pages
       setIsSphereDescending(false)
@@ -133,7 +126,7 @@ export default function HomePage() {
     // Finir la transition après les animations de sphère
     setTimeout(() => {
       setTransitioning(false)
-    }, 1200)
+    }, 2500)
   }
 
   const currentConfig = pageConfig[currentPage as keyof typeof pageConfig]
@@ -144,7 +137,7 @@ export default function HomePage() {
       {!isPreloaded && (
         <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
           <div className="text-center">
-            <div className="font-kode text-black text-2xl mb-4">NOMAD403</div>
+            <div className="font-kode text-black text-2xl mb-4 font-semibold">NOMAD403</div>
             <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         </div>
@@ -172,7 +165,7 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className={`font-kode text-base font-medium tracking-[0.15em] uppercase transition-colors duration-300 ${
+          <div className={`font-kode text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>
             NOMAD403

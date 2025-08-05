@@ -24,17 +24,17 @@ export default function CustomCursor() {
           zIndex: 9999,
         }}
       >
-        <div className="border-t border-orange-500 w-full relative">
+        <div className="border-t w-full relative" style={{ borderColor: '#c0c0c0' }}>
           {/* Coord X à côté de la ligne */}
           <div
-            className="font-enigma text-orange-500 text-xs"
             style={{
               position: "absolute",
               right: 8,
               top: 8,
-              color: "#f97316", // orange-500
+              color: "#c0c0c0", 
               fontSize: 10,
               fontWeight: 500,
+              fontFamily: "'Enigma Display', 'Arial', sans-serif",
             }}
           >
             {pos.x}
@@ -53,19 +53,19 @@ export default function CustomCursor() {
           zIndex: 9999,
         }}
       >
-        <div className="border-l border-blue-500 h-full relative">
+        <div className="border-l h-full relative" style={{ borderColor: '#808080' }}>
           {/* Coord Y intégrée dans la ligne */}
           <div
-            className="font-enigma text-blue-500 text-xs"
             style={{
               position: "absolute",
               left: 8,
               top: 8,
-              color: "#3b82f6", // blue-500
+              color: "#808080", 
               fontSize: 10,
               fontWeight: 500,
               writingMode: "vertical-rl",
               textOrientation: "mixed",
+              fontFamily: "'Enigma Display', 'Arial', sans-serif",
             }}
           >
             {pos.y}
