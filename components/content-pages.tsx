@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
-import StarField from "./StarField";
 
 interface ContentPagesProps {
   currentPage: string
@@ -139,8 +138,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                                   case "skills":
           return (
             <div className="relative w-full h-screen overflow-hidden">
-              {/* Ciel étoilé interactif avec mouse tracking - chargement optimisé */}
-              <StarField />
+              {/* Ciel étoilé rendu par GlobalCanvas */}
               
               {/* Contenu principal */}
               <div className="relative z-10 w-full h-full flex items-start">

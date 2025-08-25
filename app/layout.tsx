@@ -4,7 +4,9 @@ import '../styles/globals.css'
 import { Kode_Mono, JetBrains_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { BackgroundProvider } from "./contexts/BackgroundContext"
+import { PageProvider } from "./contexts/PageContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
+import GlobalCanvas from "@/components/GlobalCanvas"
 import CustomCursor from "@/components/CustomCursor"
 
 // const kodeMono = Kode_Mono({
@@ -40,9 +42,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className={`${kodeMono.variable} ${jetBrainsMono.variable} ${enigmaDisplay.variable} antialiased`}>
         <BackgroundProvider>
-          <BackgroundLayers />
-          <CustomCursor />
-          {children}
+          <PageProvider>
+            <BackgroundLayers />
+            <GlobalCanvas />
+            <CustomCursor />
+            {children}
+          </PageProvider>
         </BackgroundProvider>
       </body>
     </html>

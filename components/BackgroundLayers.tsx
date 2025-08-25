@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import StarField from "./StarField"
 import { useBackground } from "@/app/contexts/BackgroundContext"
 import { AnimatePresence, motion } from "framer-motion"
 
 export default function BackgroundLayers() {
-  const { mode, transitioning, isSphereDescending } = useBackground()
-  const [showStarField, setShowStarField] = useState(mode === 'night')
+  const { mode, isSphereDescending } = useBackground()
+  const [showStarField, setShowStarField] = useState(false)
 
   // Synchroniser le StarField avec le mode
   useEffect(() => {
@@ -55,12 +54,7 @@ export default function BackgroundLayers() {
         />
       </AnimatePresence>
 
-      {/* StarField synchronisé */}
-      {showStarField && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <StarField />
-        </div>
-      )}
+      {/* StarField rendu dans le Canvas global */}
     </>
   )
 } 

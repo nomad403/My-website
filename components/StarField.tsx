@@ -4,8 +4,8 @@ import { useRef, useEffect, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
-// Composant pour les étoiles
-function Stars() {
+// Composant pour les étoiles (scène-only pour Canvas global)
+function Stars({ visible = true }: { visible?: boolean }) {
   const starsRef = useRef<THREE.Points>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const { size } = useThree()
@@ -128,7 +128,7 @@ function Stars() {
   }, [])
 
   return (
-    <points ref={starsRef}>
+    <points ref={starsRef} visible={visible}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -184,3 +184,6 @@ export default function StarField() {
     </div>
   )
 }
+
+// Export scène-only pour utilisation dans GlobalCanvas
+export { Stars as StarsR3F }

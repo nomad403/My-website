@@ -4,19 +4,19 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import ParticleText from "@/components/particle-text"
 import ContentPages from "@/components/content-pages"
-import EnergySphereBackground from "@/components/EnergySphereBackground"
-import CyberpunkModel from "@/components/CyberpunkModel"
+// Le rendu 3D est géré par le Canvas global; pas de rendu direct ici
 import { useBackground } from "./contexts/BackgroundContext"
+import { usePage } from "./contexts/PageContext"
 
 // Configuration déclarative des états par page
 const pageConfig = {
   home: {
-    sphere: { scale: 1, translateX: 0, translateY: 0 },
+    sphere: { scale: 1, translateX: 0, translateY: 0 }, // Sphère plus petite et centrée
     background: 'day' as const,
     elements: ['particleText', 'homeContent']
   },
   projects: {
-    sphere: { scale: 6, translateX: 0, translateY: 1500 },
+    sphere: { scale: 3.5, translateX: 0, translateY: 800 }, // Sphère plus grande pour un vrai effet halo
     background: 'day' as const,
     elements: ['contentPages']
   },
@@ -35,22 +35,38 @@ const pageConfig = {
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home")
   const [isPreloaded, setIsPreloaded] = useState(false)
-  const [sphereScale, setSphereScale] = useState(1)
-  const [sphereTranslateY, setSphereTranslateY] = useState(0)
-  const [sphereTranslateX, setSphereTranslateX] = useState(0)
+  // pilotage via contexte
   
   // États de visibilité pour une vraie SPA
   const [homeVisible, setHomeVisible] = useState(true)
   const [contentVisible, setContentVisible] = useState(false)
   
   // Contexte global pour les backgrounds
-  const { mode, transitioning, isSphereDescending, setMode, setTransitioning, setIsSphereDescending } = useBackground()
+  const { mode, transitioning, isSphereDescending, setMode, setTransitioning, setIsSphereDescending,
+    setSphereScale, setSphereTranslateX, setSphereTranslateY } = useBackground()
+  // Router interne global (Canvas lit cette source de vérité)
+  const { setCurrentPage: setRoutedPage } = usePage()
 
   // Préchargement simple
   useEffect(() => {
     const timer = setTimeout(() => setIsPreloaded(true), 1000)
     return () => clearTimeout(timer)
   }, [])
+
+  // Synchroniser la page locale avec le routeur global
+  useEffect(() => {
+    setRoutedPage(currentPage)
+  }, [currentPage, setRoutedPage])
+
+  // Initialiser les valeurs de la sphère HOME au démarrage
+  useEffect(() => {
+    const homeConfig = pageConfig.home
+    console.log('🏠 Initialisation HOME:', homeConfig.sphere)
+    setSphereScale(homeConfig.sphere.scale)
+    setSphereTranslateX(homeConfig.sphere.translateX)
+    setSphereTranslateY(homeConfig.sphere.translateY)
+    setMode(homeConfig.background)
+  }, [setSphereScale, setSphereTranslateX, setSphereTranslateY, setMode])
 
   const handlePageChange = (newPage: string) => {
     if (newPage === currentPage || transitioning) return
@@ -148,25 +164,7 @@ export default function HomePage() {
         </div>
       )}
       
-      {/* Sphère avec transitions smooth */}
-      <div 
-        className="absolute z-0"
-        style={{
-          // Container 3x plus grand pour que la sphère agrandie ne touche jamais les bords
-          top: '-200vh',
-          left: '-200vw', 
-          width: '500vw',
-          height: '500vh',
-          background: isSphereDescending ? 'transparent' : 'transparent'
-        }}
-      >
-        <EnergySphereBackground 
-          scale={sphereScale}
-          translateX={sphereTranslateX}
-          translateY={sphereTranslateY}
-          isTransitioning={transitioning}
-        />
-      </div>
+      {/* La sphère est rendue par GlobalCanvas */}
 
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-8">
@@ -289,16 +287,7 @@ export default function HomePage() {
         </AnimatePresence>
       </div>
 
-      {/* Cyberpunk Model - visible seulement sur contact */}
-      <motion.div 
-        className="absolute inset-0 z-30"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isPreloaded && currentPage === "contact" ? 1 : 0 }}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
-        style={{ pointerEvents: currentPage === "contact" ? "auto" : "none" }}
-      >
-        <CyberpunkModel isVisible={currentPage === "contact"} />
-      </motion.div>
+      {/* Le modèle 3D est rendu par GlobalCanvas */}
     </div>
   )
 }
