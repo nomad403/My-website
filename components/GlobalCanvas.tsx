@@ -74,6 +74,7 @@ export default function GlobalCanvas() {
           translateY={sphereTranslateY}
           isTransitioning={transitioning}
           transitionEffect={transitionEffect}
+          currentPage={currentPage}
         />
         {/* Lumières uniquement pour le modèle 3D */}
         {showModel && (

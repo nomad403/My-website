@@ -138,8 +138,15 @@ export default function EnergySphereR3F({
     }
   })
 
-  // Plane suffisamment grand pour couvrir le viewport avec caméra perspective
-  const planeScale = useMemo(() => 1, [])
+  // Plane adaptatif : rond sur HOME, elliptique sur PROJECTS
+  // On détermine la page basée sur scale (PROJECTS a scale > 1)
+  const planeScale = useMemo(() => {
+    if (scale > 1) {
+      return { width: 1.8, height: 1.0 } // Elliptique pour l'horizon rapproché (PROJECTS)
+    } else {
+      return { width: 1.0, height: 1.0 } // Rond pour HOME et autres pages
+    }
+  }, [scale])
 
   return (
     <mesh
@@ -161,7 +168,7 @@ export default function EnergySphereR3F({
         materialRef.current.uniforms.u_pointerStrength.value = 1.0
       }}
     >
-      <planeGeometry args={[planeScale, planeScale, 1, 1]} />
+      <planeGeometry args={[planeScale.width, planeScale.height, 1, 1]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
