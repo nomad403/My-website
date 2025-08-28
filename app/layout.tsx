@@ -7,6 +7,7 @@ import { BackgroundProvider } from "./contexts/BackgroundContext"
 import { PageProvider } from "./contexts/PageContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
 import GlobalCanvas from "@/components/GlobalCanvas"
+
 import CustomCursor from "@/components/CustomCursor"
 
 // const kodeMono = Kode_Mono({

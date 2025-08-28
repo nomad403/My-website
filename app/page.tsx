@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import ParticleText from "@/components/particle-text"
 import ContentPages from "@/components/content-pages"
+import SpheresPacking from "@/components/SpheresPacking"
 // Le rendu 3D est géré par le Canvas global; pas de rendu direct ici
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
@@ -153,8 +154,17 @@ export default function HomePage() {
   const currentConfig = pageConfig[currentPage as keyof typeof pageConfig]
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      {/* Écran de chargement */}
+    <>
+      {/* FOND : Packing de sphères en dehors de R3F */}
+      <SpheresPacking
+        count={200}
+        colors={[0xff0000, 0x0, 0xffffff]}
+        minSize={0.5}
+        maxSize={1.0}
+      />
+      
+      <div className="relative w-full h-screen overflow-hidden">
+        {/* Écran de chargement */}
       {!isPreloaded && (
         <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
           <div className="text-center">
@@ -289,5 +299,6 @@ export default function HomePage() {
 
       {/* Le modèle 3D est rendu par GlobalCanvas */}
     </div>
+    </>
   )
 }

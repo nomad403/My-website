@@ -5,7 +5,6 @@ import { OrbitControls, OrthographicCamera, PerspectiveCamera } from "@react-thr
 import { useBackground } from "@/app/contexts/BackgroundContext"
 import { usePage } from "@/app/contexts/PageContext"
 import CyberpunkModel from "./CyberpunkModel"
-import EnergySphereR3F from "./EnergySphereR3F"
 import { StarsR3F } from "./StarField"
 
 export default function GlobalCanvas() {
@@ -14,7 +13,7 @@ export default function GlobalCanvas() {
 
   // Toujours monté; on ne bloque jamais les interactions hors contact
   // Canvas global PERMANENT (ne pas démonter pour éviter context lost)
-  const showSphere = !(currentPage === "contact" || mode === "night")
+  const showSphere = currentPage === "home" || currentPage === "projects" || currentPage === "skills"
   const showStars = mode === "night"
   const showModel = currentPage === "contact"
   const isVisible = showSphere || showStars || showModel
@@ -66,16 +65,8 @@ export default function GlobalCanvas() {
         {/* Caméras persistantes, on bascule seulement le makeDefault */}
         <OrthographicCamera makeDefault={showSphere && !showModel} position={[0, 0, 10]} near={0.1} far={1000} />
         <PerspectiveCamera makeDefault={showModel || showStars} position={[0, 0, 5]} fov={50} />
-        {/* Sphere d'énergie portée dans le Canvas global (visible hors contact et hors night) */}
-        <EnergySphereR3F
-          visible={showSphere}
-          scale={sphereScale}
-          translateX={sphereTranslateX}
-          translateY={sphereTranslateY}
-          isTransitioning={transitioning}
-          transitionEffect={transitionEffect}
-          currentPage={currentPage}
-        />
+        {/* Packing de sphères au centre derrière le titre */}
+        {/* SpheresPacking est maintenant dans app/page.tsx, pas dans le Canvas R3F */}
         {/* Lumières uniquement pour le modèle 3D */}
         {showModel && (
           <>
