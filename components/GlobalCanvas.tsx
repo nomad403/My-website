@@ -15,7 +15,7 @@ export default function GlobalCanvas() {
   // Canvas global PERMANENT (ne pas démonter pour éviter context lost)
   const showSphere = currentPage === "home" || currentPage === "projects" || currentPage === "skills"
   const showStars = mode === "night"
-  const showModel = currentPage === "contact"
+  const showModel = false // Désactivé définitivement pour éviter les conflits avec l'effet ASCII
   const isVisible = showSphere || showStars || showModel
   
   // Effets de transition spéciaux
@@ -35,7 +35,11 @@ export default function GlobalCanvas() {
     <div className="fixed inset-0">
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: currentPage === "contact" ? 30 : 0, opacity: isVisible ? 1 : 0, transition: "opacity 0.3s ease-in-out" }}
+        style={{ 
+          zIndex: isVisible ? (currentPage === "contact" ? 30 : 0) : -1, 
+          opacity: isVisible ? 1 : 0, 
+          transition: "opacity 0.3s ease-in-out" 
+        }}
       >
       <Canvas
         dpr={1}

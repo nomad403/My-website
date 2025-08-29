@@ -8,6 +8,7 @@ import SpheresPacking from "@/components/SpheresPacking"
 // Le rendu 3D est géré par le Canvas global; pas de rendu direct ici
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
+import AsciiOverlay from "@/components/AsciiOverlay"
 
 // Configuration déclarative des états par page
 const pageConfig = {
@@ -47,6 +48,9 @@ export default function HomePage() {
     setSphereScale, setSphereTranslateX, setSphereTranslateY } = useBackground()
   // Router interne global (Canvas lit cette source de vérité)
   const { setCurrentPage: setRoutedPage } = usePage()
+
+  // Référence au canvas de fond (spheres packing)
+  const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
 
   // Préchargement simple
   useEffect(() => {
@@ -153,6 +157,8 @@ export default function HomePage() {
 
   const currentConfig = pageConfig[currentPage as keyof typeof pageConfig]
 
+  // Configuration ASCII gérée directement dans le composant AsciiOverlay
+
   return (
     <>
       {/* FOND : Packing de sphères en dehors de R3F */}
@@ -161,6 +167,20 @@ export default function HomePage() {
         minSize={0.5}
         maxSize={1.0}
         currentPage={currentPage}
+        onCanvasReady={setBgCanvas}
+        visible={currentPage !== "skills" && currentPage !== "contact"}   // <<< cache l'original sur SPECIALIST et CONTACT
+      />
+
+      {/* OVERLAY ASCII en temps réel */}
+      <AsciiOverlay
+        source={bgCanvas}
+        visible={currentPage === "skills" || currentPage === "contact"}
+        mode={currentPage === "skills" ? "sobel" : "sobel"}
+        invert={false}
+        opacity={currentPage === "skills" ? 0.35 : 0.4}
+        color={currentPage === "skills" ? "#00ffc8" : "#ffcc00"}
+        fontPx={7}    // taille du "pixel"
+        cover={true}  // <<< auto-fit plein écran
       />
       
       <div className="relative w-full h-screen overflow-hidden">

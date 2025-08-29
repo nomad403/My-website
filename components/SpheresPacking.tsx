@@ -29,7 +29,7 @@ const PAGE_COLORS = {
   home: [0xff0000, 0x0, 0xffffff], // Rouge, noir, blanc (couleurs actuelles)
   projects: [0x00e5ff, 0xff00aa, 0x00ff88], // Cyan, magenta, vert cyberpunk
   skills: [0xff6b00, 0x00e5ff, 0xffffff], // Palette dédiée pour specialist/skills
-  contact: [0x0, 0x0, 0x0], // Pas de spheres sur contact
+  contact: [0xffffff, 0x00e5ff, 0xff6b00], // Palette dédiée pour contact (blanc, cyan, orange)
 };
 
 export default function SpheresPacking({
@@ -38,12 +38,16 @@ export default function SpheresPacking({
   maxSize = 1.0,
   className,
   currentPage = "home",
+  onCanvasReady,
+  visible = true,              // <<< NEW
 }: {
   count?: number;
   minSize?: number;
   maxSize?: number;
   className?: string;
   currentPage?: string;
+  onCanvasReady?: (c: HTMLCanvasElement) => void;
+  visible?: boolean;           // <<< NEW
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const instanceRef = useRef<ReturnType<Spheres2Ctor> | null>(null);
@@ -67,6 +71,7 @@ export default function SpheresPacking({
         if (cancelled) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
+        onCanvasReady?.(canvas);  // <<< expose le canvas
 
         // plein écran fixe derrière le contenu
         const resize = () => {
@@ -107,7 +112,7 @@ export default function SpheresPacking({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, minSize, maxSize]);
+  }, [count, minSize, maxSize, onCanvasReady]);
 
   // Effet pour changer les couleurs quand la page change
   useEffect(() => {
@@ -169,7 +174,7 @@ export default function SpheresPacking({
   }, [currentPage]);
 
   // Déterminer si les spheres doivent être visibles
-  const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "skills";
+  const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "skills" || currentPage === "contact";
 
   return (
     <canvas
@@ -184,7 +189,7 @@ export default function SpheresPacking({
         display: "block",
         width: "100vw",
         height: "100vh",
-        opacity: isVisible ? 1 : 0,
+        opacity: visible ? 1 : 0,   // <<< cache le canvas sans le tuer
         transition: "opacity 0.5s ease-in-out",
         visibility: isVisible ? "visible" : "hidden",
       }}

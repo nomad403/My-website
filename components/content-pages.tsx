@@ -341,139 +341,120 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                                                        case "contact":
            return (
              <div className="relative w-full h-screen flex flex-col">
-               {/* Espace pour la figure 3D (en haut) */}
-               <div className="flex-1 flex items-center justify-center">
-                 {/* La figure 3D est rendue par GlobalCanvas ici */}
-               </div>
-               
-               {/* Formulaire progressif en bas */}
-               <div className="px-8 pb-16">
+               {/* Formulaire progressif centré */}
+               <div className="flex-1 flex items-center justify-center px-8">
                  <div className="max-w-3xl mx-auto">
-                                       {/* Indicateur de progression */}
-                    <div className="text-center mb-8">
-                      <div className="flex justify-center space-x-2">
-                        {['NOM', 'PRÉNOM', 'CONTACT', 'MESSAGE'].map((step, index) => (
-                          <div
-                            key={step}
-                            className={`w-3 h-3 rounded-full ${
-                              index <= currentContactStep ? 'bg-cyan-500' : 'bg-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    
-                                                              {/* Titre au-dessus */}
-                      <div className="text-center mb-4">
-                        <label className="font-kode text-lg text-gray-800 uppercase tracking-wider">
-                          {contactSteps[currentContactStep].label}
-                        </label>
-                      </div>
+                   {/* Titre principal */}
+                   <div className="text-center mb-20">
+                     <h1 className="font-kode text-3xl text-gray-800 uppercase tracking-wider">
+                       Let's kick off a project.
+                     </h1>
+                   </div>
                      
-                                                                                         {/* Ligne avec boutons et champ - Effet Gooey */}
-                        <div className="relative flex items-center justify-center">
-                          {/* SVG Gooey Filter pour l'effet de déformation */}
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ filter: 'url(#gooey)' }}>
-                            <defs>
-                              <filter id="gooey">
-                                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-                                <feComposite in2="goo" in="SourceGraphic" result="mix" />
-                              </filter>
-                            </defs>
-                            
-                            {/* Forme centrale qui relie les boutons au champ */}
-                            <rect
-                              x="12%"
-                              y="25%"
-                              width="76%"
-                              height="50%"
-                              rx="24"
-                              className="transition-all duration-700 ease-out"
-                              style={{
-                                fill: 'rgba(6, 182, 212, 0.08)'
-                              }}
-                            />
-                            
-                            {/* Formes gooey qui créent l'effet de connexion liquide */}
-                            <circle
-                              cx="8%"
-                              cy="50%"
-                              r="24"
-                              className="transition-all duration-700 ease-out"
-                              style={{
-                                fill: 'rgba(6, 182, 212, 0.15)',
-                                opacity: currentContactStep > 0 ? 1 : 0.3
-                              }}
-                            />
-                            
-                            <circle
-                              cx="92%"
-                              cy="50%"
-                              r="24"
-                              className="transition-all duration-700 ease-out"
-                              style={{
-                                fill: 'rgba(6, 182, 212, 0.15)'
-                              }}
-                            />
-                            
-
-
-                            
-
-                          </svg>
+                   {/* Formulaire simplifié sans effet gooey */}
+                   <div className="flex items-center justify-center">
+                     {/* Bouton BACK (gauche) - position fixe avec animation */}
+                     <div className="w-16 flex justify-start">
+                       <AnimatePresence mode="wait">
+                         {currentContactStep > 0 && (
+                           <motion.button
+                             key="back-button"
+                             initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                             animate={{ opacity: 1, scale: 1, x: 0 }}
+                             exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                             transition={{ 
+                               type: "spring", 
+                               stiffness: 300, 
+                               damping: 25,
+                               duration: 0.3 
+                             }}
+                             onClick={() => setCurrentContactStep(prev => prev - 1)}
+                             className="p-3 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110"
+                           >
+                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                               <line x1="19" y1="12" x2="5" y2="12"></line>
+                               <polyline points="12,19 5,12 12,5"></polyline>
+                             </svg>
+                           </motion.button>
+                         )}
+                       </AnimatePresence>
+                     </div>
+                     
+                     {/* Champ central - taille fixe et centré */}
+                     <div className="w-[1600px] mx-2">
+                       <input
+                         type={contactSteps[currentContactStep].type}
+                         placeholder={contactSteps[currentContactStep].placeholder}
+                         value={contactData[contactSteps[currentContactStep].field]}
+                         onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
+                         className="w-full min-h-[48px] px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
+                       />
+                     </div>
+                     
+                                          {/* Bouton NEXT/ENVOYER (droite) - position fixe avec animation */}
+                     <div className="w-16 flex justify-end">
+                       <motion.button
+                         key={`next-button-${currentContactStep}`}
+                         initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                         animate={{ opacity: 1, scale: 1, x: 0 }}
+                         transition={{ 
+                           type: "spring", 
+                           stiffness: 300, 
+                           damping: 25,
+                           duration: 0.3 
+                         }}
+                         onClick={() => handleContactNext()}
+                         disabled={!contactData[contactSteps[currentContactStep].field]?.trim()}
+                         className={`p-3 transition-all duration-300 hover:scale-110 ${
+                           contactData[contactSteps[currentContactStep].field]?.trim()
+                             ? 'text-cyan-500 hover:text-cyan-600'
+                             : 'text-gray-400 cursor-not-allowed'
+                           }`}
+                       >
+                         {currentContactStep === 3 ? (
+                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                             <path d="M22 2L11 13"></path>
+                             <polygon points="22,2 15,2 2,2 2,9 2,22 9,22 22,22 22,15"></polygon>
+                           </svg>
+                         ) : (
+                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                             <line x1="5" y1="12" x2="19" y2="12"></line>
+                             <polyline points="12,5 19,12 12,19"></polyline>
+                           </svg>
+                         )}
+                       </motion.button>
+                     </div>
+                   </div>
+                   
+                   {/* Liste horizontale des étapes complétées */}
+                   <div className="mt-8 flex justify-center">
+                     <div className="flex space-x-12">
+                       {contactSteps.map((step, index) => {
+                         const hasValue = contactData[step.field]?.trim();
+                         const isCurrentStep = index === currentContactStep;
                          
-                         {/* Bouton BACK (gauche) - position fixe */}
-                         <div className="relative z-10 w-16 flex justify-start">
-                           {currentContactStep > 0 && (
-                             <button
-                               onClick={() => setCurrentContactStep(prev => prev - 1)}
-                               className="p-3 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110"
-                             >
-                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                 <line x1="19" y1="12" x2="5" y2="12"></line>
-                                 <polyline points="12,19 5,12 12,5"></polyline>
-                               </svg>
-                             </button>
-                           )}
-                         </div>
+                         // N'afficher que les items avec du contenu
+                         if (!hasValue) return null;
                          
-                         {/* Champ central - taille fixe et centré */}
-                         <div className="relative z-10 w-[768px] mx-8">
-                           <input
-                             type={contactSteps[currentContactStep].type}
-                             placeholder={contactSteps[currentContactStep].placeholder}
-                             value={contactData[contactSteps[currentContactStep].field]}
-                             onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
-                             className="w-full min-h-[48px] px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
-                           />
-                         </div>
-                         
-                         {/* Bouton NEXT/ENVOYER (droite) - position fixe */}
-                         <div className="relative z-10 w-16 flex justify-end">
-                           <button
-                             onClick={() => handleContactNext()}
-                             disabled={!contactData[contactSteps[currentContactStep].field]?.trim()}
-                             className={`p-3 transition-all duration-300 hover:scale-110 ${
-                               contactData[contactSteps[currentContactStep].field]?.trim()
-                                 ? 'text-cyan-500 hover:text-cyan-600'
-                                 : 'text-gray-400 cursor-not-allowed'
+                         return (
+                           <div
+                             key={step.field}
+                             onClick={() => setCurrentContactStep(index)}
+                             className={`cursor-pointer transition-all duration-300 ${
+                               isCurrentStep ? 'text-cyan-600' : 'text-gray-600 hover:text-gray-800'
                              }`}
                            >
-                             {currentContactStep === 3 ? (
-                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                 <path d="M22 2L11 13"></path>
-                                 <polygon points="22,2 15,2 2,2 2,9 2,22 9,22 22,22 22,15"></polygon>
-                               </svg>
-                             ) : (
-                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                 <line x1="5" y1="12" x2="19" y2="12"></line>
-                                 <polyline points="12,5 19,12 12,19"></polyline>
-                               </svg>
-                             )}
-                           </button>
-                         </div>
-                       </div>
+                             <h4 className="font-kode text-xs text-current uppercase tracking-wider mb-1">
+                               {step.label}
+                             </h4>
+                             <p className="font-jetbrains text-sm text-current leading-relaxed max-w-[200px] truncate">
+                               {contactData[step.field]}
+                             </p>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
                  </div>
                </div>
              </div>
