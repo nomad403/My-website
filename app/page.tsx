@@ -23,7 +23,7 @@ const pageConfig = {
   },
   skills: {
     sphere: { scale: 1, translateX: 0, translateY: 2500 },
-    background: 'night' as const,
+    background: 'day' as const,
     elements: ['contentPages']
   },
   contact: {
@@ -158,9 +158,9 @@ export default function HomePage() {
       {/* FOND : Packing de sphères en dehors de R3F */}
       <SpheresPacking
         count={200}
-        colors={[0xff0000, 0x0, 0xffffff]}
         minSize={0.5}
         maxSize={1.0}
+        currentPage={currentPage}
       />
       
       <div className="relative w-full h-screen overflow-hidden">

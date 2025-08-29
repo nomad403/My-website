@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
 interface CarouselItem {
   id: number;
@@ -27,25 +27,44 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
   const [isAnimatingToTarget, setIsAnimatingToTarget] = useState(false);
   const isAnimatingRef = useRef(false);
 
-  // Fonction lerp pour l'animation fluide
-  const lerp = (a: number, b: number, n: number) => {
+  // Mémorisation des calculs coûteux
+  const carouselGeometry = useMemo(() => {
+    if (items.length === 0) return null;
+    
+    const length = items.length;
+    const degrees = 360 / length;
+    const gap = 20;
+    
+    // Calculs précalculés pour éviter la latence
+    return {
+      length,
+      degrees,
+      gap,
+      // Ces valeurs seront calculées dynamiquement lors du resize
+      tz: 0,
+      height: 0
+    };
+  }, [items.length]);
+
+  // Fonction lerp optimisée
+  const lerp = useCallback((a: number, b: number, n: number) => {
     return n * (a - b) + b;
-  };
+  }, []);
 
-  // Calcule la distance Z des items
-  const distanceZ = (widthElement: number, length: number, gap: number) => {
+  // Calcule la distance Z des items (mémorisé)
+  const distanceZ = useCallback((widthElement: number, length: number, gap: number) => {
     return (widthElement / 2) / Math.tan(Math.PI / length) + gap;
-  };
+  }, []);
 
-  // Calcule la hauteur du conteneur
-  const calculateHeight = (z: number) => {
+  // Calcule la hauteur du conteneur (mémorisé)
+  const calculateHeight = useCallback((z: number) => {
     const t = Math.atan(90 * Math.PI / 180 / 2);
     const height = t * 2 * z;
     return height;
-  };
+  }, []);
 
-  // Calcule le champ de vision
-  const calculateFov = (carrouselProps: { w: number; h: number }) => {
+  // Calcule le champ de vision (mémorisé)
+  const calculateFov = useCallback((carrouselProps: { w: number; h: number }) => {
     if (!containerCarrouselRef.current) return 0;
     
     const perspective = window
@@ -57,10 +76,10 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
       Math.sqrt(carrouselProps.h * carrouselProps.h);
     const fov = 2 * Math.atan(length / (2 * parseInt(perspective))) * (180 / Math.PI);
     return fov;
-  };
+  }, []);
 
-  // Obtient les propriétés de taille
-  const onResize = () => {
+  // Obtient les propriétés de taille (optimisé)
+  const onResize = useCallback(() => {
     if (!containerCarrouselRef.current) return { w: 0, h: 0 };
     
     const boundingCarrousel = containerCarrouselRef.current.getBoundingClientRect();
@@ -68,45 +87,46 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
       w: boundingCarrousel.width,
       h: boundingCarrousel.height
     };
-  };
+  }, []);
 
-  // Crée le carrousel
-  const createCarrousel = () => {
-    if (!containerRef.current || !carrouselRef.current) return;
+  // Crée le carrousel (optimisé avec mémorisation)
+  const createCarrousel = useCallback(() => {
+    if (!containerRef.current || !carrouselRef.current || !carouselGeometry) return;
     
     const carrouselProps = onResize();
-    const length = items.length;
-    const degress = 360 / length;
-    const gap = 20;
+    const { length, degrees, gap } = carouselGeometry;
     const tz = distanceZ(carrouselProps.w, length, gap);
-    
     const height = calculateHeight(tz);
 
-    containerRef.current.style.width = tz * 2 + gap * length + "px";
-    containerRef.current.style.height = height + "px";
+    // Mettre à jour les dimensions en une seule fois
+    const container = containerRef.current;
+    container.style.width = tz * 2 + gap * length + "px";
+    container.style.height = height + "px";
 
+    // Optimisation : traiter tous les items en une seule passe
     const carrouselItems = carrouselRef.current.querySelectorAll('.carrousel-item');
     carrouselItems.forEach((item: Element, i: number) => {
-      const degressByItem = degress * i + "deg";
-      (item as HTMLElement).style.setProperty("--rotatey", degressByItem);
-      (item as HTMLElement).style.setProperty("--tz", tz + "px");
+      const degreesByItem = degrees * i + "deg";
+      const element = item as HTMLElement;
+      element.style.setProperty("--rotatey", degreesByItem);
+      element.style.setProperty("--tz", tz + "px");
     });
-  };
+  }, [carouselGeometry, distanceZ, calculateHeight, onResize]);
 
-  // Calcule l'angle de rotation pour afficher un projet spécifique
-  const calculateTargetRotation = (index: number, currentAngle: number) => {
-    const degreesPerItem = 360 / items.length;
+  // Calcule l'angle de rotation pour afficher un projet spécifique (optimisé)
+  const calculateTargetRotation = useCallback((index: number, currentAngle: number) => {
+    if (!carouselGeometry) return currentAngle;
+    
+    const degreesPerItem = carouselGeometry.degrees;
     const baseTargetAngle = -degreesPerItem * index;
     
-    // Normalise la différence pour choisir le chemin le plus court
-    let diff = baseTargetAngle - currentAngle;
+    // Normaliser l'angle pour éviter les rotations multiples
+    let normalizedTarget = baseTargetAngle;
+    while (normalizedTarget < currentAngle - 180) normalizedTarget += 360;
+    while (normalizedTarget > currentAngle + 180) normalizedTarget -= 360;
     
-    // Ajuste la différence pour éviter les rotations de plus de 180°
-    while (diff > 180) diff -= 360;
-    while (diff < -180) diff += 360;
-    
-    return currentAngle + diff;
-  };
+    return normalizedTarget;
+  }, [carouselGeometry]);
 
   // Anime vers le projet sélectionné
   const animateToProject = (index: number) => {
@@ -222,28 +242,52 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     }
   };
 
-  // Initialisation
+  // Initialisation optimisée avec requestIdleCallback
   useEffect(() => {
-    const timer = setTimeout(() => {
-      createCarrousel();
-      update();
-    }, 100);
+    if (!carouselGeometry) return;
 
+    // Utiliser requestIdleCallback pour éviter de bloquer l'UI
+    const initCarousel = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          createCarrousel();
+        }, { timeout: 1000 });
+      } else {
+        // Fallback pour les navigateurs qui ne supportent pas requestIdleCallback
+        setTimeout(createCarrousel, 0);
+      }
+    };
+
+    // Initialiser immédiatement si possible, sinon en différé
+    if (document.readyState === 'complete') {
+      initCarousel();
+    } else {
+      window.addEventListener('load', initCarousel);
+      return () => window.removeEventListener('load', initCarousel);
+    }
+  }, [carouselGeometry, createCarrousel]);
+
+  // Gestion du resize optimisée avec debounce
+  useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+    
     const handleResize = () => {
-      createCarrousel();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(createCarrousel, { timeout: 500 });
+        } else {
+          setTimeout(createCarrousel, 16); // ~60fps
+        }
+      }, 100);
     };
 
-    window.addEventListener("resize", handleResize);
-
+    window.addEventListener('resize', handleResize);
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
     };
-  }, [items]);
-
-  useEffect(() => {
-    update();
-  }, [moveTo]);
+  }, [createCarrousel]);
 
   // Animation vers le projet sélectionné
   useEffect(() => {

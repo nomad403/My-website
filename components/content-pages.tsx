@@ -90,6 +90,46 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
 
+  // États pour le formulaire de contact
+  const [currentContactStep, setCurrentContactStep] = useState(0);
+  const [contactData, setContactData] = useState({
+    nom: '',
+    prenom: '',
+    contact: '',
+    message: ''
+  });
+
+  // Configuration des étapes du formulaire de contact
+  const contactSteps = [
+    { field: 'nom' as const, label: 'VOTRE NOM', type: 'text', placeholder: 'Entrez votre nom' },
+    { field: 'prenom' as const, label: 'VOTRE PRÉNOM', type: 'text', placeholder: 'Entrez votre prénom' },
+    { field: 'contact' as const, label: 'EMAIL OU TÉLÉPHONE', type: 'text', placeholder: 'votre@email.com ou 06 12 34 56 78' },
+    { field: 'message' as const, label: 'VOTRE MESSAGE', type: 'text', placeholder: 'Décrivez votre projet, vos besoins, votre budget et vos délais...' }
+  ];
+
+  // Gestion des changements dans le formulaire de contact
+  const handleContactInputChange = (field: keyof typeof contactData, value: string) => {
+    setContactData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Gestion de la navigation dans le formulaire de contact
+  const handleContactNext = () => {
+    if (currentContactStep === 3) {
+      // Dernière étape : envoyer le formulaire
+      console.log('Formulaire soumis:', contactData);
+      alert('Formulaire soumis ! (Logique d\'envoi à implémenter)');
+      // Réinitialiser le formulaire
+      setContactData({ nom: '', prenom: '', contact: '', message: '' });
+      setCurrentContactStep(0);
+    } else {
+      // Passer à l'étape suivante
+      setCurrentContactStep(prev => prev + 1);
+    }
+  };
+
   // Fonction pour créer l'effet shuffle
   const shuffleText = (text: string) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
@@ -147,7 +187,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                     
                     {/* Colonne Description */}
                     <div className="col-span-5 pr-8">
-                      <div className="text-white">
+                      <div className="text-black">
                         <p className="font-jetbrains text-xl leading-relaxed opacity-90">
                           Développeur polyvalent spécialisé dans les technologies modernes.
                           <br /><br />
@@ -166,10 +206,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                         <div className="space-y-8">
                           {/* Frontend */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Frontend"] || "Frontend" : "Frontend"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React.js</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Next.js</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">TypeScript</div>
@@ -183,10 +223,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* Backend / API */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Backend / API"] || "Backend / API" : "Backend / API"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Node.js</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Express.js</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
@@ -196,10 +236,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* Mobile */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Mobile"] || "Mobile" : "Mobile"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Kotlin</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Jetpack Compose</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
@@ -213,10 +253,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                         <div className="space-y-8">
                           {/* IA & Automation */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["IA & Automation"] || "IA & Automation" : "IA & Automation"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Azure OpenAI API</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">CrewAI</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">LangChain</div>
@@ -227,10 +267,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* 3D & Design */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["3D & Design"] || "3D & Design" : "3D & Design"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Three.js</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React Three Fiber</div>
                               <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GLSL</div>
@@ -244,10 +284,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                         
                         {/* Colonne 3 : DevOps */}
                         <div className="space-y-3">
-                          <h3 className="font-kode text-xl text-white tracking-wider uppercase font-medium">
+                          <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
                             {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
                           </h3>
-                          <div className="space-y-1 font-jetbrains text-lg text-white/80 font-normal">
+                          <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
                             <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Vercel</div>
                             <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GitHub</div>
                           </div>
@@ -298,14 +338,146 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
            </div>
          )
 
-             case "contact":
-         return (
-           <div className="max-w-4xl mx-auto mt-32 px-8">
-            <div className="grid grid-cols-12 gap-8">
-              
-            </div>
-          </div>
-        )
+                                                       case "contact":
+           return (
+             <div className="relative w-full h-screen flex flex-col">
+               {/* Espace pour la figure 3D (en haut) */}
+               <div className="flex-1 flex items-center justify-center">
+                 {/* La figure 3D est rendue par GlobalCanvas ici */}
+               </div>
+               
+               {/* Formulaire progressif en bas */}
+               <div className="px-8 pb-16">
+                 <div className="max-w-3xl mx-auto">
+                                       {/* Indicateur de progression */}
+                    <div className="text-center mb-8">
+                      <div className="flex justify-center space-x-2">
+                        {['NOM', 'PRÉNOM', 'CONTACT', 'MESSAGE'].map((step, index) => (
+                          <div
+                            key={step}
+                            className={`w-3 h-3 rounded-full ${
+                              index <= currentContactStep ? 'bg-cyan-500' : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                                                              {/* Titre au-dessus */}
+                      <div className="text-center mb-4">
+                        <label className="font-kode text-lg text-gray-800 uppercase tracking-wider">
+                          {contactSteps[currentContactStep].label}
+                        </label>
+                      </div>
+                     
+                                                                                         {/* Ligne avec boutons et champ - Effet Gooey */}
+                        <div className="relative flex items-center justify-center">
+                          {/* SVG Gooey Filter pour l'effet de déformation */}
+                          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ filter: 'url(#gooey)' }}>
+                            <defs>
+                              <filter id="gooey">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+                                <feComposite in2="goo" in="SourceGraphic" result="mix" />
+                              </filter>
+                            </defs>
+                            
+                            {/* Forme centrale qui relie les boutons au champ */}
+                            <rect
+                              x="12%"
+                              y="25%"
+                              width="76%"
+                              height="50%"
+                              rx="24"
+                              className="transition-all duration-700 ease-out"
+                              style={{
+                                fill: 'rgba(6, 182, 212, 0.08)'
+                              }}
+                            />
+                            
+                            {/* Formes gooey qui créent l'effet de connexion liquide */}
+                            <circle
+                              cx="8%"
+                              cy="50%"
+                              r="24"
+                              className="transition-all duration-700 ease-out"
+                              style={{
+                                fill: 'rgba(6, 182, 212, 0.15)',
+                                opacity: currentContactStep > 0 ? 1 : 0.3
+                              }}
+                            />
+                            
+                            <circle
+                              cx="92%"
+                              cy="50%"
+                              r="24"
+                              className="transition-all duration-700 ease-out"
+                              style={{
+                                fill: 'rgba(6, 182, 212, 0.15)'
+                              }}
+                            />
+                            
+
+
+                            
+
+                          </svg>
+                         
+                         {/* Bouton BACK (gauche) - position fixe */}
+                         <div className="relative z-10 w-16 flex justify-start">
+                           {currentContactStep > 0 && (
+                             <button
+                               onClick={() => setCurrentContactStep(prev => prev - 1)}
+                               className="p-3 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110"
+                             >
+                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                 <line x1="19" y1="12" x2="5" y2="12"></line>
+                                 <polyline points="12,19 5,12 12,5"></polyline>
+                               </svg>
+                             </button>
+                           )}
+                         </div>
+                         
+                         {/* Champ central - taille fixe et centré */}
+                         <div className="relative z-10 w-[768px] mx-8">
+                           <input
+                             type={contactSteps[currentContactStep].type}
+                             placeholder={contactSteps[currentContactStep].placeholder}
+                             value={contactData[contactSteps[currentContactStep].field]}
+                             onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
+                             className="w-full min-h-[48px] px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
+                           />
+                         </div>
+                         
+                         {/* Bouton NEXT/ENVOYER (droite) - position fixe */}
+                         <div className="relative z-10 w-16 flex justify-end">
+                           <button
+                             onClick={() => handleContactNext()}
+                             disabled={!contactData[contactSteps[currentContactStep].field]?.trim()}
+                             className={`p-3 transition-all duration-300 hover:scale-110 ${
+                               contactData[contactSteps[currentContactStep].field]?.trim()
+                                 ? 'text-cyan-500 hover:text-cyan-600'
+                                 : 'text-gray-400 cursor-not-allowed'
+                             }`}
+                           >
+                             {currentContactStep === 3 ? (
+                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                 <path d="M22 2L11 13"></path>
+                                 <polygon points="22,2 15,2 2,2 2,9 2,22 9,22 22,22 22,15"></polygon>
+                               </svg>
+                             ) : (
+                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                 <line x1="5" y1="12" x2="19" y2="12"></line>
+                                 <polyline points="12,5 19,12 12,19"></polyline>
+                               </svg>
+                             )}
+                           </button>
+                         </div>
+                       </div>
+                 </div>
+               </div>
+             </div>
+           )
 
       default:
         return null
