@@ -154,10 +154,10 @@ export default function SpheresPacking({
 
       // Appliquer les nouvelles couleurs
       try {
-        if (instanceRef.current) {
+        if (instanceRef.current?.spheres) {
           instanceRef.current.spheres.setColors(newColors);
-          // Changer aussi la lumière principale
-          instanceRef.current.spheres.light1.color.set(newColors[0]);
+          // Changer aussi la lumière principale avec protection
+          instanceRef.current.spheres.light1?.color?.set?.(newColors[0]);
         }
       } catch (e) {
         console.warn("SpheresPacking: erreur lors du changement de couleurs", e);

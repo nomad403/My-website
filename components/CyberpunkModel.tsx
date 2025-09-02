@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useRef } from "react"
 import { useFrame, useLoader } from "@react-three/fiber"
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
+import { GLTFLoader } from "three-stdlib"
 import * as THREE from "three"
 
 interface CyberpunkModelProps {

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
+// Utilisation de l'API route serverless pour l'envoi d'email
 
 interface ContentPagesProps {
   currentPage: string
@@ -98,6 +99,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     contact: '',
     message: ''
   });
+  const [isSending, setIsSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Configuration des étapes du formulaire de contact
   const contactSteps = [
@@ -116,14 +119,54 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   };
 
   // Gestion de la navigation dans le formulaire de contact
-  const handleContactNext = () => {
+  const handleContactNext = async () => {
     if (currentContactStep === 3) {
-      // Dernière étape : envoyer le formulaire
-      console.log('Formulaire soumis:', contactData);
-      alert('Formulaire soumis ! (Logique d\'envoi à implémenter)');
-      // Réinitialiser le formulaire
-      setContactData({ nom: '', prenom: '', contact: '', message: '' });
-      setCurrentContactStep(0);
+      // Dernière étape : envoyer l'email directement
+      setIsSending(true);
+      setSendStatus('idle');
+      
+      const payload = {
+        nom: contactData.nom || "Test",
+        prenom: contactData.prenom || "Alpha",
+        contact: contactData.contact || "alpha@test.com",
+        message: contactData.message || "Hello from dev",
+      };
+
+      try {
+        const url = new URL("/api/contact", window.location.origin).toString(); // sûr et relatif
+        console.log("[contact] POST", url, payload);
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        // ici, fetch NE jette pas en cas de 400/500; on lit le body pour debug
+        const text = await res.text();
+        console.log("[contact] status", res.status, text);
+
+        if (!res.ok) {
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        alert("Message envoyé ✅");
+        setSendStatus('success');
+        
+        // Réinitialiser le formulaire après 3 secondes
+        setTimeout(() => {
+          setContactData({ nom: '', prenom: '', contact: '', message: '' });
+          setCurrentContactStep(0);
+          setSendStatus('idle');
+        }, 3000);
+        
+      } catch (err: any) {
+        console.error("[contact] FAILED", err?.message);
+        alert("Erreur: " + (err?.message ?? "Failed to fetch"));
+        setSendStatus('error');
+      } finally {
+        setIsSending(false);
+      }
     } else {
       // Passer à l'étape suivante
       setCurrentContactStep(prev => prev + 1);
@@ -372,8 +415,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                              className="p-3 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110"
                            >
                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                               <line x1="19" y1="12" x2="5" y2="12"></line>
-                               <polyline points="12,19 5,12 12,5"></polyline>
+                               <line x1="5" y1="12" x2="19" y2="12"></line>
+                               <polyline points="12,5 5,12 12,19"></polyline>
                              </svg>
                            </motion.button>
                          )}
@@ -404,14 +447,16 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                            duration: 0.3 
                          }}
                          onClick={() => handleContactNext()}
-                         disabled={!contactData[contactSteps[currentContactStep].field]?.trim()}
+                         disabled={!contactData[contactSteps[currentContactStep].field]?.trim() || isSending}
                          className={`p-3 transition-all duration-300 hover:scale-110 ${
-                           contactData[contactSteps[currentContactStep].field]?.trim()
+                           contactData[contactSteps[currentContactStep].field]?.trim() && !isSending
                              ? 'text-cyan-500 hover:text-cyan-600'
                              : 'text-gray-400 cursor-not-allowed'
                            }`}
                        >
-                         {currentContactStep === 3 ? (
+                         {isSending ? (
+                           <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                         ) : currentContactStep === 3 ? (
                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                              <path d="M22 2L11 13"></path>
                              <polygon points="22,2 15,2 2,2 2,9 2,22 9,22 22,22 22,15"></polygon>
@@ -425,6 +470,25 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        </motion.button>
                      </div>
                    </div>
+                   
+                   {/* Message de statut */}
+                   {sendStatus !== 'idle' && (
+                     <motion.div 
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       className="mt-4 text-center"
+                     >
+                       {sendStatus === 'success' ? (
+                         <p className="text-green-600 font-jetbrains text-sm">
+                           ✅ Message envoyé avec succès ! Je vous répondrai rapidement.
+                         </p>
+                       ) : sendStatus === 'error' ? (
+                         <p className="text-red-600 font-jetbrains text-sm">
+                           ❌ Erreur lors de l'envoi. Veuillez réessayer.
+                         </p>
+                       ) : null}
+                     </motion.div>
+                   )}
                    
                    {/* Liste horizontale des étapes complétées */}
                    <div className="mt-8 flex justify-center">

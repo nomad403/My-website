@@ -5,7 +5,6 @@ import { OrbitControls, OrthographicCamera, PerspectiveCamera } from "@react-thr
 import { useBackground } from "@/app/contexts/BackgroundContext"
 import { usePage } from "@/app/contexts/PageContext"
 import CyberpunkModel from "./CyberpunkModel"
-import { StarsR3F } from "./StarField"
 
 export default function GlobalCanvas() {
   const { mode, sphereScale, sphereTranslateX, sphereTranslateY, transitioning } = useBackground()
@@ -81,9 +80,6 @@ export default function GlobalCanvas() {
             <spotLight position={[0, 5, 5]} intensity={1.8} angle={0.5} penumbra={0.3} />
           </>
         )}
-        
-        {/* Stars - visible seulement en mode night */}
-        <StarsR3F visible={showStars} />
         
         {/* Cyberpunk Model - visible seulement sur contact */}
         <Suspense fallback={null}>

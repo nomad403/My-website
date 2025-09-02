@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import ParticleText from "@/components/particle-text"
-import ContentPages from "@/components/content-pages"
-import SpheresPacking from "@/components/SpheresPacking"
-// Le rendu 3D est géré par le Canvas global; pas de rendu direct ici
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
+import GlobalCanvas from "@/components/GlobalCanvas"
+import BackgroundLayers from "@/components/BackgroundLayers"
+import ParticleText from "@/components/particle-text"
+import SpheresPacking from "@/components/SpheresPacking"
 import AsciiOverlay from "@/components/AsciiOverlay"
+import ShuffleText from "@/components/ShuffleText"
+import ContentPages from "@/components/content-pages"
 
 // Configuration déclarative des états par page
 const pageConfig = {
@@ -211,7 +213,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
               }`}
             >
-              HOME
+              <ShuffleText shuffleDuration={150} letterDelay={12}>HOME</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("projects")}
@@ -219,7 +221,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
               }`}
             >
-              PROJECTS
+              <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("skills")}
@@ -227,7 +229,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
               }`}
             >
-              SPECIALIST
+              <ShuffleText shuffleDuration={150} letterDelay={12}>SPECIALIST</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("contact")}
@@ -235,7 +237,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
               }`}
             >
-              CONTACT
+              <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
             </button>
           </div>
         </div>
@@ -255,42 +257,7 @@ export default function HomePage() {
           <ParticleText />
         </motion.div>
 
-        {/* Home Content - visible seulement sur home */}
-        <motion.div 
-          className="absolute inset-0 z-20"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isPreloaded && homeVisible ? 1 : 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{ pointerEvents: homeVisible ? "auto" : "none" }}
-        >
-          <div className="flex flex-col justify-between p-8 max-w-7xl mx-auto h-full pointer-events-none">
-            <div className="flex justify-center pt-20">
-              <p className="font-jetbrains text-black text-xs font-light tracking-widest uppercase">
-                I DON'T WANT TO BE THAT DEVELOPER ANYMORE
-              </p>
-            </div>
-
-            <div className="pb-20">
-              <div className="grid grid-cols-12 gap-8 items-end">
-                <div className="col-span-3">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="font-jetbrains text-black text-xs font-light uppercase tracking-wide mb-1">
-                        CHANGE YOUR LIFE
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-jetbrains text-black text-xs font-light uppercase tracking-wide">
-                        CONTACT WITH US
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
+       
         {/* Content Pages - visible sur projects, skills, contact */}
         <AnimatePresence mode="wait">
           {contentVisible && (
@@ -318,6 +285,52 @@ export default function HomePage() {
       </div>
 
       {/* Le modèle 3D est rendu par GlobalCanvas */}
+      
+      {/* Réseaux sociaux intégrés */}
+      <div className="absolute bottom-0 left-0 right-0 z-50 p-8">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          {/* Réseaux sociaux à gauche */}
+          <div className="flex space-x-6 font-jetbrains text-sm font-light uppercase tracking-wider">
+            <a 
+              href="https://x.com/_nomad_403" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`transition-all duration-300 hover:scale-110 ${
+                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+              }`}
+            >
+              <ShuffleText shuffleDuration={150} letterDelay={12}>X</ShuffleText>
+            </a>
+            <a 
+              href="https://www.linkedin.com/in/glenn-richard/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`transition-all duration-300 hover:scale-110 ${
+                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+              }`}
+            >
+              <ShuffleText shuffleDuration={150} letterDelay={12}>LINKEDIN</ShuffleText>
+            </a>
+            <a 
+              href="https://github.com/nomad403" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`transition-all duration-300 hover:scale-110 ${
+                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+              }`}
+            >
+              <ShuffleText shuffleDuration={150} letterDelay={12}>GITHUB</ShuffleText>
+            </a>
+          </div>
+          
+          {/* Email à droite */}
+          <div className={`font-jetbrains text-sm ${
+            mode === 'night' ? 'text-white' : 'text-black'
+          }`}>
+            nomad403@protonmail.com
+          </div>
+        </div>
+      </div>
     </div>
     </>
   )

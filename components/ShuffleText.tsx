@@ -1,32 +1,83 @@
-"use client";
-import { useEffect, useState } from "react";
+"use client"
 
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=<>?";
+import { useState, useEffect } from 'react'
 
 interface ShuffleTextProps {
-  text: string;
-  duration?: number;
-  className?: string;
+  children: string
+  className?: string
+  shuffleDuration?: number
+  shuffleChars?: string
+  letterDelay?: number
 }
 
-export default function ShuffleText({ text, duration = 700, className = "" }: ShuffleTextProps) {
-  const [display, setDisplay] = useState(text);
+export default function ShuffleText({ 
+  children, 
+  className = "", 
+  shuffleDuration = 200,
+  shuffleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()",
+  letterDelay = 18
+}: ShuffleTextProps) {
+  const [isShuffling, setIsShuffling] = useState(false)
+  const [displayText, setDisplayText] = useState(children)
 
-  useEffect(() => {
-    let frame = 0;
-    let interval = setInterval(() => {
-      let revealedCount = Math.min(frame, text.length);
-      let newDisplay = text.split("").map((char: string, i: number) => {
-        if (i < revealedCount) return char;
-        if (char === " ") return " ";
-        return CHARS[Math.floor(Math.random() * CHARS.length)];
-      }).join("");
-      setDisplay(newDisplay);
-      frame++;
-      if (frame > text.length) clearInterval(interval);
-    }, duration / text.length);
-    return () => clearInterval(interval);
-  }, [text, duration]);
+  const shuffleChar = () => shuffleChars[Math.floor(Math.random() * shuffleChars.length)]
 
-  return <span className={className}>{display}</span>;
+  const handleMouseEnter = () => {
+    if (isShuffling) return
+    
+    setIsShuffling(true)
+    const originalText = children
+    const textLength = originalText.length
+    
+    // Créer un tableau pour suivre l'état de chaque lettre
+    let currentText = originalText.split('')
+    
+    // Phase 1: Shuffle lettre par lettre de gauche à droite
+    const startShuffle = (index: number) => {
+      if (index >= textLength) {
+        // Toutes les lettres sont mélangées, commencer la restauration
+        setTimeout(() => startRestore(0), 80)
+        return
+      }
+      
+      // Mélanger cette lettre spécifique
+      currentText[index] = shuffleChar()
+      setDisplayText(currentText.join(''))
+      
+      // Passer à la lettre suivante après un délai
+      setTimeout(() => {
+        startShuffle(index + 1)
+      }, letterDelay)
+    }
+    
+    // Phase 2: Restaurer lettre par lettre de gauche à droite
+    const startRestore = (index: number) => {
+      if (index >= textLength) {
+        // Toutes les lettres sont restaurées
+        setIsShuffling(false)
+        return
+      }
+      
+      // Restaurer cette lettre spécifique
+      currentText[index] = originalText[index]
+      setDisplayText(currentText.join(''))
+      
+      // Passer à la lettre suivante après un délai
+      setTimeout(() => {
+        startRestore(index + 1)
+      }, letterDelay)
+    }
+    
+    // Commencer par la première lettre
+    startShuffle(0)
+  }
+
+  return (
+    <span 
+      className={className}
+      onMouseEnter={handleMouseEnter}
+    >
+      {displayText}
+    </span>
+  )
 }
