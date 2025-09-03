@@ -280,13 +280,13 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
               
               {/* Contenu principal */}
               <div className="relative z-10 w-full h-full flex items-start">
-                <div className="max-w-7xl mx-auto w-full pt-40 pl-0">
-                  <div className="grid grid-cols-12 gap-8">
+                <div className="max-w-7xl mx-auto w-full pt-20 md:pt-40 px-4 md:px-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
                     {/* Colonne Description */}
-                    <div className="col-span-5 pr-8">
+                    <div className="lg:col-span-5 lg:pr-8">
                       <div className="text-black">
-                        <p className="font-jetbrains text-xl leading-relaxed opacity-90">
+                        <p className="font-jetbrains text-base md:text-lg lg:text-xl leading-relaxed opacity-90">
                           Every project is an adventure.
                           <br /><br />
                           The nomad spirit is about exploring, testing, and daring to embrace technologies that are ever more powerful and secure. In a digital world that is constantly evolving, meeting new needs requires continuous awareness and adaptation.
@@ -297,17 +297,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                     </div>
                     
                     {/* Colonnes Stacks */}
-                    <div className="col-span-7 pl-16">
-                      <div className="grid grid-cols-3 gap-8 w-full">
+                    <div className="lg:col-span-7 lg:pl-16">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 w-full">
                         
                         {/* Colonne 1 : Frontend + Backend + Mobile */}
                         <div className="space-y-8">
                           {/* Frontend */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Frontend"] || "Frontend" : "Frontend"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                               <div 
                                 className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                 onClick={() => handleTechClick('React.js')}
@@ -361,10 +361,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* Backend / API */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Backend / API"] || "Backend / API" : "Backend / API"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                               <div 
                                 className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                 onClick={() => handleTechClick('Node.js')}
@@ -394,10 +394,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* Mobile */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Mobile"] || "Mobile" : "Mobile"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                               <div 
                                 className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                 onClick={() => handleTechClick('Kotlin')}
@@ -436,10 +436,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                         <div className="space-y-8">
                           {/* IA & Automation */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["IA & Automation"] || "IA & Automation" : "IA & Automation"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                               <div 
                                 className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                 onClick={() => handleTechClick('Azure OpenAI API')}
@@ -475,10 +475,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           
                           {/* 3D & Design */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["3D & Design"] || "3D & Design" : "3D & Design"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                               <div 
                                 className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                 onClick={() => handleTechClick('Three.js')}
@@ -527,10 +527,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                         
                         {/* Colonne 3 : DevOps */}
                         <div className="space-y-3">
-                          <h3 className="font-kode text-xl text-black tracking-wider uppercase font-medium">
+                          <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
                             {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
                           </h3>
-                          <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
+                          <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
                             <div 
                               className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                               onClick={() => handleTechClick('Vercel')}
@@ -558,24 +558,45 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
              case "projects":
          return (
            <div className="relative w-full h-screen overflow-hidden">
-             {/* Container aligné comme le header */}
-             <div className="max-w-7xl mx-auto h-full flex items-center gap-16">
-               {/* Liste à gauche */}
-               <div className="min-w-[180px]">
-                 <SphereAlignedProjectList
-                   projects={projectList}
-                   selected={selected}
-                   onSelect={(idx) => {
-                     setPrevSelected(selected);
-                     setSelected(idx);
-                     setSelectedImage(0);
-                   }}
-                   maxVisible={5}
-                 />
+             {/* Desktop Layout */}
+             <div className="hidden lg:block max-w-7xl mx-auto h-full">
+               <div className="h-full flex items-center gap-16">
+                 {/* Liste à gauche */}
+                 <div className="min-w-[180px]">
+                   <SphereAlignedProjectList
+                     projects={projectList}
+                     selected={selected}
+                     onSelect={(idx) => {
+                       setPrevSelected(selected);
+                       setSelected(idx);
+                       setSelectedImage(0);
+                     }}
+                     maxVisible={5}
+                     orientation="vertical"
+                   />
+                 </div>
+                 {/* Carrousel au centre */}
+                 <div className="flex-1 flex justify-center items-start">
+                   <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
+                     <CylinderCarousel
+                       items={projectList}
+                       selectedIndex={selected}
+                       onItemChange={(index: number) => {
+                         setPrevSelected(selected);
+                         setSelected(index);
+                         setSelectedImage(0);
+                       }}
+                     />
+                   </div>
+                 </div>
                </div>
-               {/* Carrousel au centre, prend tout le reste */}
-               <div className="flex-1 flex justify-center items-start">
-                 <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
+             </div>
+
+             {/* Tablet Layout */}
+             <div className="hidden md:block lg:hidden w-full h-full flex flex-col">
+               {/* Carrousel centré en haut */}
+               <div className="flex-1 flex justify-center items-center p-6 pb-3">
+                 <div className="w-full max-w-[85vw] h-[65vh]">
                    <CylinderCarousel
                      items={projectList}
                      selectedIndex={selected}
@@ -587,6 +608,58 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    />
                  </div>
                </div>
+               
+               {/* Menu horizontal en bas */}
+               <div className="h-[35vh] flex items-center justify-center p-6 pt-3">
+                 <div className="w-full max-w-[85vw] flex justify-center">
+                   <SphereAlignedProjectList
+                     projects={projectList}
+                     selected={selected}
+                     onSelect={(idx) => {
+                       setPrevSelected(selected);
+                       setSelected(idx);
+                       setSelectedImage(0);
+                     }}
+                     maxVisible={5}
+                     orientation="horizontal"
+                   />
+                 </div>
+               </div>
+             </div>
+
+             {/* Mobile Layout */}
+             <div className="md:hidden w-full h-full flex flex-col">
+               {/* Carrousel centré en haut */}
+               <div className="flex-1 flex justify-center items-center p-4 pb-2">
+                 <div className="w-full max-w-[95vw] h-[60vh]">
+                   <CylinderCarousel
+                     items={projectList}
+                     selectedIndex={selected}
+                     onItemChange={(index: number) => {
+                       setPrevSelected(selected);
+                       setSelected(index);
+                       setSelectedImage(0);
+                     }}
+                   />
+                 </div>
+               </div>
+               
+               {/* Menu horizontal en bas */}
+               <div className="h-[40vh] flex items-center justify-center p-4 pt-2">
+                 <div className="w-full max-w-[95vw] flex justify-center">
+                   <SphereAlignedProjectList
+                     projects={projectList}
+                     selected={selected}
+                     onSelect={(idx) => {
+                       setPrevSelected(selected);
+                       setSelected(idx);
+                       setSelectedImage(0);
+                     }}
+                     maxVisible={3}
+                     orientation="horizontal"
+                   />
+                 </div>
+               </div>
              </div>
            </div>
          )
@@ -595,11 +668,11 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
            return (
              <div className="relative w-full h-screen flex flex-col">
                {/* Formulaire progressif centré */}
-               <div className="flex-1 flex items-center justify-center px-8">
-                 <div className="max-w-3xl mx-auto">
+               <div className="flex-1 flex items-center justify-center px-4 md:px-8">
+                 <div className="max-w-3xl mx-auto w-full">
                    {/* Titre principal */}
-                   <div className="text-center mb-20">
-                     <h1 className="font-kode text-3xl text-gray-800 uppercase tracking-wider">
+                   <div className="text-center mb-12 md:mb-20">
+                     <h1 className="font-kode text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider">
                        <ShuffleText triggerShuffle={sendStatus === 'success'} enableHover={false}>
                          {titleText}
                        </ShuffleText>
@@ -635,14 +708,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        </AnimatePresence>
                      </div>
                      
-                     {/* Champ central - taille fixe et centré */}
-                     <div className="w-[1600px] mx-2">
+                     {/* Champ central - responsive */}
+                     <div className="flex-1 mx-2 max-w-[600px]">
                        <input
                          type={contactSteps[currentContactStep].type}
                          placeholder={contactSteps[currentContactStep].placeholder}
                          value={contactData[contactSteps[currentContactStep].field]}
                          onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
-                         className="w-full min-h-[48px] px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
+                         className="w-full min-h-[48px] px-4 md:px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains text-sm md:text-base focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
                        />
                      </div>
                      
@@ -697,8 +770,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    )}
                    
                    {/* Liste horizontale des étapes complétées */}
-                   <div className="mt-8 flex justify-center">
-                     <div className="flex space-x-12">
+                   <div className="mt-6 md:mt-8 flex justify-center">
+                     <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-12">
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
                          const isCurrentStep = index === currentContactStep;
@@ -717,7 +790,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                              <h4 className="font-kode text-xs text-current uppercase tracking-wider mb-1">
                                {step.label}
                              </h4>
-                             <p className="font-jetbrains text-sm text-current leading-relaxed max-w-[200px] truncate">
+                             <p className="font-jetbrains text-xs md:text-sm text-current leading-relaxed max-w-[150px] md:max-w-[200px] truncate">
                                {contactData[step.field]}
                              </p>
                            </div>

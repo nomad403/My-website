@@ -35,14 +35,10 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     const degrees = 360 / length;
     const gap = 20;
     
-    // Calculs précalculés pour éviter la latence
     return {
       length,
       degrees,
-      gap,
-      // Ces valeurs seront calculées dynamiquement lors du resize
-      tz: 0,
-      height: 0
+      gap
     };
   }, [items.length]);
 
@@ -63,45 +59,37 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     return height;
   }, []);
 
-  // Calcule le champ de vision (mémorisé)
-  const calculateFov = useCallback((carrouselProps: { w: number; h: number }) => {
-    if (!containerCarrouselRef.current) return 0;
-    
-    const perspective = window
-      .getComputedStyle(containerCarrouselRef.current)
-      .perspective.split("px")[0];
 
-    const length =
-      Math.sqrt(carrouselProps.w * carrouselProps.w) +
-      Math.sqrt(carrouselProps.h * carrouselProps.h);
-    const fov = 2 * Math.atan(length / (2 * parseInt(perspective))) * (180 / Math.PI);
-    return fov;
-  }, []);
 
   // Obtient les propriétés de taille (optimisé)
   const onResize = useCallback(() => {
     if (!containerCarrouselRef.current) return { w: 0, h: 0 };
     
-    const boundingCarrousel = containerCarrouselRef.current.getBoundingClientRect();
+    const rect = containerCarrouselRef.current.getBoundingClientRect();
     return {
-      w: boundingCarrousel.width,
-      h: boundingCarrousel.height
+      w: rect.width,
+      h: rect.height
     };
   }, []);
 
-  // Crée le carrousel (optimisé avec mémorisation)
+  // Crée le carrousel (optimisé avec mémorisation et responsivité)
   const createCarrousel = useCallback(() => {
     if (!containerRef.current || !carrouselRef.current || !carouselGeometry) return;
     
     const carrouselProps = onResize();
     const { length, degrees, gap } = carouselGeometry;
-    const tz = distanceZ(carrouselProps.w, length, gap);
+    
+    // Calculs responsifs basés sur la taille du conteneur
+    const containerWidth = carrouselProps.w;
+    const isMobile = containerWidth < 400;
+    const isTablet = containerWidth >= 400 && containerWidth < 600;
+    
+    // Ajuster les paramètres selon la taille d'écran
+    const adjustedGap = isMobile ? gap * 0.7 : isTablet ? gap * 0.85 : gap;
+    const tz = distanceZ(carrouselProps.w, length, adjustedGap);
     const height = calculateHeight(tz);
 
-    // Mettre à jour les dimensions en une seule fois
-    const container = containerRef.current;
-    container.style.width = tz * 2 + gap * length + "px";
-    container.style.height = height + "px";
+    // Les dimensions sont maintenant gérées par CSS avec les variables --widthItem et --heightItem
 
     // Optimisation : traiter tous les items en une seule passe
     const carrouselItems = carrouselRef.current.querySelectorAll('.carrousel-item');
@@ -267,9 +255,10 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     }
   }, [carouselGeometry, createCarrousel]);
 
-  // Gestion du resize optimisée avec debounce
+  // Gestion du resize optimisée avec debounce et ResizeObserver
   useEffect(() => {
     let resizeTimeout: NodeJS.Timeout;
+    let resizeObserver: ResizeObserver | null = null;
     
     const handleResize = () => {
       clearTimeout(resizeTimeout);
@@ -282,10 +271,21 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
       }, 100);
     };
 
+    // Utiliser ResizeObserver pour une détection plus précise
+    if (containerCarrouselRef.current && 'ResizeObserver' in window) {
+      resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(containerCarrouselRef.current);
+    }
+
+    // Fallback pour les navigateurs sans ResizeObserver
     window.addEventListener('resize', handleResize);
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(resizeTimeout);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
     };
   }, [createCarrousel]);
 

@@ -488,6 +488,7 @@ body {
   align-items: center;
   width: 100%;
   height: 100%;
+  min-height: 400px;
 }
 
 .container-carrousel {
@@ -496,6 +497,11 @@ body {
   width: var(--widthItem);
   height: var(--heightItem);
   perspective: 1600px;
+  transition: all 0.3s ease-out;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .carrousel {
@@ -579,17 +585,62 @@ body {
   filter: contrast(2.5) brightness(1.8) saturate(1);
 }
 
-@media screen and (min-width: 576px) {
+/* Responsive breakpoints pour le carrousel */
+@media screen and (max-width: 480px) {
   .container-carrousel {
-    --widthItem: 350px;
-    --heightItem: 230px;
+    --widthItem: 280px;
+    --heightItem: 160px;
+    perspective: 1200px;
+  }
+  
+  .carrousel-item {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 481px) and (max-width: 767px) {
+  .container-carrousel {
+    --widthItem: 320px;
+    --heightItem: 180px;
+    perspective: 1400px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .container-carrousel {
+    --widthItem: 400px;
+    --heightItem: 240px;
+    perspective: 1600px;
+  }
+}
+
+@media screen and (min-width: 1024px) {
   .container-carrousel {
     --widthItem: 450px;
     --heightItem: 280px;
+    perspective: 1800px;
+  }
+}
+
+/* Centrage parfait pour tous les breakpoints */
+@media screen and (max-width: 767px) {
+  .container-carrousel {
+    --widthItem: min(85vw, 300px);
+    --heightItem: min(45vh, 160px);
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .container-carrousel {
+    --widthItem: min(75vw, 450px);
+    --heightItem: min(55vh, 280px);
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .container-carrousel {
+    --widthItem: min(65vw, 550px);
+    --heightItem: min(65vh, 350px);
   }
 }
 

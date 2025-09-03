@@ -8,6 +8,7 @@ interface SphereAlignedProjectListProps {
   selected: number
   onSelect: (idx: number) => void
   maxVisible?: number
+  orientation?: 'vertical' | 'horizontal'
 }
 
 export default function SphereAlignedProjectList({
@@ -15,6 +16,7 @@ export default function SphereAlignedProjectList({
   selected,
   onSelect,
   maxVisible = 5, // Réduit à 5 éléments max
+  orientation = 'vertical',
 }: SphereAlignedProjectListProps) {
   const [firstVisible, setFirstVisible] = useState(0)
   const { mode } = useBackground()
@@ -102,39 +104,69 @@ export default function SphereAlignedProjectList({
 
   const visibleProjects = createCircularProjects()
 
-  // Calcul des positions en colonne verticale simple
+  // Calcul des positions selon l'orientation avec responsivité dynamique
   const createProjectPositions = () => {
     const centerIndex = Math.floor(maxVisible / 2)
-    const itemHeight = 70 // Espacement vertical entre les éléments
-    const containerHeight = 400 // Hauteur du conteneur
-    const totalListHeight = maxVisible * itemHeight // Hauteur totale de la liste
-    const startY = (containerHeight - totalListHeight) / 2 // Position de départ centrée
+    
+    if (orientation === 'horizontal') {
+      // Layout horizontal responsive pour mobile/tablet
+      const itemWidth = Math.max(80, Math.min(140, window.innerWidth / maxVisible - 20)) // Responsive
+      const containerWidth = Math.min(400, window.innerWidth * 0.9) // Responsive
+      const totalListWidth = maxVisible * itemWidth
+      const startX = Math.max(0, (containerWidth - totalListWidth) / 2)
 
-    return visibleProjects.map((project, index) => {
-      // Position Y centrée dans le conteneur
-      const y = startY + (index * itemHeight)
+      return visibleProjects.map((project, index) => {
+        const x = startX + (index * itemWidth)
+        const y = 0
 
-      // Position X fixe à gauche (gérée par le flex parent)
-      const x = 0
+        // Calcul de l'opacité et de l'échelle
+        const distanceFromCenter = Math.abs(index - centerIndex)
+        const maxDistance = Math.floor(maxVisible / 2)
+        const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7
+        const scale = 1 - (distanceFromCenter / maxDistance) * 0.3
 
-      // Calcul de l'opacité et de l'échelle
-      const distanceFromCenter = Math.abs(index - centerIndex)
-      const maxDistance = Math.floor(maxVisible / 2)
-      const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7 // De 1.0 à 0.3
-      const scale = 1 - (distanceFromCenter / maxDistance) * 0.3 // De 1.0 à 0.7
+        const isSelected = project.originalIndex === selected
 
-      const isSelected = project.originalIndex === selected
+        return {
+          project,
+          x,
+          y,
+          opacity: Math.max(opacity, 0.3),
+          scale: Math.max(scale, 0.7),
+          isSelected,
+          globalIndex: project.originalIndex
+        }
+      })
+    } else {
+      // Layout vertical pour desktop (comportement original)
+      const itemHeight = 70
+      const containerHeight = 400
+      const totalListHeight = maxVisible * itemHeight
+      const startY = (containerHeight - totalListHeight) / 2
 
-      return {
-        project,
-        x,
-        y,
-        opacity: Math.max(opacity, 0.3),
-        scale: Math.max(scale, 0.7),
-        isSelected,
-        globalIndex: project.originalIndex
-      }
-    })
+      return visibleProjects.map((project, index) => {
+        const y = startY + (index * itemHeight)
+        const x = 0
+
+        // Calcul de l'opacité et de l'échelle
+        const distanceFromCenter = Math.abs(index - centerIndex)
+        const maxDistance = Math.floor(maxVisible / 2)
+        const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7
+        const scale = 1 - (distanceFromCenter / maxDistance) * 0.3
+
+        const isSelected = project.originalIndex === selected
+
+        return {
+          project,
+          x,
+          y,
+          opacity: Math.max(opacity, 0.3),
+          scale: Math.max(scale, 0.7),
+          isSelected,
+          globalIndex: project.originalIndex
+        }
+      })
+    }
   }
 
   const projectPositions = createProjectPositions()
@@ -159,12 +191,30 @@ export default function SphereAlignedProjectList({
     return () => window.removeEventListener('keydown', handleKeyDownWrapper)
   }, [selected, projects.length])
 
+  // Gestion du redimensionnement pour recalculer les positions
+  useEffect(() => {
+    const handleResize = () => {
+      // Force le recalcul des positions en déclenchant un re-render
+      setFirstVisible(prev => prev) // Trigger re-render
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
     <div
       ref={containerRef}
-      className="relative min-w-[180px] h-[400px]"
+      className={`relative ${
+        orientation === 'horizontal' 
+          ? 'w-full max-w-[400px] h-[80px]' 
+          : 'min-w-[180px] h-[400px]'
+      }`}
       onWheel={handleWheel}
-      style={{ pointerEvents: 'auto' }}
+      style={{ 
+        pointerEvents: 'auto',
+        transform: orientation === 'horizontal' ? 'none' : undefined // Reset des transforms en mode horizontal
+      }}
       tabIndex={0} // Pour permettre le focus et les événements clavier
     >
       {projectPositions.map((item, index) => (
@@ -190,20 +240,21 @@ export default function SphereAlignedProjectList({
           }}
                     className={`
              absolute pointer-events-auto cursor-pointer select-none
-             font-kode uppercase tracking-wider text-left
+             font-kode uppercase tracking-wider
              transition-all duration-300 ease-out z-10
              ${
                item.isSelected
                  ? "font-bold text-xl"
                  : "font-medium text-base"
              }
+             ${orientation === 'horizontal' ? 'text-center' : 'text-left'}
            `}
             title={item.project.name}
             style={{
-             transformOrigin: "left center",
+             transformOrigin: orientation === 'horizontal' ? "center center" : "left center",
              transform: "translateX(0%)",
              whiteSpace: "nowrap",
-             maxWidth: "200px",
+             maxWidth: orientation === 'horizontal' ? "100px" : "200px",
              overflow: "hidden",
              textOverflow: "ellipsis",
              color: "black", // Texte noir

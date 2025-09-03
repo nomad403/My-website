@@ -39,6 +39,7 @@ const pageConfig = {
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home")
   const [isPreloaded, setIsPreloaded] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   // pilotage via contexte
   
   // États de visibilité pour une vraie SPA
@@ -79,6 +80,7 @@ export default function HomePage() {
     if (newPage === currentPage || transitioning) return
     
     setTransitioning(true)
+    setIsMobileMenuOpen(false) // Fermer le menu mobile lors de la navigation
     
     // Récupérer la configuration de la nouvelle page
     const newConfig = pageConfig[newPage as keyof typeof pageConfig]
@@ -199,13 +201,15 @@ export default function HomePage() {
       {/* La sphère est rendue par GlobalCanvas */}
 
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 p-8">
+      <nav className="absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className={`font-kode text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
+          <div className={`font-kode text-sm md:text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>
             NOMAD403
           </div>
+          
+          {/* Menu Desktop */}
           <div className="hidden md:flex space-x-8 font-jetbrains text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}
@@ -240,7 +244,104 @@ export default function HomePage() {
               <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
             </button>
           </div>
+
+          {/* Bouton Hamburger Mobile */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`md:hidden p-2 transition-colors duration-300 ${
+              mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
+            }`}
+          >
+            <div className="w-6 h-6 flex flex-col justify-center items-center">
+              <motion.span
+                className={`block h-0.5 w-6 transition-all duration-300 ${
+                  mode === 'night' ? 'bg-white' : 'bg-black'
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? 45 : 0,
+                  y: isMobileMenuOpen ? 0 : -4
+                }}
+              />
+              <motion.span
+                className={`block h-0.5 w-6 transition-all duration-300 ${
+                  mode === 'night' ? 'bg-white' : 'bg-black'
+                }`}
+                animate={{
+                  opacity: isMobileMenuOpen ? 0 : 1
+                }}
+              />
+              <motion.span
+                className={`block h-0.5 w-6 transition-all duration-300 ${
+                  mode === 'night' ? 'bg-white' : 'bg-black'
+                }`}
+                animate={{
+                  rotate: isMobileMenuOpen ? -45 : 0,
+                  y: isMobileMenuOpen ? 0 : 4
+                }}
+              />
+            </div>
+          </button>
         </div>
+
+        {/* Menu Mobile */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className={`md:hidden mt-4 overflow-hidden ${
+                mode === 'night' ? 'bg-black/90 backdrop-blur-sm' : 'bg-white/90 backdrop-blur-sm'
+              } rounded-lg border ${
+                mode === 'night' ? 'border-white/20' : 'border-black/20'
+              }`}
+            >
+              <div className="p-4 space-y-3 font-jetbrains text-sm font-light">
+                <button
+                  onClick={() => handlePageChange("home")}
+                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                    currentPage === "home" 
+                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
+                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>HOME</ShuffleText>
+                </button>
+                <button
+                  onClick={() => handlePageChange("projects")}
+                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                    currentPage === "projects" 
+                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
+                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
+                </button>
+                <button
+                  onClick={() => handlePageChange("skills")}
+                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                    currentPage === "skills" 
+                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
+                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>SPECIALIST</ShuffleText>
+                </button>
+                <button
+                  onClick={() => handlePageChange("contact")}
+                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                    currentPage === "contact" 
+                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
+                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Contenu principal - Éléments avec transitions déclaratives */}
