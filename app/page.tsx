@@ -210,7 +210,7 @@ export default function HomePage() {
             <button
               onClick={() => handlePageChange("home")}
               className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""} ${
-                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>HOME</ShuffleText>
@@ -218,7 +218,7 @@ export default function HomePage() {
             <button
               onClick={() => handlePageChange("projects")}
               className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""} ${
-                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
@@ -226,7 +226,7 @@ export default function HomePage() {
             <button
               onClick={() => handlePageChange("skills")}
               className={`nav-link transition-all duration-300 ${currentPage === "skills" ? "active" : ""} ${
-                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>SPECIALIST</ShuffleText>
@@ -234,7 +234,7 @@ export default function HomePage() {
             <button
               onClick={() => handlePageChange("contact")}
               className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""} ${
-                mode === 'night' ? 'text-white hover:text-orange-400 night-mode' : 'text-black hover:text-orange-600 day-mode'
+                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
@@ -296,7 +296,7 @@ export default function HomePage() {
               target="_blank" 
               rel="noopener noreferrer"
               className={`transition-all duration-300 hover:scale-110 ${
-                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+                mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>X</ShuffleText>
@@ -306,7 +306,7 @@ export default function HomePage() {
               target="_blank" 
               rel="noopener noreferrer"
               className={`transition-all duration-300 hover:scale-110 ${
-                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+                mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>LINKEDIN</ShuffleText>
@@ -316,7 +316,7 @@ export default function HomePage() {
               target="_blank" 
               rel="noopener noreferrer"
               className={`transition-all duration-300 hover:scale-110 ${
-                mode === 'night' ? 'text-white hover:text-orange-400' : 'text-black hover:text-orange-600'
+                mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>GITHUB</ShuffleText>

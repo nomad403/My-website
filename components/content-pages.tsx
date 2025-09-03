@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
+import ShuffleText from "./ShuffleText";
 // Utilisation de l'API route serverless pour l'envoi d'email
 
 interface ContentPagesProps {
@@ -91,6 +92,57 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
 
+  // Mapping des URLs pour chaque technologie
+  const techUrls: {[key: string]: string} = {
+    // Frontend
+    'React.js': 'https://react.dev',
+    'Next.js': 'https://nextjs.org',
+    'TypeScript': 'https://www.typescriptlang.org',
+    'Tailwind CSS': 'https://tailwindcss.com',
+    'Framer Motion': 'https://www.framer.com/motion',
+    'Three.js': 'https://threejs.org',
+    'React Three Fiber': 'https://docs.pmnd.rs/react-three-fiber',
+    'Radix UI': 'https://www.radix-ui.com',
+    
+    // Backend / API
+    'Node.js': 'https://nodejs.org',
+    'Express.js': 'https://expressjs.com',
+    'Firebase': 'https://firebase.google.com',
+    'JSON API': 'https://jsonapi.org',
+    
+    // Mobile
+    'Kotlin': 'https://kotlinlang.org',
+    'Jetpack Compose': 'https://developer.android.com/jetpack/compose',
+    'Swift': 'https://swift.org',
+    'SwiftUI': 'https://developer.apple.com/xcode/swiftui',
+    
+    // IA & Automation
+    'Azure OpenAI API': 'https://azure.microsoft.com/en-us/products/ai-services/openai-service',
+    'CrewAI': 'https://www.crewai.com',
+    'LangChain': 'https://langchain.com',
+    'Ollama': 'https://ollama.ai',
+    'Power Automate': 'https://powerautomate.microsoft.com',
+    
+    // 3D & Design
+    'GLSL': 'https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language',
+    'Figma': 'https://www.figma.com',
+    'Photoshop': 'https://www.adobe.com/products/photoshop.html',
+    'Illustrator': 'https://www.adobe.com/products/illustrator.html',
+    'After Effects': 'https://www.adobe.com/products/aftereffects.html',
+    
+    // DevOps
+    'Vercel': 'https://vercel.com',
+    'GitHub': 'https://github.com'
+  };
+
+  // Fonction pour gérer les clics sur les technologies
+  const handleTechClick = (techName: string) => {
+    const url = techUrls[techName];
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // États pour le formulaire de contact
   const [currentContactStep, setCurrentContactStep] = useState(0);
   const [contactData, setContactData] = useState({
@@ -101,13 +153,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   });
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [titleText, setTitleText] = useState("Let's kick off a project.");
 
   // Configuration des étapes du formulaire de contact
   const contactSteps = [
-    { field: 'nom' as const, label: 'VOTRE NOM', type: 'text', placeholder: 'Entrez votre nom' },
-    { field: 'prenom' as const, label: 'VOTRE PRÉNOM', type: 'text', placeholder: 'Entrez votre prénom' },
-    { field: 'contact' as const, label: 'EMAIL OU TÉLÉPHONE', type: 'text', placeholder: 'votre@email.com ou 06 12 34 56 78' },
-    { field: 'message' as const, label: 'VOTRE MESSAGE', type: 'text', placeholder: 'Décrivez votre projet, vos besoins, votre budget et vos délais...' }
+    { field: 'nom' as const, label: 'YOUR NAME', type: 'text', placeholder: 'Enter your name' },
+    { field: 'prenom' as const, label: 'YOUR FIRST NAME', type: 'text', placeholder: 'Enter your first name' },
+    { field: 'contact' as const, label: 'EMAIL OR PHONE', type: 'text', placeholder: 'your@email.com or +1 234 567 8900' },
+    { field: 'message' as const, label: 'YOUR MESSAGE', type: 'text', placeholder: 'Describe your project, needs, budget and timeline...' }
   ];
 
   // Gestion des changements dans le formulaire de contact
@@ -150,14 +203,16 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           throw new Error(text || `HTTP ${res.status}`);
         }
 
-        alert("Message envoyé ✅");
+        // Effet shuffle sur le titre
+        setTitleText("Message sent, I'll get back to you soon.");
         setSendStatus('success');
         
-        // Réinitialiser le formulaire après 3 secondes
+        // Réinitialiser le formulaire et le titre après 3 secondes
         setTimeout(() => {
           setContactData({ nom: '', prenom: '', contact: '', message: '' });
           setCurrentContactStep(0);
           setSendStatus('idle');
+          setTitleText("Let's kick off a project.");
         }, 3000);
         
       } catch (err: any) {
@@ -186,7 +241,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
       
       // Créer des versions shuffle de tous les textes
       const texts = [
-        "Développeur polyvalent spécialisé dans les technologies modernes.",
+        "Every project is an adventure.",
         "Expertise en frontend, mobile, IA et design 3D.",
         "Approche centrée sur l'expérience utilisateur et l'innovation technique.",
         "Frontend", "Backend / API", "Mobile", "IA & Automation", "3D & Design", "DevOps / Déploiement",
@@ -232,11 +287,11 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                     <div className="col-span-5 pr-8">
                       <div className="text-black">
                         <p className="font-jetbrains text-xl leading-relaxed opacity-90">
-                          Développeur polyvalent spécialisé dans les technologies modernes.
+                          Every project is an adventure.
                           <br /><br />
-                          Expertise en frontend, mobile, IA et design 3D.
+                          The nomad spirit is about exploring, testing, and daring to embrace technologies that are ever more powerful and secure. In a digital world that is constantly evolving, meeting new needs requires continuous awareness and adaptation.
                           <br /><br />
-                          Approche centrée sur l'expérience utilisateur et l'innovation technique.
+                          As a web, mobile, and AI developer, I approach each project with care, turning challenges into opportunities for innovation.
                         </p>
                       </div>
                     </div>
@@ -253,14 +308,54 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               {isShuffling ? shuffledTexts["Frontend"] || "Frontend" : "Frontend"}
                             </h3>
                             <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Next.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">TypeScript</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Tailwind CSS</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Framer Motion</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Three.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React Three Fiber</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Radix UI</div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('React.js')}
+                              >
+                                React.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Next.js')}
+                              >
+                                Next.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('TypeScript')}
+                              >
+                                TypeScript
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Tailwind CSS')}
+                              >
+                                Tailwind CSS
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Framer Motion')}
+                              >
+                                Framer Motion
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Three.js')}
+                              >
+                                Three.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('React Three Fiber')}
+                              >
+                                React Three Fiber
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Radix UI')}
+                              >
+                                Radix UI
+                              </div>
                             </div>
                           </div>
                           
@@ -270,10 +365,30 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               {isShuffling ? shuffledTexts["Backend / API"] || "Backend / API" : "Backend / API"}
                             </h3>
                             <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Node.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Express.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">JSON API</div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Node.js')}
+                              >
+                                Node.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Express.js')}
+                              >
+                                Express.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Firebase')}
+                              >
+                                Firebase
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('JSON API')}
+                              >
+                                JSON API
+                              </div>
                             </div>
                           </div>
                           
@@ -283,11 +398,36 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               {isShuffling ? shuffledTexts["Mobile"] || "Mobile" : "Mobile"}
                             </h3>
                             <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Kotlin</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Jetpack Compose</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Firebase</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Swift</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">SwiftUI</div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Kotlin')}
+                              >
+                                Kotlin
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Jetpack Compose')}
+                              >
+                                Jetpack Compose
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Firebase')}
+                              >
+                                Firebase
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Swift')}
+                              >
+                                Swift
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('SwiftUI')}
+                              >
+                                SwiftUI
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -300,11 +440,36 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               {isShuffling ? shuffledTexts["IA & Automation"] || "IA & Automation" : "IA & Automation"}
                             </h3>
                             <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Azure OpenAI API</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">CrewAI</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">LangChain</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Ollama</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Power Automate</div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Azure OpenAI API')}
+                              >
+                                Azure OpenAI API
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('CrewAI')}
+                              >
+                                CrewAI
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('LangChain')}
+                              >
+                                LangChain
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Ollama')}
+                              >
+                                Ollama
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Power Automate')}
+                              >
+                                Power Automate
+                              </div>
                             </div>
                           </div>
                           
@@ -314,13 +479,48 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               {isShuffling ? shuffledTexts["3D & Design"] || "3D & Design" : "3D & Design"}
                             </h3>
                             <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Three.js</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">React Three Fiber</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GLSL</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Figma</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Photoshop</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Illustrator</div>
-                              <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">After Effects</div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Three.js')}
+                              >
+                                Three.js
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('React Three Fiber')}
+                              >
+                                React Three Fiber
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('GLSL')}
+                              >
+                                GLSL
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Figma')}
+                              >
+                                Figma
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Photoshop')}
+                              >
+                                Photoshop
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('Illustrator')}
+                              >
+                                Illustrator
+                              </div>
+                              <div 
+                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                onClick={() => handleTechClick('After Effects')}
+                              >
+                                After Effects
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -331,8 +531,18 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                             {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
                           </h3>
                           <div className="space-y-1 font-jetbrains text-lg text-black/80 font-normal">
-                            <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">Vercel</div>
-                            <div className="cursor-pointer transition-all duration-300 hover:text-orange-400 hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">GitHub</div>
+                            <div 
+                              className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                              onClick={() => handleTechClick('Vercel')}
+                            >
+                              Vercel
+                            </div>
+                            <div 
+                              className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                              onClick={() => handleTechClick('GitHub')}
+                            >
+                              GitHub
+                            </div>
                           </div>
                         </div>
                         
@@ -390,7 +600,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    {/* Titre principal */}
                    <div className="text-center mb-20">
                      <h1 className="font-kode text-3xl text-gray-800 uppercase tracking-wider">
-                       Let's kick off a project.
+                       <ShuffleText triggerShuffle={sendStatus === 'success'} enableHover={false}>
+                         {titleText}
+                       </ShuffleText>
                      </h1>
                    </div>
                      
@@ -471,22 +683,16 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </div>
                    </div>
                    
-                   {/* Message de statut */}
-                   {sendStatus !== 'idle' && (
+                   {/* Message d'erreur uniquement */}
+                   {sendStatus === 'error' && (
                      <motion.div 
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: 0 }}
                        className="mt-4 text-center"
                      >
-                       {sendStatus === 'success' ? (
-                         <p className="text-green-600 font-jetbrains text-sm">
-                           ✅ Message envoyé avec succès ! Je vous répondrai rapidement.
-                         </p>
-                       ) : sendStatus === 'error' ? (
-                         <p className="text-red-600 font-jetbrains text-sm">
-                           ❌ Erreur lors de l'envoi. Veuillez réessayer.
-                         </p>
-                       ) : null}
+                       <p className="text-red-600 font-jetbrains text-sm">
+                         ❌ Error sending message. Please try again.
+                       </p>
                      </motion.div>
                    )}
                    

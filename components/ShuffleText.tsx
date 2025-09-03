@@ -8,6 +8,9 @@ interface ShuffleTextProps {
   shuffleDuration?: number
   shuffleChars?: string
   letterDelay?: number
+  triggerShuffle?: boolean // Nouvelle prop pour déclencher l'effet programmatiquement
+  enableHover?: boolean
+  totalDuration?: number       // NEW: durée fixe globale
 }
 
 export default function ShuffleText({ 
@@ -15,68 +18,81 @@ export default function ShuffleText({
   className = "", 
   shuffleDuration = 200,
   shuffleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()",
-  letterDelay = 18
+  letterDelay = 15,
+  triggerShuffle,
+  enableHover = true,
+  totalDuration = 900,         // NEW
 }: ShuffleTextProps) {
   const [isShuffling, setIsShuffling] = useState(false)
   const [displayText, setDisplayText] = useState(children)
-
   const shuffleChar = () => shuffleChars[Math.floor(Math.random() * shuffleChars.length)]
 
-  const handleMouseEnter = () => {
+  useEffect(() => {
+    if (triggerShuffle && !isShuffling) {
+      startShuffleAnimation()
+    }
+  }, [triggerShuffle])
+
+  useEffect(() => {
+    if (!isShuffling) setDisplayText(children)
+  }, [children, isShuffling])
+
+  const startShuffleAnimation = () => {
     if (isShuffling) return
-    
     setIsShuffling(true)
-    const originalText = children
-    const textLength = originalText.length
-    
-    // Créer un tableau pour suivre l'état de chaque lettre
-    let currentText = originalText.split('')
-    
-    // Phase 1: Shuffle lettre par lettre de gauche à droite
-    const startShuffle = (index: number) => {
-      if (index >= textLength) {
-        // Toutes les lettres sont mélangées, commencer la restauration
-        setTimeout(() => startRestore(0), 80)
-        return
+
+    const original = children
+    const arr = original.split("")
+    const len = arr.length
+    const start = performance.now()
+    let raf = 0
+
+    // 2 phases sur une durée fixe :
+    // - phase A: 0 → tA : plein shuffle (ex: 40% du temps)
+    // - phase B: tA → 100% : restauration progressive de gauche à droite
+    const ratioA = 0.4 // 40% shuffle, 60% restore
+
+    const tick = (t: number) => {
+      const elapsed = t - start
+      const p = Math.min(1, elapsed / totalDuration)
+
+      if (p < ratioA) {
+        // Phase A: toutes les lettres en version aléatoire
+        const out = arr.map((ch) => (ch === " " ? " " : shuffleChar()))
+        setDisplayText(out.join(""))
+      } else {
+        // Phase B: on restaure progressivement en fonction du progrès
+        const q = (p - ratioA) / (1 - ratioA) // 0..1
+        const cutoff = Math.floor(q * len)
+        const out = arr.map((ch, i) => {
+          if (ch === " ") return " "
+          // lettres déjà "restaurées"
+          if (i < cutoff) return ch
+          // lettres pas encore restaurées -> bruit
+          return shuffleChar()
+        })
+        setDisplayText(out.join(""))
       }
-      
-      // Mélanger cette lettre spécifique
-      currentText[index] = shuffleChar()
-      setDisplayText(currentText.join(''))
-      
-      // Passer à la lettre suivante après un délai
-      setTimeout(() => {
-        startShuffle(index + 1)
-      }, letterDelay)
-    }
-    
-    // Phase 2: Restaurer lettre par lettre de gauche à droite
-    const startRestore = (index: number) => {
-      if (index >= textLength) {
-        // Toutes les lettres sont restaurées
+
+      if (p < 1) {
+        raf = requestAnimationFrame(tick)
+      } else {
+        setDisplayText(original)
         setIsShuffling(false)
-        return
+        cancelAnimationFrame(raf)
       }
-      
-      // Restaurer cette lettre spécifique
-      currentText[index] = originalText[index]
-      setDisplayText(currentText.join(''))
-      
-      // Passer à la lettre suivante après un délai
-      setTimeout(() => {
-        startRestore(index + 1)
-      }, letterDelay)
     }
-    
-    // Commencer par la première lettre
-    startShuffle(0)
+
+    raf = requestAnimationFrame(tick)
+  }
+
+  const canHover = enableHover && !isShuffling && !triggerShuffle
+  const handleMouseEnter = () => {
+    if (canHover) startShuffleAnimation()
   }
 
   return (
-    <span 
-      className={className}
-      onMouseEnter={handleMouseEnter}
-    >
+    <span className={className} onMouseEnter={handleMouseEnter}>
       {displayText}
     </span>
   )
