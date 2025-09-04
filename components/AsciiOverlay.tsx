@@ -17,7 +17,7 @@ function measureCharWidth(px: number, family = 'Consolas, Monaco, "Liberation Mo
 
 export default function AsciiOverlay({
   source,
-  fps = 25,
+  fps = 50,
   invert = false,
   mode = "plain",
   visible = true,

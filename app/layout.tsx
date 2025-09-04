@@ -17,6 +17,7 @@ import CustomCursor from "../components/CustomCursor"
 const kodeMono = localFont({
   src: "../fonts/EnigmaRegular.woff2",
   variable: "--font-kode-mono",
+  display: "swap",
 })
 
 const jetBrainsMono = JetBrains_Mono({

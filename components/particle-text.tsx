@@ -116,10 +116,22 @@ export default function ParticleText() {
 
     try {
       ctx.clearRect(0, 0, width, height)
-      ctx.font = `${options.text.fontSize}px 'Enigma Regular'`
+      // Utilisation exacte du nom de police avec guillemets et fallback
+      ctx.font = `${options.text.fontSize}px "Enigma Regular", monospace`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"
+      
+      // Vérifier si la police est bien chargée en mesurant le texte
+      const testText = "A"
+      const metrics = ctx.measureText(testText)
+      
+      // Si la mesure est trop petite, utiliser une police de fallback
+      if (metrics.width < 5) {
+        console.warn("Font not loaded, using fallback")
+        ctx.font = `${options.text.fontSize}px monospace`
+      }
+      
       ctx.fillText(options.text.message, centerX, centerY)
 
       const imageData = ctx.getImageData(0, 0, width, height)
@@ -252,14 +264,47 @@ export default function ParticleText() {
     mouseRef.current.hover = false
   }
 
-  const handleResize = () => {
-    setupCanvas()
+  const handleResize = async () => {
+    if (!setupCanvas()) return
+    
+    // Attendre que la police soit rechargée après resize
+    await waitForFont()
     mapParticles()
   }
 
+  // Fonction pour attendre que la police soit chargée
+  const waitForFont = async (): Promise<boolean> => {
+    try {
+      // Attendre que la police spécifique soit chargée
+      const fontStr = `700 ${options.text.fontSize}px "Enigma Regular", monospace`
+      await document.fonts.load(fontStr, options.text.message)
+      
+      // Attendre que toutes les polices soient prêtes
+      await document.fonts.ready
+      
+      return true
+    } catch (error) {
+      console.warn("Font loading failed, using fallback:", error)
+      return false
+    }
+  }
+
   useEffect(() => {
-    const initialize = () => {
+    let cancelled = false
+
+    const initialize = async () => {
       if (!setupCanvas()) return
+      
+      // Attendre que la police soit chargée avant de dessiner
+      const fontLoaded = await waitForFont()
+      
+      if (cancelled) return
+      
+      // Dessiner une fois avec fallback si la police n'est pas chargée
+      if (!fontLoaded) {
+        console.warn("Using fallback font for particle text")
+      }
+      
       mapParticles()
       isInitializedRef.current = true
       animate()
@@ -272,6 +317,7 @@ export default function ParticleText() {
     window.addEventListener("resize", handleResize)
 
     return () => {
+      cancelled = true
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseleave", handleMouseLeave)
       window.removeEventListener("resize", handleResize)
