@@ -203,11 +203,13 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className={`font-kode text-sm md:text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
+          <button 
+          onClick={() => handlePageChange("home")}
+          className={`font-kode text-sm md:text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>
             NOMAD403
-          </div>
+          </button>
           
           {/* Menu Desktop */}
           <div className="hidden md:flex space-x-8 font-jetbrains text-sm font-light">

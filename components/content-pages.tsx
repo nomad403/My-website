@@ -154,6 +154,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [titleText, setTitleText] = useState("Let's kick off a project.");
+  const [shouldShuffleBack, setShouldShuffleBack] = useState(false);
 
   // Configuration des étapes du formulaire de contact
   const contactSteps = [
@@ -212,6 +213,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           setContactData({ nom: '', prenom: '', contact: '', message: '' });
           setCurrentContactStep(0);
           setSendStatus('idle');
+          // Déclencher l'effet shuffle pour le retour au texte initial
+          setShouldShuffleBack(true);
           setTitleText("Let's kick off a project.");
         }, 3000);
         
@@ -233,6 +236,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
     return text.split('').map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
   };
+
+  // Réinitialiser le flag de shuffle de retour après l'animation
+  useEffect(() => {
+    if (shouldShuffleBack) {
+      const timer = setTimeout(() => {
+        setShouldShuffleBack(false);
+      }, 2000); // Durée de l'animation shuffle
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShuffleBack]);
 
   // Effet pour gérer le shuffle lors de la disparition
   useEffect(() => {
@@ -672,11 +686,19 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  <div className="max-w-3xl mx-auto w-full">
                    {/* Titre principal */}
                    <div className="text-center mb-12 md:mb-20">
-                     <h1 className="font-kode text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider">
-                       <ShuffleText triggerShuffle={sendStatus === 'success'} enableHover={false}>
-                         {titleText}
-                       </ShuffleText>
-                     </h1>
+                     <div className="grid place-items-center">
+                       {/* Ghost: reserves the max width. Invisible but still takes layout space */}
+                       <span className="invisible whitespace-nowrap font-kode text-xl md:text-2xl lg:text-3xl uppercase tracking-wider">
+                         Message sent, I'll get back to you soon.
+                       </span>
+
+                       {/* Real title on top, forced single line */}
+                       <h1 className="col-start-1 row-start-1 whitespace-nowrap font-kode text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider overflow-hidden text-ellipsis">
+                         <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack} enableHover={false}>
+                           {titleText}
+                         </ShuffleText>
+                       </h1>
+                     </div>
                    </div>
                      
                    {/* Formulaire simplifié sans effet gooey */}
@@ -710,13 +732,41 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      
                      {/* Champ central - responsive */}
                      <div className="flex-1 mx-2 max-w-[600px]">
-                       <input
-                         type={contactSteps[currentContactStep].type}
-                         placeholder={contactSteps[currentContactStep].placeholder}
-                         value={contactData[contactSteps[currentContactStep].field]}
-                         onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
-                         className="w-full min-h-[48px] px-4 md:px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains text-sm md:text-base focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
-                       />
+                       {contactSteps[currentContactStep].field === 'message' ? (
+                         <textarea
+                           placeholder={contactSteps[currentContactStep].placeholder}
+                           value={contactData[contactSteps[currentContactStep].field]}
+                           onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
+                           className="w-full min-h-[48px] max-h-[200px] px-4 md:px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains text-sm md:text-base focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg resize-none overflow-y-auto custom-scrollbar"
+                           rows={1}
+                           style={{
+                             height: 'auto',
+                             minHeight: '48px',
+                             maxHeight: '200px'
+                           }}
+                           onInput={(e) => {
+                             const target = e.target as HTMLTextAreaElement;
+                             target.style.height = 'auto';
+                             const newHeight = Math.min(target.scrollHeight, 200);
+                             target.style.height = newHeight + 'px';
+                             
+                             // Gérer l'affichage de la scrollbar
+                             if (newHeight >= 200) {
+                               target.classList.add('scrollable');
+                             } else {
+                               target.classList.remove('scrollable');
+                             }
+                           }}
+                         />
+                       ) : (
+                         <input
+                           type={contactSteps[currentContactStep].type}
+                           placeholder={contactSteps[currentContactStep].placeholder}
+                           value={contactData[contactSteps[currentContactStep].field]}
+                           onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
+                           className="w-full min-h-[48px] px-4 md:px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains text-sm md:text-base focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
+                         />
+                       )}
                      </div>
                      
                                           {/* Bouton NEXT/ENVOYER (droite) - position fixe avec animation */}
@@ -756,22 +806,28 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </div>
                    </div>
                    
-                   {/* Message d'erreur uniquement */}
-                   {sendStatus === 'error' && (
-                     <motion.div 
-                       initial={{ opacity: 0, y: 10 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       className="mt-4 text-center"
-                     >
-                       <p className="text-red-600 font-jetbrains text-sm">
-                         ❌ Error sending message. Please try again.
-                       </p>
-                     </motion.div>
-                   )}
+                   {/* Message d'erreur - Espace réservé fixe */}
+                   <div className="mt-4 text-center min-h-[24px]">
+                     <AnimatePresence mode="wait">
+                       {sendStatus === 'error' && (
+                         <motion.div 
+                           key="error-message"
+                           initial={{ opacity: 0, y: 10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           exit={{ opacity: 0, y: -10 }}
+                           transition={{ duration: 0.3 }}
+                         >
+                           <p className="text-red-600 font-jetbrains text-sm">
+                             ❌ Error sending message. Please try again.
+                           </p>
+                         </motion.div>
+                       )}
+                     </AnimatePresence>
+                   </div>
                    
-                   {/* Liste horizontale des étapes complétées */}
+                   {/* Liste horizontale des étapes complétées - Espace réservé fixe */}
                    <div className="mt-6 md:mt-8 flex justify-center">
-                     <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-12">
+                     <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
                          const isCurrentStep = index === currentContactStep;
