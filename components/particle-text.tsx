@@ -116,8 +116,10 @@ export default function ParticleText() {
 
     try {
       ctx.clearRect(0, 0, width, height)
-      // Utilisation exacte du nom de police avec guillemets et fallback
-      ctx.font = `${options.text.fontSize}px "Enigma Regular", monospace`
+      
+      // Utiliser le vrai nom de police résolu dynamiquement
+      const fam = getEnigmaFamily()
+      ctx.font = `${options.text.fontSize}px "${fam}", monospace`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"
@@ -272,15 +274,36 @@ export default function ParticleText() {
     mapParticles()
   }
 
+  // Récupère le nom réel (hashé) stocké dans --font-enigma
+  const getEnigmaFamily = (): string => {
+    try {
+      // La variable contient un nom entouré de guillemets
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-enigma")
+        .trim()
+      // Nettoie les guillemets éventuels
+      return raw.replace(/^["']|["']$/g, "")
+    } catch (error) {
+      console.warn("Could not resolve font family, using fallback:", error)
+      return "monospace"
+    }
+  }
+
   // Fonction pour attendre que la police soit chargée
   const waitForFont = async (): Promise<boolean> => {
     try {
-      // Attendre que la police spécifique soit chargée
-      const fontStr = `700 ${options.text.fontSize}px "Enigma Regular", monospace`
-      await document.fonts.load(fontStr, options.text.message)
+      const fam = getEnigmaFamily() // Vrai nom de la police
+      const fontStr = `${options.text.fontSize}px "${fam}", monospace`
       
-      // Attendre que toutes les polices soient prêtes
-      await document.fonts.ready
+      await Promise.race([
+        (document as any).fonts?.load(fontStr, options.text.message),
+        new Promise((r) => setTimeout(r, 1200)),
+      ])
+      
+      await Promise.race([
+        (document as any).fonts?.ready ?? Promise.resolve(),
+        new Promise((r) => setTimeout(r, 500)),
+      ])
       
       return true
     } catch (error) {
