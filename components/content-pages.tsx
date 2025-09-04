@@ -1,13 +1,20 @@
 "use client"
 
-import { ArrowLeft } from "lucide-react"
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
-// Utilisation de l'API route serverless pour l'envoi d'email
+
+// Structure de données pour les stacks (même contenu, même identité)
+const stacks = [
+  { title: "Frontend", items: ["React.js","Next.js","TypeScript","Tailwind CSS","Framer Motion","Three.js","React Three Fiber","Radix UI"] },
+  { title: "Backend / API", items: ["Node.js","Express.js","Firebase","JSON API"] },
+  { title: "Mobile", items: ["Kotlin","Jetpack Compose","Firebase","Swift","SwiftUI"] },
+  { title: "IA & Automation", items: ["Azure OpenAI API","CrewAI","LangChain","Ollama","Power Automate"] },
+  { title: "3D & Design", items: ["Three.js","React Three Fiber","GLSL","Figma","Photoshop","Illustrator","After Effects"] },
+  { title: "DevOps / Déploiement", items: ["Vercel","GitHub"] },
+];
 
 interface ContentPagesProps {
   currentPage: string
@@ -86,15 +93,13 @@ const projectList = [
 
 export default function ContentPages({ currentPage, onBack, isVisible = true }: ContentPagesProps) {
   const [selected, setSelected] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(0); // Nouvel état pour la navigation entre images
-  // Ajoute un état pour mémoriser l'index précédent
+  const [selectedImage, setSelectedImage] = useState(0);
   const [prevSelected, setPrevSelected] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
 
-  // Mapping des URLs pour chaque technologie
+  // Technology URL mapping
   const techUrls: {[key: string]: string} = {
-    // Frontend
     'React.js': 'https://react.dev',
     'Next.js': 'https://nextjs.org',
     'TypeScript': 'https://www.typescriptlang.org',
@@ -103,39 +108,29 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     'Three.js': 'https://threejs.org',
     'React Three Fiber': 'https://docs.pmnd.rs/react-three-fiber',
     'Radix UI': 'https://www.radix-ui.com',
-    
-    // Backend / API
     'Node.js': 'https://nodejs.org',
     'Express.js': 'https://expressjs.com',
     'Firebase': 'https://firebase.google.com',
     'JSON API': 'https://jsonapi.org',
-    
-    // Mobile
     'Kotlin': 'https://kotlinlang.org',
     'Jetpack Compose': 'https://developer.android.com/jetpack/compose',
     'Swift': 'https://swift.org',
     'SwiftUI': 'https://developer.apple.com/xcode/swiftui',
-    
-    // IA & Automation
     'Azure OpenAI API': 'https://azure.microsoft.com/en-us/products/ai-services/openai-service',
     'CrewAI': 'https://www.crewai.com',
     'LangChain': 'https://langchain.com',
     'Ollama': 'https://ollama.ai',
     'Power Automate': 'https://powerautomate.microsoft.com',
-    
-    // 3D & Design
     'GLSL': 'https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language',
     'Figma': 'https://www.figma.com',
     'Photoshop': 'https://www.adobe.com/products/photoshop.html',
     'Illustrator': 'https://www.adobe.com/products/illustrator.html',
     'After Effects': 'https://www.adobe.com/products/aftereffects.html',
-    
-    // DevOps
     'Vercel': 'https://vercel.com',
     'GitHub': 'https://github.com'
   };
 
-  // Fonction pour gérer les clics sur les technologies
+  // Handle technology clicks
   const handleTechClick = (techName: string) => {
     const url = techUrls[techName];
     if (url) {
@@ -143,7 +138,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     }
   };
 
-  // États pour le formulaire de contact
+  // Contact form states
   const [currentContactStep, setCurrentContactStep] = useState(0);
   const [contactData, setContactData] = useState({
     nom: '',
@@ -156,7 +151,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [titleText, setTitleText] = useState("Let's kick off a project.");
   const [shouldShuffleBack, setShouldShuffleBack] = useState(false);
 
-  // Configuration des étapes du formulaire de contact
+  // Contact form steps configuration
   const contactSteps = [
     { field: 'nom' as const, label: 'YOUR NAME', type: 'text', placeholder: 'Enter your name' },
     { field: 'prenom' as const, label: 'YOUR FIRST NAME', type: 'text', placeholder: 'Enter your first name' },
@@ -164,7 +159,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     { field: 'message' as const, label: 'YOUR MESSAGE', type: 'text', placeholder: 'Describe your project, needs, budget and timeline...' }
   ];
 
-  // Gestion des changements dans le formulaire de contact
+  // Handle contact form input changes
   const handleContactInputChange = (field: keyof typeof contactData, value: string) => {
     setContactData(prev => ({
       ...prev,
@@ -172,10 +167,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     }));
   };
 
-  // Gestion de la navigation dans le formulaire de contact
+  // Handle contact form navigation
   const handleContactNext = async () => {
     if (currentContactStep === 3) {
-      // Dernière étape : envoyer l'email directement
+      // Last step: send email directly
       setIsSending(true);
       setSendStatus('idle');
       
@@ -187,7 +182,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
       };
 
       try {
-        const url = new URL("/api/contact", window.location.origin).toString(); // sûr et relatif
+        const url = new URL("/api/contact", window.location.origin).toString();
         console.log("[contact] POST", url, payload);
 
         const res = await fetch(url, {
@@ -196,7 +191,6 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           body: JSON.stringify(payload),
         });
 
-        // ici, fetch NE jette pas en cas de 400/500; on lit le body pour debug
         const text = await res.text();
         console.log("[contact] status", res.status, text);
 
@@ -204,16 +198,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           throw new Error(text || `HTTP ${res.status}`);
         }
 
-        // Effet shuffle sur le titre
         setTitleText("Message sent, I'll get back to you soon.");
         setSendStatus('success');
         
-        // Réinitialiser le formulaire et le titre après 3 secondes
+        // Reset form and title after 3 seconds
         setTimeout(() => {
           setContactData({ nom: '', prenom: '', contact: '', message: '' });
           setCurrentContactStep(0);
           setSendStatus('idle');
-          // Déclencher l'effet shuffle pour le retour au texte initial
           setShouldShuffleBack(true);
           setTitleText("Let's kick off a project.");
         }, 3000);
@@ -226,23 +218,23 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
         setIsSending(false);
       }
     } else {
-      // Passer à l'étape suivante
+      // Go to next step
       setCurrentContactStep(prev => prev + 1);
     }
   };
 
-  // Fonction pour créer l'effet shuffle
+  // Create shuffle effect
   const shuffleText = (text: string) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
     return text.split('').map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
   };
 
-  // Réinitialiser le flag de shuffle de retour après l'animation
+  // Reset shuffle back flag after animation
   useEffect(() => {
     if (shouldShuffleBack) {
       const timer = setTimeout(() => {
         setShouldShuffleBack(false);
-      }, 2000); // Durée de l'animation shuffle
+      }, 2000);
       
       return () => clearTimeout(timer);
     }
@@ -287,17 +279,16 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     switch (currentPage) {
              
 
-                                  case "skills":
-          return (
-            <div className="relative w-full h-screen overflow-hidden">
-              {/* Ciel étoilé rendu par GlobalCanvas */}
-              
-              {/* Contenu principal */}
-              <div className="relative z-10 w-full h-full flex items-start">
-                <div className="max-w-7xl mx-auto w-full pt-20 md:pt-40 px-4 md:px-0">
+      case "skills":
+        return (
+          <div className="fixed inset-0 w-full h-full overflow-hidden bg-transparent">
+            
+            {/* Main content */}
+            <div className="relative z-10 w-full h-full flex items-start">
+              <div className="max-w-7xl mx-auto w-full pt-20 md:pt-40 px-4 md:px-0 h-full overflow-y-auto custom-scrollbar pb-20">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
-                    {/* Colonne Description */}
+                    {/* Description Column */}
                     <div className="lg:col-span-5 lg:pr-8">
                       <div className="text-black">
                         <p className="font-jetbrains text-base md:text-lg lg:text-xl leading-relaxed opacity-90">
@@ -310,255 +301,143 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                       </div>
                     </div>
                     
-                    {/* Colonnes Stacks */}
+                    {/* Stacks Columns */}
                     <div className="lg:col-span-7 lg:pl-16">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 w-full">
-                        
-                        {/* Colonne 1 : Frontend + Backend + Mobile */}
-                        <div className="space-y-8">
+                      {/* Mobile: Horizontal scroll layout */}
+                      <div className="block sm:hidden">
+                        <div className="flex flex-col space-y-8">
                           {/* Frontend */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Frontend"] || "Frontend" : "Frontend"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('React.js')}
-                              >
-                                React.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Next.js')}
-                              >
-                                Next.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('TypeScript')}
-                              >
-                                TypeScript
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Tailwind CSS')}
-                              >
-                                Tailwind CSS
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Framer Motion')}
-                              >
-                                Framer Motion
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Three.js')}
-                              >
-                                Three.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('React Three Fiber')}
-                              >
-                                React Three Fiber
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Radix UI')}
-                              >
-                                Radix UI
-                              </div>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['React.js', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Three.js', 'React Three Fiber', 'Radix UI'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
                           
                           {/* Backend / API */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Backend / API"] || "Backend / API" : "Backend / API"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Node.js')}
-                              >
-                                Node.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Express.js')}
-                              >
-                                Express.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Firebase')}
-                              >
-                                Firebase
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('JSON API')}
-                              >
-                                JSON API
-                              </div>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['Node.js', 'Express.js', 'Firebase', 'JSON API'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
                           
                           {/* Mobile */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["Mobile"] || "Mobile" : "Mobile"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Kotlin')}
-                              >
-                                Kotlin
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Jetpack Compose')}
-                              >
-                                Jetpack Compose
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Firebase')}
-                              >
-                                Firebase
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Swift')}
-                              >
-                                Swift
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('SwiftUI')}
-                              >
-                                SwiftUI
-                              </div>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['Kotlin', 'Jetpack Compose', 'Firebase', 'Swift', 'SwiftUI'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Colonne 2 : IA + 3D & Design */}
-                        <div className="space-y-8">
+                          
                           {/* IA & Automation */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["IA & Automation"] || "IA & Automation" : "IA & Automation"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Azure OpenAI API')}
-                              >
-                                Azure OpenAI API
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('CrewAI')}
-                              >
-                                CrewAI
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('LangChain')}
-                              >
-                                LangChain
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Ollama')}
-                              >
-                                Ollama
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Power Automate')}
-                              >
-                                Power Automate
-                              </div>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['Azure OpenAI API', 'CrewAI', 'LangChain', 'Ollama', 'Power Automate'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
                           
                           {/* 3D & Design */}
                           <div className="space-y-3">
-                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
                               {isShuffling ? shuffledTexts["3D & Design"] || "3D & Design" : "3D & Design"}
                             </h3>
-                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Three.js')}
-                              >
-                                Three.js
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('React Three Fiber')}
-                              >
-                                React Three Fiber
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('GLSL')}
-                              >
-                                GLSL
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Figma')}
-                              >
-                                Figma
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Photoshop')}
-                              >
-                                Photoshop
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('Illustrator')}
-                              >
-                                Illustrator
-                              </div>
-                              <div 
-                                className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                                onClick={() => handleTechClick('After Effects')}
-                              >
-                                After Effects
-                              </div>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['Three.js', 'React Three Fiber', 'GLSL', 'Figma', 'Photoshop', 'Illustrator', 'After Effects'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* DevOps / Déploiement */}
+                          <div className="space-y-3">
+                            <h3 className="font-kode text-lg text-black tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
+                            </h3>
+                            <div className="flex flex-wrap gap-2 font-jetbrains text-sm text-black/80 font-normal">
+                              {['Vercel', 'GitHub'].map((tech) => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer px-3 py-1 bg-gray-100 rounded-full transition-all duration-300 hover:text-cyan-400 hover:bg-cyan-50 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Desktop: Responsive grid layout */}
+                      <div className="hidden sm:grid w-full gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         
-                        {/* Colonne 3 : DevOps */}
-                        <div className="space-y-3">
-                          <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
-                            {isShuffling ? shuffledTexts["DevOps / Déploiement"] || "DevOps / Déploiement" : "DevOps / Déploiement"}
-                          </h3>
-                          <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
-                            <div 
-                              className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                              onClick={() => handleTechClick('Vercel')}
-                            >
-                              Vercel
-                            </div>
-                            <div 
-                              className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                              onClick={() => handleTechClick('GitHub')}
-                            >
-                              GitHub
+                        {/* Cartes responsives avec identité visuelle préservée */}
+                        {stacks.map(({ title, items }) => (
+                          <div key={title} className="space-y-3">
+                            <h3 className="font-kode text-lg md:text-xl text-black tracking-wider uppercase font-medium">
+                              {isShuffling ? shuffledTexts[title] || title : title}
+                            </h3>
+                            <div className="space-y-1 font-jetbrains text-sm md:text-base lg:text-lg text-black/80 font-normal">
+                              {items.map(tech => (
+                                <div 
+                                  key={tech}
+                                  className="cursor-pointer transition-all duration-300 hover:text-cyan-400 hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                                  onClick={() => handleTechClick(tech)}
+                                >
+                                  {tech}
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        </div>
+                        ))}
                         
                       </div>
                     </div>
@@ -575,7 +454,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
              {/* Desktop Layout */}
              <div className="hidden lg:block max-w-7xl mx-auto h-full">
                <div className="h-full flex items-center gap-16">
-                 {/* Liste à gauche */}
+                 {/* List on the left */}
                  <div className="min-w-[180px]">
                    <SphereAlignedProjectList
                      projects={projectList}
@@ -589,7 +468,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      orientation="vertical"
                    />
                  </div>
-                 {/* Carrousel au centre */}
+                 {/* Carousel in center */}
                  <div className="flex-1 flex justify-center items-start">
                    <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
                      <CylinderCarousel
@@ -608,7 +487,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
              {/* Tablet Layout */}
              <div className="hidden md:block lg:hidden w-full h-full flex flex-col">
-               {/* Carrousel centré en haut */}
+               {/* Carousel centered at top */}
                <div className="flex-1 flex justify-center items-center p-6 pb-3">
                  <div className="w-full max-w-[85vw] h-[65vh]">
                    <CylinderCarousel
@@ -623,7 +502,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  </div>
                </div>
                
-               {/* Menu horizontal en bas */}
+               {/* Horizontal menu at bottom */}
                <div className="h-[35vh] flex items-center justify-center p-6 pt-3">
                  <div className="w-full max-w-[85vw] flex justify-center">
                    <SphereAlignedProjectList
@@ -643,7 +522,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
              {/* Mobile Layout */}
              <div className="md:hidden w-full h-full flex flex-col">
-               {/* Carrousel centré en haut */}
+               {/* Carousel centered at top */}
                <div className="flex-1 flex justify-center items-center p-4 pb-2">
                  <div className="w-full max-w-[95vw] h-[60vh]">
                    <CylinderCarousel
@@ -658,7 +537,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  </div>
                </div>
                
-               {/* Menu horizontal en bas */}
+               {/* Horizontal menu at bottom */}
                <div className="h-[40vh] flex items-center justify-center p-4 pt-2">
                  <div className="w-full max-w-[95vw] flex justify-center">
                    <SphereAlignedProjectList
@@ -684,7 +563,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                {/* Formulaire progressif centré */}
                <div className="flex-1 flex items-center justify-center px-4 md:px-8">
                  <div className="max-w-3xl mx-auto w-full">
-                   {/* Titre principal */}
+                   {/* Main title */}
                    <div className="text-center mb-12 md:mb-20">
                      <div className="grid place-items-center">
                        {/* Ghost: reserves the max width. Invisible but still takes layout space */}
@@ -695,15 +574,15 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        {/* Real title on top, forced single line */}
                        <h1 className="col-start-1 row-start-1 whitespace-nowrap font-kode text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider overflow-hidden text-ellipsis">
                          <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack} enableHover={false}>
-                           {titleText}
-                         </ShuffleText>
-                       </h1>
+                         {titleText}
+                       </ShuffleText>
+                     </h1>
                      </div>
                    </div>
                      
-                   {/* Formulaire simplifié sans effet gooey */}
+                   {/* Simplified form without gooey effect */}
                    <div className="flex items-center justify-center">
-                     {/* Bouton BACK (gauche) - position fixe avec animation */}
+                     {/* BACK button (left) - fixed position with animation */}
                      <div className="w-16 flex justify-start">
                        <AnimatePresence mode="wait">
                          {currentContactStep > 0 && (
@@ -730,7 +609,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        </AnimatePresence>
                      </div>
                      
-                     {/* Champ central - responsive */}
+                     {/* Central field - responsive */}
                      <div className="flex-1 mx-2 max-w-[600px]">
                        {contactSteps[currentContactStep].field === 'message' ? (
                          <textarea
@@ -750,7 +629,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                              const newHeight = Math.min(target.scrollHeight, 200);
                              target.style.height = newHeight + 'px';
                              
-                             // Gérer l'affichage de la scrollbar
+                             // Handle scrollbar display
                              if (newHeight >= 200) {
                                target.classList.add('scrollable');
                              } else {
@@ -759,17 +638,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                            }}
                          />
                        ) : (
-                         <input
-                           type={contactSteps[currentContactStep].type}
-                           placeholder={contactSteps[currentContactStep].placeholder}
-                           value={contactData[contactSteps[currentContactStep].field]}
-                           onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
+                       <input
+                         type={contactSteps[currentContactStep].type}
+                         placeholder={contactSteps[currentContactStep].placeholder}
+                         value={contactData[contactSteps[currentContactStep].field]}
+                         onChange={(e) => handleContactInputChange(contactSteps[currentContactStep].field, e.target.value)}
                            className="w-full min-h-[48px] px-4 md:px-6 py-3 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-500 font-jetbrains text-sm md:text-base focus:border-cyan-400 focus:outline-none transition-all duration-300 shadow-lg"
-                         />
+                       />
                        )}
                      </div>
                      
-                                          {/* Bouton NEXT/ENVOYER (droite) - position fixe avec animation */}
+                     {/* NEXT/SEND button (right) - fixed position with animation */}
                      <div className="w-16 flex justify-end">
                        <motion.button
                          key={`next-button-${currentContactStep}`}
@@ -806,33 +685,33 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </div>
                    </div>
                    
-                   {/* Message d'erreur - Espace réservé fixe */}
+                   {/* Error message - Fixed reserved space */}
                    <div className="mt-4 text-center min-h-[24px]">
                      <AnimatePresence mode="wait">
-                       {sendStatus === 'error' && (
-                         <motion.div 
+                   {sendStatus === 'error' && (
+                     <motion.div 
                            key="error-message"
-                           initial={{ opacity: 0, y: 10 }}
-                           animate={{ opacity: 1, y: 0 }}
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
                            transition={{ duration: 0.3 }}
-                         >
-                           <p className="text-red-600 font-jetbrains text-sm">
-                             ❌ Error sending message. Please try again.
-                           </p>
-                         </motion.div>
-                       )}
+                     >
+                       <p className="text-red-600 font-jetbrains text-sm">
+                         ❌ Error sending message. Please try again.
+                       </p>
+                     </motion.div>
+                   )}
                      </AnimatePresence>
                    </div>
                    
-                   {/* Liste horizontale des étapes complétées - Espace réservé fixe */}
+                   {/* Horizontal list of completed steps - Fixed reserved space */}
                    <div className="mt-6 md:mt-8 flex justify-center">
                      <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
                          const isCurrentStep = index === currentContactStep;
                          
-                         // N'afficher que les items avec du contenu
+                         // Only show items with content
                          if (!hasValue) return null;
                          
                          return (
@@ -864,7 +743,6 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     }
   }
 
-  // Plus de slide - supprimé
 
      return (
     <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">

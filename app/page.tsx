@@ -1,36 +1,34 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
-import GlobalCanvas from "@/components/GlobalCanvas"
-import BackgroundLayers from "@/components/BackgroundLayers"
 import ParticleText from "@/components/particle-text"
 import SpheresPacking from "@/components/SpheresPacking"
 import AsciiOverlay from "@/components/AsciiOverlay"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
 
-// Configuration déclarative des états par page
+// Declarative page state configuration
 const pageConfig = {
   home: {
-    sphere: { scale: 1, translateX: 0, translateY: 0 }, // Sphère plus petite et centrée
+    sphere: { scale: 1 },
     background: 'day' as const,
     elements: ['particleText', 'homeContent']
   },
   projects: {
-    sphere: { scale: 3.5, translateX: 0, translateY: 800 }, // Sphère plus grande pour un vrai effet halo
+    sphere: { scale: 3.5 },
     background: 'day' as const,
     elements: ['contentPages']
   },
   skills: {
-    sphere: { scale: 1, translateX: 0, translateY: 2500 },
+    sphere: { scale: 1 },
     background: 'day' as const,
     elements: ['contentPages']
   },
   contact: {
-    sphere: { scale: 0, translateX: -2000, translateY: 0 },
+    sphere: { scale: 0 },
     background: 'day' as const,
     elements: []
   }
@@ -40,82 +38,69 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState("home")
   const [isPreloaded, setIsPreloaded] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  // pilotage via contexte
   
-  // États de visibilité pour une vraie SPA
+  // SPA visibility states
   const [homeVisible, setHomeVisible] = useState(true)
   const [contentVisible, setContentVisible] = useState(false)
   
-  // Contexte global pour les backgrounds
+  // Global background context
   const { mode, transitioning, isSphereDescending, setMode, setTransitioning, setIsSphereDescending,
-    setSphereScale, setSphereTranslateX, setSphereTranslateY } = useBackground()
-  // Router interne global (Canvas lit cette source de vérité)
+    setSphereScale } = useBackground()
+  // Global internal router (Canvas reads this source of truth)
   const { setCurrentPage: setRoutedPage } = usePage()
 
-  // Référence au canvas de fond (spheres packing)
+  // Background canvas reference (spheres packing)
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
 
-  // Préchargement simple
+  // Simple preloading
   useEffect(() => {
     const timer = setTimeout(() => setIsPreloaded(true), 1000)
     return () => clearTimeout(timer)
   }, [])
 
-  // Synchroniser la page locale avec le routeur global
+  // Sync local page with global router
   useEffect(() => {
     setRoutedPage(currentPage)
   }, [currentPage, setRoutedPage])
 
-  // Initialiser les valeurs de la sphère HOME au démarrage
+  // Initialize HOME sphere values on startup
   useEffect(() => {
     const homeConfig = pageConfig.home
     console.log('🏠 Initialisation HOME:', homeConfig.sphere)
     setSphereScale(homeConfig.sphere.scale)
-    setSphereTranslateX(homeConfig.sphere.translateX)
-    setSphereTranslateY(homeConfig.sphere.translateY)
     setMode(homeConfig.background)
-  }, [setSphereScale, setSphereTranslateX, setSphereTranslateY, setMode])
+  }, [setSphereScale, setMode])
 
   const handlePageChange = (newPage: string) => {
     if (newPage === currentPage || transitioning) return
     
     setTransitioning(true)
-    setIsMobileMenuOpen(false) // Fermer le menu mobile lors de la navigation
+    setIsMobileMenuOpen(false)
     
-    // Récupérer la configuration de la nouvelle page
     const newConfig = pageConfig[newPage as keyof typeof pageConfig]
     
-    // Logique spéciale pour les transitions vers le bas (skills)
+    // Special logic for transitions to skills page (downward)
     if (newPage === "skills" && currentPage !== "skills") {
-      // Masquer le fond blanc pendant la descente
       setIsSphereDescending(true)
       
-      // Animation fluide : taille et position simultanément
       setSphereScale(newConfig.sphere.scale)
-      setSphereTranslateY(newConfig.sphere.translateY)
-      setSphereTranslateX(newConfig.sphere.translateX || 0)
       
-      // Une fois la sphère descendue, révéler le fond de specialist
+      // Reveal specialist background after sphere descends
       setTimeout(() => {
         setIsSphereDescending(false)
-        // Changer de page APRÈS le fade
         setCurrentPage(newPage)
         setHomeVisible(false)
         setContentVisible(true)
-      }, 1800) // Délai pour laisser la sphère descendre complètement
+      }, 300)
     } else if (currentPage === "skills" && newPage !== "skills") {
-      // Logique spéciale pour les transitions depuis specialist
+      // Special logic for transitions from skills page
       setIsSphereDescending(true)
       
-      // Animation fluide : taille et position simultanément
-      setSphereTranslateY(newConfig.sphere.translateY)
       setSphereScale(newConfig.sphere.scale)
-      setSphereTranslateX(newConfig.sphere.translateX)
       
-      // Changer de page IMMÉDIATEMENT pour permettre le fade AnimatePresence
+      // Change page immediately to allow AnimatePresence fade
       setCurrentPage(newPage)
       
-      // Gérer la visibilité selon la page
       if (newPage === "home") {
         setHomeVisible(true)
         setContentVisible(false)
@@ -124,21 +109,16 @@ export default function HomePage() {
         setContentVisible(true)
       }
       
-      // Une fois la sphère montée, finir la transition
       setTimeout(() => {
         setIsSphereDescending(false)
-      }, 1800) // Délai pour laisser la sphère monter complètement
+      }, 300)
     } else {
-      // Transitions normales pour les autres pages
+      // Normal transitions for other pages
       setIsSphereDescending(false)
       setSphereScale(newConfig.sphere.scale)
-      setSphereTranslateY(newConfig.sphere.translateY)
-      setSphereTranslateX(newConfig.sphere.translateX)
       
-      // Changer de page immédiatement pour les autres pages
       setCurrentPage(newPage)
       
-      // Gérer la visibilité selon la page
       if (newPage === "home") {
         setHomeVisible(true)
         setContentVisible(false)
@@ -148,12 +128,12 @@ export default function HomePage() {
       }
     }
     
-    // Transition de fond si nécessaire
+    // Background transition if needed
     if (newConfig.background !== mode) {
       setMode(newConfig.background)
     }
     
-    // Finir la transition après les animations de sphère
+    // Finish transition after sphere animations
     setTimeout(() => {
       setTransitioning(false)
     }, 2500)
@@ -161,21 +141,28 @@ export default function HomePage() {
 
   const currentConfig = pageConfig[currentPage as keyof typeof pageConfig]
 
-  // Configuration ASCII gérée directement dans le composant AsciiOverlay
+  // Gérer le scroll du body selon la page
+  useEffect(() => {
+    if (currentPage === "skills") {
+      document.body.classList.remove("no-scroll")
+    } else {
+      document.body.classList.add("no-scroll")
+    }
+  }, [currentPage])
 
   return (
     <>
-      {/* FOND : Packing de sphères en dehors de R3F */}
+      {/* Background: Sphere packing outside R3F */}
       <SpheresPacking
         count={200}
         minSize={0.5}
         maxSize={1.0}
         currentPage={currentPage}
         onCanvasReady={setBgCanvas}
-        visible={currentPage !== "skills" && currentPage !== "contact"}   // <<< cache l'original sur SPECIALIST et CONTACT
+        visible={currentPage !== "skills" && currentPage !== "contact"}
       />
 
-      {/* OVERLAY ASCII en temps réel */}
+      {/* Real-time ASCII overlay */}
       <AsciiOverlay
         source={bgCanvas}
         visible={currentPage === "skills" || currentPage === "contact"}
@@ -183,12 +170,12 @@ export default function HomePage() {
         invert={false}
         opacity={currentPage === "skills" ? 0.35 : 0.4}
         color={currentPage === "skills" ? "#00ffc8" : "#ffcc00"}
-        fontPx={7}    // taille du "pixel"
-        cover={true}  // <<< auto-fit plein écran
+        fontPx={7}
+        cover={true}
       />
       
       <div className="relative w-full h-screen overflow-hidden">
-        {/* Écran de chargement */}
+        {/* Loading screen */}
       {!isPreloaded && (
         <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
           <div className="text-center">
@@ -197,8 +184,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-      
-      {/* La sphère est rendue par GlobalCanvas */}
 
       {/* Navigation */}
       <nav className="absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
@@ -211,7 +196,7 @@ export default function HomePage() {
             NOMAD403
           </button>
           
-          {/* Menu Desktop */}
+          {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8 font-jetbrains text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}
@@ -247,45 +232,40 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Bouton Hamburger Mobile */}
+          {/* Mobile Hamburger Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden p-2 transition-colors duration-300 ${
               mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
             }`}
           >
-            <div className="w-6 h-6 flex flex-col justify-center items-center">
+            <div className="relative w-6 h-6">
+              {/* barre haute */}
               <motion.span
-                className={`block h-0.5 w-6 transition-all duration-300 ${
-                  mode === 'night' ? 'bg-white' : 'bg-black'
-                }`}
-                animate={{
-                  rotate: isMobileMenuOpen ? 45 : 0,
-                  y: isMobileMenuOpen ? 0 : -4
-                }}
+                className={`absolute left-0 right-0 top-1/2 block h-[2px] w-6 bg-current rounded-full will-change-transform`}
+                style={{ transformOrigin: '50% 50%' }}
+                animate={isMobileMenuOpen ? { rotate: 45, y: 0 } : { rotate: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: 'easeInOut' }}
               />
+              {/* barre milieu */}
               <motion.span
-                className={`block h-0.5 w-6 transition-all duration-300 ${
-                  mode === 'night' ? 'bg-white' : 'bg-black'
-                }`}
-                animate={{
-                  opacity: isMobileMenuOpen ? 0 : 1
-                }}
+                className={`absolute left-0 right-0 top-1/2 block h-[2px] w-6 bg-current rounded-full will-change-transform`}
+                style={{ transformOrigin: '50% 50%' }}
+                animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                transition={{ duration: 0.12, ease: 'easeInOut' }}
               />
+              {/* barre basse */}
               <motion.span
-                className={`block h-0.5 w-6 transition-all duration-300 ${
-                  mode === 'night' ? 'bg-white' : 'bg-black'
-                }`}
-                animate={{
-                  rotate: isMobileMenuOpen ? -45 : 0,
-                  y: isMobileMenuOpen ? 0 : 4
-                }}
+                className={`absolute left-0 right-0 top-1/2 block h-[2px] w-6 bg-current rounded-full will-change-transform`}
+                style={{ transformOrigin: '50% 50%' }}
+                animate={isMobileMenuOpen ? { rotate: -45, y: 0 } : { rotate: 0, y: 6 }}
+                transition={{ duration: 0.18, ease: 'easeInOut' }}
               />
             </div>
           </button>
         </div>
 
-        {/* Menu Mobile */}
+        {/* Mobile Menu */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -346,10 +326,10 @@ export default function HomePage() {
         </AnimatePresence>
       </nav>
 
-      {/* Contenu principal - Éléments avec transitions déclaratives */}
+      {/* Main content - Elements with declarative transitions */}
       <div className="relative w-full min-h-screen z-20">
         
-        {/* Particle Text - visible seulement sur home */}
+        {/* Particle Text - visible only on home */}
         <motion.div 
           className="absolute inset-0 z-10"
           initial={{ opacity: 0 }}
@@ -360,8 +340,7 @@ export default function HomePage() {
           <ParticleText />
         </motion.div>
 
-       
-        {/* Content Pages - visible sur projects, skills, contact */}
+        {/* Content Pages - visible on projects, skills, contact */}
         <AnimatePresence mode="wait">
           {contentVisible && (
             <motion.div 
@@ -387,12 +366,11 @@ export default function HomePage() {
         </AnimatePresence>
       </div>
 
-      {/* Le modèle 3D est rendu par GlobalCanvas */}
       
-      {/* Réseaux sociaux intégrés */}
+      {/* Social media links */}
       <div className="absolute bottom-0 left-0 right-0 z-50 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
-          {/* Réseaux sociaux à gauche */}
+          {/* Social media links on the left */}
           <div className="flex space-x-6 font-jetbrains text-sm font-light uppercase tracking-wider">
             <a 
               href="https://x.com/_nomad_403" 
@@ -426,7 +404,7 @@ export default function HomePage() {
             </a>
           </div>
           
-          {/* Email à droite */}
+          {/* Email on the right */}
           <div className={`font-jetbrains text-sm ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>

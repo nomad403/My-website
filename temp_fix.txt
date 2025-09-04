@@ -1,1 +1,0 @@
-// Modification temporaire pour corriger le timing du background

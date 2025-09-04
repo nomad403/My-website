@@ -6,9 +6,7 @@ import localFont from "next/font/local"
 import { BackgroundProvider } from "./contexts/BackgroundContext"
 import { PageProvider } from "./contexts/PageContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
-import GlobalCanvas from "@/components/GlobalCanvas"
-
-import CustomCursor from "@/components/CustomCursor"
+import CustomCursor from "../components/CustomCursor"
 
 // const kodeMono = Kode_Mono({
 //   subsets: ["latin"],
@@ -45,7 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BackgroundProvider>
           <PageProvider>
             <BackgroundLayers />
-            <GlobalCanvas />
             <CustomCursor />
             {children}
           </PageProvider>
