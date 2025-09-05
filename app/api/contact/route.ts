@@ -9,22 +9,7 @@ type Body = { nom?: string; prenom?: string; contact?: string; message?: string 
 
 export async function POST(req: Request) {
   try {
-    // Limite simple (64 KB)
-    const reader = req.body?.getReader?.();
-    if (reader) {
-      let total = 0;
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        total += value?.length ?? 0;
-        if (total > 64 * 1024) {
-          return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
-        }
-      }
-      // Re-clone la requête pour lire à nouveau le body
-      req = new Request(req, { body: await req.blob() });
-    }
-
+    // Lire le body UNE SEULE FOIS
     let data: Body | null = null;
     try {
       data = (await req.json()) as Body;
