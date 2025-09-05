@@ -289,6 +289,21 @@ export default function ParticleText() {
     mapParticles()
   }
 
+  // Récupère le nom réel (hashé) stocké dans --font-enigma
+  const getEnigmaFamily = (): string => {
+    try {
+      // La variable contient un nom entouré de guillemets
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-enigma")
+        .trim()
+      // Nettoie les guillemets éventuels
+      return raw.replace(/^["']|["']$/g, "")
+    } catch (error) {
+      console.warn("Could not resolve font family, using fallback:", error)
+      return "monospace"
+    }
+  }
+
   // Fonction pour attendre que la police soit chargée
   const waitForFont = async (): Promise<boolean> => {
     try {
@@ -299,8 +314,15 @@ export default function ParticleText() {
       // Attendre que la police spécifique soit chargée
       await document.fonts.load(fontStr, options.text.message)
       
-      // Attendre que toutes les polices soient prêtes
-      await document.fonts.ready
+      await Promise.race([
+        (document as any).fonts?.load(fontStr, options.text.message),
+        new Promise((r) => setTimeout(r, 1200)),
+      ])
+      
+      await Promise.race([
+        (document as any).fonts?.ready ?? Promise.resolve(),
+        new Promise((r) => setTimeout(r, 500)),
+      ])
       
       return true
     } catch (error) {
