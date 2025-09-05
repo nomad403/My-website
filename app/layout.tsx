@@ -1,34 +1,26 @@
 import type React from "react"
 import type { Metadata } from "next"
 import '../styles/globals.css'
-import { Kode_Mono, JetBrains_Mono } from "next/font/google"
+import { JetBrains_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { BackgroundProvider } from "./contexts/BackgroundContext"
 import { PageProvider } from "./contexts/PageContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
 import CustomCursor from "../components/CustomCursor"
 
-// const kodeMono = Kode_Mono({
-//   subsets: ["latin"],
-//   weight: ["400", "500", "600", "700"],
-//   variable: "--font-kode-mono",
-// })
-
-const kodeMono = localFont({
+const enigma = localFont({
   src: "../fonts/EnigmaRegular.woff2",
-  variable: "--font-kode-mono",
+  variable: "--font-enigma",
   display: "swap",
+  preload: true,
+  weight: "400",
+  style: "normal",
 })
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-jetbrains-mono",
-})
-
-const enigmaDisplay = localFont({
-  src: "../fonts/EnigmaRegular.woff2",
-  variable: "--font-enigma-display",
+  variable: "--font-jetbrains",
 })
 
 export const metadata: Metadata = {
@@ -40,7 +32,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className={`${kodeMono.variable} ${jetBrainsMono.variable} ${enigmaDisplay.variable} antialiased`}>
+      <body className={`${enigma.variable} ${jetBrainsMono.variable} antialiased`}>
+        {/* Forcer la présence de la fonte dans le DOM */}
+        <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">.</span>
         <BackgroundProvider>
           <PageProvider>
             <BackgroundLayers />

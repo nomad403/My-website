@@ -104,6 +104,21 @@ export default function ParticleText() {
     return true
   }
 
+  // Helper pour récupérer le vrai nom de police depuis CSS
+  const getEnigmaFamily = () => {
+    try {
+      if (typeof window === "undefined" || !document.documentElement) {
+        return "enigma"
+      }
+      
+      // Utiliser directement le nom de police découvert
+      return "enigma"
+    } catch (error) {
+      console.warn("Error getting font family:", error)
+      return "enigma"
+    }
+  }
+
   const mapParticles = () => {
     const bufferCanvas = bufferCanvasRef.current
     if (!bufferCanvas) return
@@ -116,17 +131,19 @@ export default function ParticleText() {
 
     try {
       ctx.clearRect(0, 0, width, height)
-      // Utilisation exacte du nom de police avec guillemets et fallback
-      ctx.font = `${options.text.fontSize}px "Enigma Regular", monospace`
+      
+      // Utiliser le vrai nom de police Enigma
+      const fontFamily = getEnigmaFamily()
+      ctx.font = `${options.text.fontSize}px "${fontFamily}", monospace`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"
       
-      // Vérifier si la police est bien chargée en mesurant le texte
+      // Vérifier si la police est bien chargée
       const testText = "A"
       const metrics = ctx.measureText(testText)
       
-      // Si la mesure est trop petite, utiliser une police de fallback
+      // Si la mesure est trop petite, utiliser fallback
       if (metrics.width < 5) {
         console.warn("Font not loaded, using fallback")
         ctx.font = `${options.text.fontSize}px monospace`
@@ -275,8 +292,11 @@ export default function ParticleText() {
   // Fonction pour attendre que la police soit chargée
   const waitForFont = async (): Promise<boolean> => {
     try {
+      // Utiliser le vrai nom de police Enigma
+      const fontFamily = getEnigmaFamily()
+      const fontStr = `${options.text.fontSize}px "${fontFamily}", monospace`
+      
       // Attendre que la police spécifique soit chargée
-      const fontStr = `700 ${options.text.fontSize}px "Enigma Regular", monospace`
       await document.fonts.load(fontStr, options.text.message)
       
       // Attendre que toutes les polices soient prêtes

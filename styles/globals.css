@@ -225,8 +225,6 @@ body {
 }
 
 :root {
-  --font-kode-mono: "Kode Mono", monospace;
-  --font-jetbrains-mono: "JetBrains Mono", monospace;
   --lg-bg-color: #ffffff12;
   --lg-highlight: rgba(255, 255, 255, 0.75);
   --lg-text: #292929;
@@ -235,16 +233,16 @@ body {
   --lg-grey: #5b5b5b;
 }
 
-.font-kode {
-  font-family: var(--font-kode-mono);
-}
-
-.font-jetbrains {
-  font-family: var(--font-jetbrains-mono);
-}
-
-.font-enigma {
-  font-family: var(--font-enigma-display);
+@layer utilities {
+  .font-enigma { 
+    font-family: var(--font-enigma), ui-monospace, monospace; 
+  }
+  .font-kode { 
+    font-family: var(--font-enigma), ui-monospace, monospace; 
+  }
+  .font-jetbrains { 
+    font-family: var(--font-jetbrains), ui-monospace, monospace; 
+  }
 }
 
 .nav-link {
