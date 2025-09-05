@@ -39,7 +39,7 @@ export default function SpheresPacking({
   className,
   currentPage = "home",
   onCanvasReady,
-  visible = true,              // <<< NEW
+  visible = true,
 }: {
   count?: number;
   minSize?: number;
@@ -47,7 +47,7 @@ export default function SpheresPacking({
   className?: string;
   currentPage?: string;
   onCanvasReady?: (c: HTMLCanvasElement) => void;
-  visible?: boolean;           // <<< NEW
+  visible?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const instanceRef = useRef<ReturnType<Spheres2Ctor> | null>(null);
@@ -60,9 +60,6 @@ export default function SpheresPacking({
       if (typeof window === "undefined") return;
 
       try {
-        // ⚠️ Très important : on demande au bundler d'ignorer cet import runtime.
-        // - webpack: /* webpackIgnore: true */
-        // - vite:     /* @vite-ignore */
         const mod: any = await import(
           /* webpackIgnore: true */ /* @vite-ignore */ CDN_ESM
         );
@@ -71,9 +68,7 @@ export default function SpheresPacking({
         if (cancelled) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
-        onCanvasReady?.(canvas);  // <<< expose le canvas
-
-        // plein écran fixe derrière le contenu
+        onCanvasReady?.(canvas);
         const resize = () => {
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
@@ -111,22 +106,18 @@ export default function SpheresPacking({
         instanceRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, minSize, maxSize, onCanvasReady]);
 
-  // Effet pour changer les couleurs quand la page change
   useEffect(() => {
     if (!instanceRef.current) return;
 
     const targetColors = PAGE_COLORS[currentPage as keyof typeof PAGE_COLORS];
     
-    // Si c'est skills ou contact, pas de spheres
     if (targetColors.every(c => c === 0)) {
       return;
     }
 
-    // Changement de couleurs en fade
-    const fadeDuration = 1000; // 1 seconde
+    const fadeDuration = 1000;
     const startColors = [...currentColorsRef.current];
     const startTime = performance.now();
 

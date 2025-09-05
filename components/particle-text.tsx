@@ -41,32 +41,31 @@ export default function ParticleText() {
 
   const options: ParticleOptions = {
     mouse: {
-      lerpAmt: 0.4, // plus doux
-      repelThreshold: 120, // rayon de répulsion plus large
+      lerpAmt: 0.4,
+      repelThreshold: 120,
     },
     particles: {
-      density: 2, // densité raisonnable
+      density: 2,
       get pixelDensity() {
         return (4 - this.density) * 2
       },
-      pLerpAmt: 0.13, // interpolation plus douce
-      vLerpAmt: 0.07, // vitesse plus douce
+      pLerpAmt: 0.13,
+      vLerpAmt: 0.07,
     },
     text: {
       fontColor: [0, 0, 0, 255],
       get fontSize() {
-        // Taille responsive basée sur la largeur de l'écran
         const width = window.innerWidth
-        if (width < 768) return 40 // Mobile
-        if (width < 1024) return 60 // Tablet
-        if (width < 1440) return 80 // Desktop
-        return 100 // Large screens
+        if (width < 480) return 24
+        if (width < 768) return 32
+        if (width < 1024) return 50
+        if (width < 1440) return 70
+        return 90
       },
       message: "AUGMENTED DEVELOPER",
     },
   }
 
-  // Utility functions
   const lerp = (start: number, end: number, amt: number) => start + (end - start) * amt
   const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
   const angle = (x1: number, y1: number, x2: number, y2: number) => Math.atan2(y2 - y1, x2 - x1)
@@ -93,7 +92,7 @@ export default function ParticleText() {
       width,
       height,
       centerX: width * 0.5,
-      centerY: height * 0.5, // Parfaitement centré
+      centerY: height * 0.5,
     }
 
     repelRef.current = {
@@ -104,14 +103,11 @@ export default function ParticleText() {
     return true
   }
 
-  // Helper pour récupérer le vrai nom de police depuis CSS
   const getEnigmaFamily = () => {
     try {
       if (typeof window === "undefined" || !document.documentElement) {
         return "enigma"
       }
-      
-      // Utiliser directement le nom de police découvert
       return "enigma"
     } catch (error) {
       console.warn("Error getting font family:", error)
@@ -132,21 +128,32 @@ export default function ParticleText() {
     try {
       ctx.clearRect(0, 0, width, height)
       
-      // Utiliser le vrai nom de police Enigma
       const fontFamily = getEnigmaFamily()
-      ctx.font = `${options.text.fontSize}px "${fontFamily}", monospace`
+      let fontSize = options.text.fontSize
+      
+      ctx.font = `${fontSize}px "${fontFamily}", monospace`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"
       
-      // Vérifier si la police est bien chargée
       const testText = "A"
-      const metrics = ctx.measureText(testText)
+      let metrics = ctx.measureText(testText)
       
-      // Si la mesure est trop petite, utiliser fallback
       if (metrics.width < 5) {
         console.warn("Font not loaded, using fallback")
-        ctx.font = `${options.text.fontSize}px monospace`
+        ctx.font = `${fontSize}px monospace`
+      }
+      
+      const textMetrics = ctx.measureText(options.text.message)
+      const maxWidth = width * 0.9
+      
+      if (textMetrics.width > maxWidth) {
+        while (textMetrics.width > maxWidth && fontSize > 12) {
+          fontSize -= 2
+          ctx.font = `${fontSize}px "${fontFamily}", monospace`
+          const newMetrics = ctx.measureText(options.text.message)
+          if (newMetrics.width <= maxWidth) break
+        }
       }
       
       ctx.fillText(options.text.message, centerX, centerY)
@@ -181,13 +188,10 @@ export default function ParticleText() {
 
   const updateParticles = () => {
     const { hover, x: userX, y: userY } = mouseRef.current
-    // const { centerX, centerY } = dimensionsRef.current
 
     particlesRef.current.forEach((particle) => {
-      // Calcul de la distance entre la particule et la souris
       const rd = dist(particle.x, particle.y, userX, userY)
       if (hover && rd < options.mouse.repelThreshold) {
-        // Repousse localement la particule
         const phi = angle(userX, userY, particle.x, particle.y)
         const f = (options.mouse.repelThreshold ** 2 / rd) * (rd / options.mouse.repelThreshold)
         const dx = particle.bx - particle.x
@@ -195,7 +199,6 @@ export default function ParticleText() {
         particle.vx = lerp(particle.vx, dx + Math.cos(phi) * f, options.particles.vLerpAmt)
         particle.vy = lerp(particle.vy, dy + Math.sin(phi) * f, options.particles.vLerpAmt)
       } else {
-        // Retour à la position d'origine sans répulsion
         const dx = particle.bx - particle.x
         const dy = particle.by - particle.y
         particle.vx = lerp(particle.vx, dx, options.particles.vLerpAmt)
@@ -230,7 +233,6 @@ export default function ParticleText() {
         const y = Math.floor(particle.y)
 
         if (x >= 0 && x < width && y >= 0 && y < height) {
-          // Carré 2x2 pour chaque particule
           for (let dx = 0; dx < 2; dx++) {
             for (let dy = 0; dy < 2; dy++) {
               const nx = x + dx
@@ -283,21 +285,15 @@ export default function ParticleText() {
 
   const handleResize = async () => {
     if (!setupCanvas()) return
-    
-    // Attendre que la police soit rechargée après resize
     await waitForFont()
     mapParticles()
   }
 
-
-  // Fonction pour attendre que la police soit chargée
   const waitForFont = async (): Promise<boolean> => {
     try {
-      // Utiliser le vrai nom de police Enigma
       const fontFamily = getEnigmaFamily()
       const fontStr = `${options.text.fontSize}px "${fontFamily}", monospace`
       
-      // Attendre que la police spécifique soit chargée
       await document.fonts.load(fontStr, options.text.message)
       
       await Promise.race([
@@ -323,12 +319,10 @@ export default function ParticleText() {
     const initialize = async () => {
       if (!setupCanvas()) return
       
-      // Attendre que la police soit chargée avant de dessiner
       const fontLoaded = await waitForFont()
       
       if (cancelled) return
       
-      // Dessiner une fois avec fallback si la police n'est pas chargée
       if (!fontLoaded) {
         console.warn("Using fallback font for particle text")
       }
@@ -351,7 +345,6 @@ export default function ParticleText() {
       window.removeEventListener("resize", handleResize)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
-    // eslint-disable-next-line
   }, [])
 
   return (

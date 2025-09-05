@@ -6,7 +6,6 @@ import SphereAlignedProjectList from "./SphereAlignedProjectList";
 import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
 
-// Structure de données pour les stacks (même contenu, même identité)
 const stacks = [
   { title: "Frontend", items: ["React.js","Next.js","TypeScript","Tailwind CSS","Framer Motion","Three.js","React Three Fiber","Radix UI"] },
   { title: "Backend / API", items: ["Node.js","Express.js","Firebase","JSON API"] },

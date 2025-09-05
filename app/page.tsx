@@ -10,7 +10,6 @@ import AsciiOverlay from "@/components/AsciiOverlay"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
 
-// Declarative page state configuration
 const pageConfig = {
   home: {
     sphere: { scale: 1 },
@@ -66,7 +65,6 @@ export default function HomePage() {
   // Initialize HOME sphere values on startup
   useEffect(() => {
     const homeConfig = pageConfig.home
-    console.log('🏠 Initialisation HOME:', homeConfig.sphere)
     setSphereScale(homeConfig.sphere.scale)
     setMode(homeConfig.background)
   }, [setSphereScale, setMode])
