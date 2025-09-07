@@ -6,12 +6,14 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "framer-motion": "^12.23.3",
     "next": "15.2.4",
+    "next-sitemap": "^4.2.3",
     "react": "^19",
     "react-dom": "^19",
     "resend": "^6.0.2"
