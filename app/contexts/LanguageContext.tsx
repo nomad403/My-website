@@ -17,6 +17,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Charger la langue sauvegardée ou détecter la langue du navigateur au démarrage
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     const savedLang = localStorage.getItem('nomad403-language') as Language
     if (savedLang && ['fr', 'en'].includes(savedLang)) {
       // Utiliser la langue sauvegardée
@@ -37,6 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Sauvegarder la langue dans localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return
     localStorage.setItem('nomad403-language', language)
   }, [language])
 

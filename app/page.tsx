@@ -87,8 +87,10 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
     setIsMobileMenuOpen(false)
     
     // Mettre à jour l'URL sans recharger la page
-    const newUrl = newPage === "home" ? "/" : `/${newPage}`
-    window.history.pushState({}, "", newUrl)
+    if (typeof window !== 'undefined') {
+      const newUrl = newPage === "home" ? "/" : `/${newPage}`
+      window.history.pushState({}, "", newUrl)
+    }
     
     const newConfig = pageConfig[newPage as keyof typeof pageConfig]
     
@@ -165,6 +167,8 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
 
   // Gérer la navigation avec les boutons précédent/suivant du navigateur
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     const handlePopState = () => {
       const path = window.location.pathname
       let pageName = "home"
