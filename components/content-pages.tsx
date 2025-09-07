@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import SphereAlignedProjectList from "./SphereAlignedProjectList";
+import ProjectNavigation from "./ProjectNavigation";
 import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
 
@@ -241,7 +241,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
   // Effet pour gérer le shuffle lors de la disparition
   useEffect(() => {
-    if (!isVisible && currentPage === "skills") {
+    if (!isVisible && currentPage === "specialist") {
       setIsShuffling(true);
       
       // Créer des versions shuffle de tous les textes
@@ -278,7 +278,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
     switch (currentPage) {
              
 
-      case "skills":
+      case "specialist":
         return (
           <div className="fixed inset-0 w-full h-full overflow-hidden bg-transparent">
             
@@ -455,7 +455,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                <div className="h-full flex items-center gap-16">
                  {/* List on the left */}
                  <div className="min-w-[180px]">
-                   <SphereAlignedProjectList
+                   <ProjectNavigation
                      projects={projectList}
                      selected={selected}
                      onSelect={(idx) => {
@@ -504,7 +504,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                {/* Horizontal menu at bottom */}
                <div className="h-[35vh] flex items-center justify-center p-6 pt-3">
                  <div className="w-full max-w-[85vw] flex justify-center">
-                   <SphereAlignedProjectList
+                   <ProjectNavigation
                      projects={projectList}
                      selected={selected}
                      onSelect={(idx) => {
@@ -539,7 +539,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                {/* Horizontal menu at bottom */}
                <div className="h-[40vh] flex items-center justify-center p-4 pt-2">
                  <div className="w-full max-w-[95vw] flex justify-center">
-                   <SphereAlignedProjectList
+                   <ProjectNavigation
                      projects={projectList}
                      selected={selected}
                      onSelect={(idx) => {

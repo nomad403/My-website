@@ -9,6 +9,8 @@ import SpheresPacking from "@/components/SpheresPacking"
 import AsciiOverlay from "@/components/AsciiOverlay"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
+import DynamicHead from "@/components/DynamicHead"
+import { getPageMetadata } from "@/config/metadata"
 
 const pageConfig = {
   home: {
@@ -21,7 +23,7 @@ const pageConfig = {
     background: 'day' as const,
     elements: ['contentPages']
   },
-  skills: {
+  specialist: {
     sphere: { scale: 1 },
     background: 'day' as const,
     elements: ['contentPages']
@@ -77,8 +79,8 @@ export default function HomePage() {
     
     const newConfig = pageConfig[newPage as keyof typeof pageConfig]
     
-    // Special logic for transitions to skills page (downward)
-    if (newPage === "skills" && currentPage !== "skills") {
+    // Special logic for transitions to specialist page (downward)
+    if (newPage === "specialist" && currentPage !== "specialist") {
       setIsSphereDescending(true)
       
       setSphereScale(newConfig.sphere.scale)
@@ -90,8 +92,8 @@ export default function HomePage() {
         setHomeVisible(false)
         setContentVisible(true)
       }, 300)
-    } else if (currentPage === "skills" && newPage !== "skills") {
-      // Special logic for transitions from skills page
+    } else if (currentPage === "specialist" && newPage !== "specialist") {
+      // Special logic for transitions from specialist page
       setIsSphereDescending(true)
       
       setSphereScale(newConfig.sphere.scale)
@@ -141,15 +143,24 @@ export default function HomePage() {
 
   // Gérer le scroll du body selon la page
   useEffect(() => {
-    if (currentPage === "skills") {
+    if (currentPage === "specialist") {
       document.body.classList.remove("no-scroll")
     } else {
       document.body.classList.add("no-scroll")
     }
   }, [currentPage])
 
+  // Obtenir les métadonnées pour la page courante
+  const currentMetadata = getPageMetadata(currentPage)
+
   return (
     <>
+      {/* Métadonnées dynamiques */}
+      <DynamicHead 
+        title={currentMetadata.title || "NOMAD403 - Web, Mobile & AI Developer"}
+        description={currentMetadata.description || "Freelance developer building custom web apps, mobile applications, and AI-powered tools."}
+      />
+      
       {/* Background: Sphere packing outside R3F */}
       <SpheresPacking
         count={200}
@@ -157,17 +168,17 @@ export default function HomePage() {
         maxSize={1.0}
         currentPage={currentPage}
         onCanvasReady={setBgCanvas}
-        visible={currentPage !== "skills" && currentPage !== "contact"}
+        visible={currentPage !== "specialist" && currentPage !== "contact"}
       />
 
       {/* Real-time ASCII overlay */}
       <AsciiOverlay
         source={bgCanvas}
-        visible={currentPage === "skills" || currentPage === "contact"}
-        mode={currentPage === "skills" ? "sobel" : "sobel"}
+        visible={currentPage === "specialist" || currentPage === "contact"}
+        mode={currentPage === "specialist" ? "sobel" : "sobel"}
         invert={false}
-        opacity={currentPage === "skills" ? 0.35 : 0.4}
-        color={currentPage === "skills" ? "#00ffc8" : "#ffcc00"}
+        opacity={currentPage === "specialist" ? 0.35 : 0.4}
+        color={currentPage === "specialist" ? "#00ffc8" : "#ffcc00"}
         fontPx={7}
         cover={true}
       />
@@ -213,8 +224,8 @@ export default function HomePage() {
               <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
             </button>
             <button
-              onClick={() => handlePageChange("skills")}
-              className={`nav-link transition-all duration-300 ${currentPage === "skills" ? "active" : ""} ${
+              onClick={() => handlePageChange("specialist")}
+              className={`nav-link transition-all duration-300 ${currentPage === "specialist" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
@@ -299,9 +310,9 @@ export default function HomePage() {
                   <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
                 </button>
                 <button
-                  onClick={() => handlePageChange("skills")}
+                  onClick={() => handlePageChange("specialist")}
                   className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "skills" 
+                    currentPage === "specialist" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
                   }`}
@@ -338,7 +349,7 @@ export default function HomePage() {
           <ParticleText />
         </motion.div>
 
-        {/* Content Pages - visible on projects, skills, contact */}
+        {/* Content Pages - visible on projects, specialist, contact */}
         <AnimatePresence mode="wait">
           {contentVisible && (
             <motion.div 

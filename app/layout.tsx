@@ -25,7 +25,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "NOMAD403 - Web, Mobile & AI Developer",
-  description: "Freelance developer building scalable web apps, mobile solutions, and AI tools. Interactive 3D portfolio showcasing modern and high-end projects.",
+  description: "Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

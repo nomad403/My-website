@@ -3,7 +3,7 @@ import { useRef, useState, useEffect, type WheelEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useBackground } from "@/app/contexts/BackgroundContext"
 
-interface SphereAlignedProjectListProps {
+interface ProjectNavigationProps {
   projects: { id: number; name: string }[]
   selected: number
   onSelect: (idx: number) => void
@@ -11,13 +11,13 @@ interface SphereAlignedProjectListProps {
   orientation?: 'vertical' | 'horizontal'
 }
 
-export default function SphereAlignedProjectList({
+export default function ProjectNavigation({
   projects,
   selected,
   onSelect,
   maxVisible = 5, // Réduit à 5 éléments max
   orientation = 'vertical',
-}: SphereAlignedProjectListProps) {
+}: ProjectNavigationProps) {
   const [firstVisible, setFirstVisible] = useState(0)
   const { mode } = useBackground()
 
@@ -277,4 +277,4 @@ export default function SphereAlignedProjectList({
       ))}
     </div>
   )
-} 
+}
