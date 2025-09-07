@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
 import ParticleText from "@/components/particle-text"
@@ -11,6 +12,7 @@ import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
 import DynamicHead from "@/components/DynamicHead"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import JsonLdPerson from "@/components/JsonLdPerson"
 import { getPageMetadata } from "@/config/metadata"
 import { useLanguage } from "./contexts/LanguageContext"
 
@@ -213,6 +215,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
         title={typeof currentMetadata.title === 'string' ? currentMetadata.title : "NOMAD403 - Web, Mobile & AI Developer"}
         description={typeof currentMetadata.description === 'string' ? currentMetadata.description : "Freelance developer building custom web apps, mobile applications, and AI-powered tools."}
       />
+      <JsonLdPerson />
       
       {/* Background: Sphere packing outside R3F */}
       <SpheresPacking
@@ -260,38 +263,54 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8 font-jetbrains text-sm font-light">
-            <button
-              onClick={() => handlePageChange("home")}
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault()
+                handlePageChange("home")
+              }}
               className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
                 <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.home')}</ShuffleText>
-            </button>
-            <button
-              onClick={() => handlePageChange("projects")}
+            </Link>
+            <Link
+              href="/projects"
+              onClick={(e) => {
+                e.preventDefault()
+                handlePageChange("projects")
+              }}
               className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.projects')}</ShuffleText>
-            </button>
-            <button
-              onClick={() => handlePageChange("specialist")}
+            </Link>
+            <Link
+              href="/specialist"
+              onClick={(e) => {
+                e.preventDefault()
+                handlePageChange("specialist")
+              }}
               className={`nav-link transition-all duration-300 ${currentPage === "specialist" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
-            </button>
-            <button
-              onClick={() => handlePageChange("contact")}
+            </Link>
+            <Link
+              href="/contact"
+              onClick={(e) => {
+                e.preventDefault()
+                handlePageChange("contact")
+              }}
               className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
-            </button>
+            </Link>
             
             {/* Language Switcher */}
             <LanguageSwitcher />
@@ -345,8 +364,12 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
               }`}
             >
               <div className="p-4 space-y-3 font-jetbrains text-sm font-light">
-                <button
-                  onClick={() => handlePageChange("home")}
+                <Link
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("home")
+                  }}
                   className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "home" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -354,9 +377,13 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                   }`}
                 >
                   <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.home')}</ShuffleText>
-                </button>
-                <button
-                  onClick={() => handlePageChange("projects")}
+                </Link>
+                <Link
+                  href="/projects"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("projects")
+                  }}
                   className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "projects" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -364,9 +391,13 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                   }`}
                 >
                   <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.projects')}</ShuffleText>
-                </button>
-                <button
-                  onClick={() => handlePageChange("specialist")}
+                </Link>
+                <Link
+                  href="/specialist"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("specialist")
+                  }}
                   className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "specialist" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -374,9 +405,13 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                   }`}
                 >
                   <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
-                </button>
-                <button
-                  onClick={() => handlePageChange("contact")}
+                </Link>
+                <Link
+                  href="/contact"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("contact")
+                  }}
                   className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "contact" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -384,7 +419,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                   }`}
                 >
                   <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
-                </button>
+                </Link>
                 
                 {/* Language Switcher for mobile */}
                 <div className="pt-2 border-t border-gray-300/20">

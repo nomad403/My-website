@@ -26,6 +26,17 @@ export default function DynamicHead({ title, description }: DynamicHeadProps) {
     
     // Mettre à jour l'attribut lang de l'élément html
     document.documentElement.lang = title.includes('Développeur') || title.includes('Projets') || title.includes('Compétences') ? 'fr' : 'en'
+    
+    // Ajouter la balise canonical
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) {
+      canonical.setAttribute('href', window.location.href)
+    } else {
+      const link = document.createElement('link')
+      link.rel = 'canonical'
+      link.href = window.location.href
+      document.head.appendChild(link)
+    }
   }, [title, description])
 
   return null
