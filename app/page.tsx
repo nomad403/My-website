@@ -10,7 +10,9 @@ import AsciiOverlay from "@/components/AsciiOverlay"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
 import DynamicHead from "@/components/DynamicHead"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { getPageMetadata } from "@/config/metadata"
+import { useLanguage } from "./contexts/LanguageContext"
 
 const pageConfig = {
   home: {
@@ -35,14 +37,21 @@ const pageConfig = {
   }
 }
 
-export default function HomePage() {
-  const [currentPage, setCurrentPage] = useState("home")
+interface HomePageProps {
+  initialPage?: string
+}
+
+export default function HomePage({ initialPage = "home" }: HomePageProps) {
+  const [currentPage, setCurrentPage] = useState(initialPage)
   const [isPreloaded, setIsPreloaded] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
-  // SPA visibility states
-  const [homeVisible, setHomeVisible] = useState(true)
-  const [contentVisible, setContentVisible] = useState(false)
+  // Language context
+  const { t, language } = useLanguage()
+  
+  // SPA visibility states - initialiser selon la page de départ
+  const [homeVisible, setHomeVisible] = useState(initialPage === "home")
+  const [contentVisible, setContentVisible] = useState(initialPage !== "home")
   
   // Global background context
   const { mode, transitioning, isSphereDescending, setMode, setTransitioning, setIsSphereDescending,
@@ -64,18 +73,22 @@ export default function HomePage() {
     setRoutedPage(currentPage)
   }, [currentPage, setRoutedPage])
 
-  // Initialize HOME sphere values on startup
+  // Initialize sphere values on startup based on initial page
   useEffect(() => {
-    const homeConfig = pageConfig.home
-    setSphereScale(homeConfig.sphere.scale)
-    setMode(homeConfig.background)
-  }, [setSphereScale, setMode])
+    const initialConfig = pageConfig[initialPage as keyof typeof pageConfig] || pageConfig.home
+    setSphereScale(initialConfig.sphere.scale)
+    setMode(initialConfig.background)
+  }, [initialPage, setSphereScale, setMode])
 
   const handlePageChange = (newPage: string) => {
     if (newPage === currentPage || transitioning) return
     
     setTransitioning(true)
     setIsMobileMenuOpen(false)
+    
+    // Mettre à jour l'URL sans recharger la page
+    const newUrl = newPage === "home" ? "/" : `/${newPage}`
+    window.history.pushState({}, "", newUrl)
     
     const newConfig = pageConfig[newPage as keyof typeof pageConfig]
     
@@ -150,15 +163,51 @@ export default function HomePage() {
     }
   }, [currentPage])
 
+  // Gérer la navigation avec les boutons précédent/suivant du navigateur
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname
+      let pageName = "home"
+      
+      if (path === "/projects") pageName = "projects"
+      else if (path === "/specialist") pageName = "specialist"
+      else if (path === "/contact") pageName = "contact"
+      
+      // Éviter les boucles infinies
+      if (pageName !== currentPage) {
+        setCurrentPage(pageName)
+        
+        // Mettre à jour la visibilité des éléments
+        if (pageName === "home") {
+          setHomeVisible(true)
+          setContentVisible(false)
+        } else {
+          setHomeVisible(false)
+          setContentVisible(true)
+        }
+        
+        // Mettre à jour la configuration de la sphère
+        const newConfig = pageConfig[pageName as keyof typeof pageConfig]
+        if (newConfig) {
+          setSphereScale(newConfig.sphere.scale)
+          setMode(newConfig.background)
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [currentPage, setSphereScale, setMode])
+
   // Obtenir les métadonnées pour la page courante
-  const currentMetadata = getPageMetadata(currentPage)
+  const currentMetadata = getPageMetadata(currentPage, language)
 
   return (
     <>
       {/* Métadonnées dynamiques */}
       <DynamicHead 
-        title={currentMetadata.title || "NOMAD403 - Web, Mobile & AI Developer"}
-        description={currentMetadata.description || "Freelance developer building custom web apps, mobile applications, and AI-powered tools."}
+        title={typeof currentMetadata.title === 'string' ? currentMetadata.title : "NOMAD403 - Web, Mobile & AI Developer"}
+        description={typeof currentMetadata.description === 'string' ? currentMetadata.description : "Freelance developer building custom web apps, mobile applications, and AI-powered tools."}
       />
       
       {/* Background: Sphere packing outside R3F */}
@@ -206,14 +255,14 @@ export default function HomePage() {
           </button>
           
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8 font-jetbrains text-sm font-light">
+          <div className="hidden md:flex items-center space-x-8 font-jetbrains text-sm font-light">
             <button
               onClick={() => handlePageChange("home")}
               className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
-              <ShuffleText shuffleDuration={150} letterDelay={12}>HOME</ShuffleText>
+                <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.home')}</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("projects")}
@@ -221,7 +270,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
-              <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
+              <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.projects')}</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("specialist")}
@@ -229,7 +278,7 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
-              <ShuffleText shuffleDuration={150} letterDelay={12}>SPECIALIST</ShuffleText>
+              <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
             </button>
             <button
               onClick={() => handlePageChange("contact")}
@@ -237,8 +286,11 @@ export default function HomePage() {
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
             >
-              <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
+              <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
             </button>
+            
+            {/* Language Switcher */}
+            <LanguageSwitcher />
           </div>
 
           {/* Mobile Hamburger Button */}
@@ -297,7 +349,7 @@ export default function HomePage() {
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
                   }`}
                 >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>HOME</ShuffleText>
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.home')}</ShuffleText>
                 </button>
                 <button
                   onClick={() => handlePageChange("projects")}
@@ -307,7 +359,7 @@ export default function HomePage() {
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
                   }`}
                 >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>PROJECTS</ShuffleText>
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.projects')}</ShuffleText>
                 </button>
                 <button
                   onClick={() => handlePageChange("specialist")}
@@ -317,7 +369,7 @@ export default function HomePage() {
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
                   }`}
                 >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>SPECIALIST</ShuffleText>
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
                 </button>
                 <button
                   onClick={() => handlePageChange("contact")}
@@ -327,8 +379,13 @@ export default function HomePage() {
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
                   }`}
                 >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>CONTACT</ShuffleText>
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
                 </button>
+                
+                {/* Language Switcher for mobile */}
+                <div className="pt-2 border-t border-gray-300/20">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </motion.div>
           )}
@@ -417,7 +474,7 @@ export default function HomePage() {
           <div className={`font-jetbrains text-sm ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>
-            nomad403@protonmail.com
+            {t('social.email')}
           </div>
         </div>
       </div>

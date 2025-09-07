@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useLanguage } from "@/app/contexts/LanguageContext"
 
 interface ParticleOptions {
   mouse: {
@@ -38,6 +39,9 @@ export default function ParticleText() {
   const repelRef = useRef({ x: 0, y: 0 })
   const dimensionsRef = useRef({ width: 0, height: 0, centerX: 0, centerY: 0 })
   const isInitializedRef = useRef(false)
+  
+  // Language context
+  const { t } = useLanguage()
 
   const options: ParticleOptions = {
     mouse: {
@@ -62,7 +66,7 @@ export default function ParticleText() {
         if (width < 1440) return 70
         return 90
       },
-      message: "AUGMENTED DEVELOPER",
+      message: t('home.subtitle'),
     },
   }
 
@@ -346,6 +350,13 @@ export default function ParticleText() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [])
+
+  // Effet pour mettre à jour le texte quand la langue change
+  useEffect(() => {
+    if (isInitializedRef.current) {
+      mapParticles()
+    }
+  }, [t('home.subtitle')])
 
   return (
     <>

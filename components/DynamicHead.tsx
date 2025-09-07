@@ -23,6 +23,9 @@ export default function DynamicHead({ title, description }: DynamicHeadProps) {
       meta.content = description
       document.head.appendChild(meta)
     }
+    
+    // Mettre à jour l'attribut lang de l'élément html
+    document.documentElement.lang = title.includes('Développeur') || title.includes('Projets') || title.includes('Compétences') ? 'fr' : 'en'
   }, [title, description])
 
   return null

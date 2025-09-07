@@ -5,6 +5,7 @@ import { JetBrains_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import { BackgroundProvider } from "./contexts/BackgroundContext"
 import { PageProvider } from "./contexts/PageContext"
+import { LanguageProvider } from "./contexts/LanguageContext"
 import BackgroundLayers from "@/components/BackgroundLayers"
 import CustomCursor from "../components/CustomCursor"
 
@@ -34,13 +35,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${enigma.variable} ${jetBrainsMono.variable} antialiased`}>
         {/* Forcer la présence de la fonte dans le DOM */}
         <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">.</span>
-        <BackgroundProvider>
-          <PageProvider>
-            <BackgroundLayers />
-            <CustomCursor />
-            {children}
-          </PageProvider>
-        </BackgroundProvider>
+        <LanguageProvider>
+          <BackgroundProvider>
+            <PageProvider>
+              <BackgroundLayers />
+              <CustomCursor />
+              {children}
+            </PageProvider>
+          </BackgroundProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

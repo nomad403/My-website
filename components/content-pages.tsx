@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ProjectNavigation from "./ProjectNavigation";
 import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
+import { useLanguage } from "@/app/contexts/LanguageContext";
 
 const stacks = [
   { title: "Frontend", items: ["React.js","Next.js","TypeScript","Tailwind CSS","Framer Motion","Three.js","React Three Fiber","Radix UI"] },
@@ -96,6 +97,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [prevSelected, setPrevSelected] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
+  
+  // Language context
+  const { t } = useLanguage();
 
   // Technology URL mapping
   const techUrls: {[key: string]: string} = {
@@ -147,15 +151,20 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   });
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [titleText, setTitleText] = useState("Let's kick off a project.");
+  const [titleText, setTitleText] = useState(t('contact.title'));
+  
+  // Mettre à jour le titre quand la langue change
+  useEffect(() => {
+    setTitleText(t('contact.title'));
+  }, [t]);
   const [shouldShuffleBack, setShouldShuffleBack] = useState(false);
 
-  // Contact form steps configuration
+  // Contact form steps configuration - recalculé à chaque changement de langue
   const contactSteps = [
-    { field: 'nom' as const, label: 'YOUR NAME', type: 'text', placeholder: 'Enter your name' },
-    { field: 'prenom' as const, label: 'YOUR FIRST NAME', type: 'text', placeholder: 'Enter your first name' },
-    { field: 'contact' as const, label: 'EMAIL OR PHONE', type: 'text', placeholder: 'your@email.com or +1 234 567 8900' },
-    { field: 'message' as const, label: 'YOUR MESSAGE', type: 'text', placeholder: 'Describe your project, needs, budget and timeline...' }
+    { field: 'nom' as const, label: t('contact.fields.name'), type: 'text', placeholder: t('contact.placeholders.name') },
+    { field: 'prenom' as const, label: t('contact.fields.firstname'), type: 'text', placeholder: t('contact.placeholders.firstname') },
+    { field: 'contact' as const, label: t('contact.fields.contact'), type: 'text', placeholder: t('contact.placeholders.contact') },
+    { field: 'message' as const, label: t('contact.fields.message'), type: 'text', placeholder: t('contact.placeholders.message') }
   ];
 
   // Handle contact form input changes
@@ -197,7 +206,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           throw new Error(text || `HTTP ${res.status}`);
         }
 
-        setTitleText("Message sent, I'll get back to you soon.");
+        setTitleText(t('contact.success'));
         setSendStatus('success');
         
         // Reset form and title after 3 seconds
@@ -206,7 +215,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           setCurrentContactStep(0);
           setSendStatus('idle');
           setShouldShuffleBack(true);
-          setTitleText("Let's kick off a project.");
+          setTitleText(t('contact.title'));
         }, 3000);
         
       } catch (err: any) {
@@ -291,11 +300,11 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                     <div className="lg:col-span-5 lg:pr-8">
                       <div className="text-black">
                         <p className="font-jetbrains text-base md:text-lg lg:text-xl leading-relaxed opacity-90">
-                          Every project is an adventure.
+                          {t('specialist.intro')}
                           <br /><br />
-                          The nomad spirit is about exploring, testing, and daring to embrace technologies that are ever more powerful and secure. In a digital world that is constantly evolving, meeting new needs requires continuous awareness and adaptation.
+                          {t('specialist.text1')}
                           <br /><br />
-                          As a web, mobile, and AI developer, I approach each project with care, turning challenges into opportunities for innovation.
+                          {t('specialist.text2')}
                         </p>
                       </div>
                     </div>
@@ -696,7 +705,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                            transition={{ duration: 0.3 }}
                      >
                        <p className="text-red-600 font-jetbrains text-sm">
-                         ❌ Error sending message. Please try again.
+                         {t('contact.error')}
                        </p>
                      </motion.div>
                    )}
