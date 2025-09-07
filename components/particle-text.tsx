@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { useLanguage } from "@/app/contexts/LanguageContext"
 
 interface ParticleOptions {
@@ -43,32 +43,40 @@ export default function ParticleText() {
   // Language context
   const { t } = useLanguage()
 
-  const options: ParticleOptions = {
+  // État pour les valeurs dynamiques
+  const [fontSize, setFontSize] = useState(90) // Valeur par défaut plus grande
+  const [pixelDensity, setPixelDensity] = useState(4)
+
+  // Calculer les valeurs de manière sécurisée
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth
+      if (width < 480) setFontSize(24)
+      else if (width < 768) setFontSize(32)
+      else if (width < 1024) setFontSize(50)
+      else if (width < 1440) setFontSize(90)
+      else setFontSize(100)
+    }
+    setPixelDensity(4) // Valeur fixe pour éviter les getters
+  }, [])
+
+  const options: ParticleOptions = useMemo(() => ({
     mouse: {
       lerpAmt: 0.4,
       repelThreshold: 120,
     },
     particles: {
       density: 2,
-      get pixelDensity() {
-        return (4 - this.density) * 2
-      },
+      pixelDensity: pixelDensity,
       pLerpAmt: 0.13,
       vLerpAmt: 0.07,
     },
     text: {
       fontColor: [0, 0, 0, 255],
-      get fontSize() {
-        const width = window.innerWidth
-        if (width < 480) return 24
-        if (width < 768) return 32
-        if (width < 1024) return 50
-        if (width < 1440) return 70
-        return 90
-      },
+      fontSize: fontSize,
       message: t('home.subtitle'),
     },
-  }
+  }), [fontSize, pixelDensity, t])
 
   const lerp = (start: number, end: number, amt: number) => start + (end - start) * amt
   const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -80,6 +88,7 @@ export default function ParticleText() {
     const bufferCanvas = bufferCanvasRef.current
     if (!canvas || !bufferCanvas) return false
 
+    if (typeof window === 'undefined') return false;
     const width = window.innerWidth
     const height = window.innerHeight
     if (width <= 0 || height <= 0) return false
@@ -338,15 +347,19 @@ export default function ParticleText() {
 
     initialize()
 
-    window.addEventListener("mousemove", handleMouseMove)
-    window.addEventListener("mouseleave", handleMouseLeave)
-    window.addEventListener("resize", handleResize)
+    if (typeof window !== 'undefined') {
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseleave", handleMouseLeave)
+      window.addEventListener("resize", handleResize)
+    }
 
     return () => {
       cancelled = true
-      window.removeEventListener("mousemove", handleMouseMove)
-      window.removeEventListener("mouseleave", handleMouseLeave)
-      window.removeEventListener("resize", handleResize)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener("mousemove", handleMouseMove)
+        window.removeEventListener("mouseleave", handleMouseLeave)
+        window.removeEventListener("resize", handleResize)
+      }
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [])
@@ -356,7 +369,7 @@ export default function ParticleText() {
     if (isInitializedRef.current) {
       mapParticles()
     }
-  }, [t('home.subtitle')])
+  }, [options.text.message])
 
   return (
     <>

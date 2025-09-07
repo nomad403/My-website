@@ -6,6 +6,7 @@ type Mode = "plain" | "dither" | "sobel";
 
 // Helper pour mesurer la largeur réelle d'un caractère
 function measureCharWidth(px: number, family = 'Consolas, Monaco, "Liberation Mono", monospace') {
+  if (typeof document === 'undefined') return 8; // Fallback pour SSR
   const c = document.createElement("canvas");
   const ctx = c.getContext("2d")!;
   ctx.font = `${px}px ${family}`;
@@ -23,9 +24,9 @@ export default function AsciiOverlay({
   visible = true,
   color = "#0ff",
   opacity = 0.35,
-  fontPx = 7,           // <<< NEW: taille du caractère (px)
-  cover = true,         // <<< NEW: adapter colonnes/lignes à la fenêtre
-  cols: fixedCols,      // <<< si fourni, force le nb de colonnes
+  fontPx = 7,           
+  cover = true,         
+  cols: fixedCols,   
 }: {
   source: HTMLCanvasElement | null;
   fps?: number;
@@ -56,12 +57,15 @@ export default function AsciiOverlay({
   // Calcul dynamique de la grille selon la taille de la fenêtre
   useEffect(() => {
     if (!cover) {
-      setGrid(g => ({ cols: fixedCols ?? g.cols, rows: Math.max(1, Math.floor(window.innerHeight / fontPx)) }));
+      if (typeof window !== 'undefined') {
+        setGrid(g => ({ cols: fixedCols ?? g.cols, rows: Math.max(1, Math.floor(window.innerHeight / fontPx)) }));
+      }
       return;
     }
     
     const family = 'Consolas, Monaco, "Liberation Mono", monospace';
     const calc = () => {
+      if (typeof window === 'undefined') return;
       // largeur réelle d'un caractère pour la police utilisée par le <pre>
       const charW = measureCharWidth(fontPx, family); 
       const cols = fixedCols ?? Math.max(1, Math.floor(window.innerWidth / charW));
@@ -69,12 +73,18 @@ export default function AsciiOverlay({
       setGrid({ cols, rows });
     };
     calc();
-    window.addEventListener("resize", calc);
+    if (typeof window !== 'undefined') {
+      window.addEventListener("resize", calc);
 
-    // (optionnel) si les polices web se (re)chargent
-    if ((document as any).fonts?.ready) (document as any).fonts.ready.then(calc);
+      // (optionnel) si les polices web se (re)chargent
+      if ((document as any).fonts?.ready) (document as any).fonts.ready.then(calc);
+    }
 
-    return () => window.removeEventListener("resize", calc);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener("resize", calc);
+      }
+    };
   }, [cover, fontPx, fixedCols]);
 
   useEffect(() => {
@@ -87,6 +97,7 @@ export default function AsciiOverlay({
 
     const w = grid.cols;             // <<< plein écran en colonnes
     const h = grid.rows;             // <<< plein écran en lignes
+    if (typeof document === 'undefined') return;
     const off = document.createElement("canvas");
     off.width = w;
     off.height = h;
@@ -203,5 +214,6 @@ export default function AsciiOverlay({
   );
 
   // Monte l'overlay au niveau du <body> seulement côté client
+  if (typeof document === 'undefined') return null;
   return createPortal(pre, document.body);
 } 

@@ -247,9 +247,9 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     };
 
     // Initialiser immédiatement si possible, sinon en différé
-    if (document.readyState === 'complete') {
+    if (typeof document !== 'undefined' && document.readyState === 'complete') {
       initCarousel();
-    } else {
+    } else if (typeof window !== 'undefined') {
       window.addEventListener('load', initCarousel);
       return () => window.removeEventListener('load', initCarousel);
     }
@@ -272,16 +272,20 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
     };
 
     // Utiliser ResizeObserver pour une détection plus précise
-    if (containerCarrouselRef.current && 'ResizeObserver' in window) {
+    if (containerCarrouselRef.current && typeof window !== 'undefined' && 'ResizeObserver' in window) {
       resizeObserver = new ResizeObserver(handleResize);
       resizeObserver.observe(containerCarrouselRef.current);
     }
 
     // Fallback pour les navigateurs sans ResizeObserver
-    window.addEventListener('resize', handleResize);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+    }
     
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize);
+      }
       clearTimeout(resizeTimeout);
       if (resizeObserver) {
         resizeObserver.disconnect();

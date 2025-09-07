@@ -70,11 +70,15 @@ export default function SpheresPacking({
         if (!canvas) return;
         onCanvasReady?.(canvas);
         const resize = () => {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
+          if (typeof window !== 'undefined') {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+          }
         };
         resize();
-        window.addEventListener("resize", resize);
+        if (typeof window !== 'undefined') {
+          window.addEventListener("resize", resize);
+        }
 
         const inst = ctor(canvas, { 
           count, 
@@ -85,7 +89,9 @@ export default function SpheresPacking({
         instanceRef.current = inst;
 
         return () => {
-          window.removeEventListener("resize", resize);
+          if (typeof window !== 'undefined') {
+            window.removeEventListener("resize", resize);
+          }
           try {
             inst.dispose();
           } catch {}

@@ -104,12 +104,24 @@ export default function ProjectNavigation({
 
   const visibleProjects = createCircularProjects()
 
+  // État pour les positions des projets
+  const [projectPositions, setProjectPositions] = useState<Array<{
+    project: any
+    x: number
+    y: number
+    opacity: number
+    scale: number
+    isSelected: boolean
+    globalIndex: number
+  }>>([])
+
   // Calcul des positions selon l'orientation avec responsivité dynamique
   const createProjectPositions = () => {
     const centerIndex = Math.floor(maxVisible / 2)
     
     if (orientation === 'horizontal') {
       // Layout horizontal responsive pour mobile/tablet
+      if (typeof window === 'undefined') return [];
       const itemWidth = Math.max(80, Math.min(140, window.innerWidth / maxVisible - 20)) // Responsive
       const containerWidth = Math.min(400, window.innerWidth * 0.9) // Responsive
       const totalListWidth = maxVisible * itemWidth
@@ -169,7 +181,12 @@ export default function ProjectNavigation({
     }
   }
 
-  const projectPositions = createProjectPositions()
+  // Mettre à jour les positions quand nécessaire
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setProjectPositions(createProjectPositions())
+    }
+  }, [selected, firstVisible, orientation, maxVisible, projects.length])
 
   // Gestion des touches clavier
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -186,6 +203,7 @@ export default function ProjectNavigation({
 
   // Ajouter les event listeners pour les touches
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const handleKeyDownWrapper = (e: KeyboardEvent) => handleKeyDown(e)
     window.addEventListener('keydown', handleKeyDownWrapper)
     return () => window.removeEventListener('keydown', handleKeyDownWrapper)
@@ -193,6 +211,7 @@ export default function ProjectNavigation({
 
   // Gestion du redimensionnement pour recalculer les positions
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const handleResize = () => {
       // Force le recalcul des positions en déclenchant un re-render
       setFirstVisible(prev => prev) // Trigger re-render

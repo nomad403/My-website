@@ -28,7 +28,6 @@ export default function LanguageSwitcher() {
         }`}
         title={t('lang.switch')}
       >
-        <span className="text-lg">{currentLang?.flag}</span>
         <span className="text-sm font-jetbrains uppercase tracking-wider">
           {currentLang?.code}
         </span>
