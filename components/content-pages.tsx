@@ -293,7 +293,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
             
             {/* Main content */}
             <div className="relative z-10 w-full h-full flex items-start">
-              <div className="max-w-7xl mx-auto w-full pt-20 md:pt-40 px-4 md:px-0 h-full overflow-y-auto custom-scrollbar pb-20">
+              <div className="max-w-7xl mx-auto w-full pt-20 md:pt-40 px-4 sm:px-6 md:px-8 lg:px-12 h-full overflow-y-auto custom-scrollbar pb-20">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
                     {/* Description Column */}
@@ -459,11 +459,12 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
              case "projects":
          return (
            <div className="relative w-full h-screen overflow-hidden">
-             {/* Desktop Layout */}
-             <div className="hidden lg:block max-w-7xl mx-auto h-full">
-               <div className="h-full flex items-center gap-16">
-                 {/* List on the left */}
-                 <div className="min-w-[180px]">
+             <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+               {/* Layout mobile/desktop */}
+               <div className="h-full xl:grid xl:grid-cols-[200px_1fr] gap-2 xl:gap-8 items-center">
+                 
+                 {/* Menu vertical pour desktop */}
+                 <div className="hidden xl:block">
                    <ProjectNavigation
                      projects={projectList}
                      selected={selected}
@@ -476,9 +477,11 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      orientation="vertical"
                    />
                  </div>
-                 {/* Carousel in center */}
-                 <div className="flex-1 flex justify-center items-start">
-                   <div className="w-[900px] h-[550px] max-w-[75vw] max-h-[75vh]">
+
+                 {/* Carrousel + menu horizontal regroupés */}
+                 <div className="flex flex-col items-center justify-center w-full h-full">
+                   {/* Carrousel */}
+                   <div className="w-full max-w-[clamp(300px,90vw,800px)] aspect-[16/10] mb-6 flex-shrink-0">
                      <CylinderCarousel
                        items={projectList}
                        selectedIndex={selected}
@@ -489,76 +492,23 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        }}
                      />
                    </div>
-                 </div>
-               </div>
-             </div>
 
-             {/* Tablet Layout */}
-             <div className="hidden md:block lg:hidden w-full h-full flex flex-col">
-               {/* Carousel centered at top */}
-               <div className="flex-1 flex justify-center items-center p-6 pb-3">
-                 <div className="w-full max-w-[85vw] h-[65vh]">
-                   <CylinderCarousel
-                     items={projectList}
-                     selectedIndex={selected}
-                     onItemChange={(index: number) => {
-                       setPrevSelected(selected);
-                       setSelected(index);
-                       setSelectedImage(0);
-                     }}
-                   />
-                 </div>
-               </div>
-               
-               {/* Horizontal menu at bottom */}
-               <div className="h-[35vh] flex items-center justify-center p-6 pt-3">
-                 <div className="w-full max-w-[85vw] flex justify-center">
-                   <ProjectNavigation
-                     projects={projectList}
-                     selected={selected}
-                     onSelect={(idx) => {
-                       setPrevSelected(selected);
-                       setSelected(idx);
-                       setSelectedImage(0);
-                     }}
-                     maxVisible={5}
-                     orientation="horizontal"
-                   />
-                 </div>
-               </div>
-             </div>
-
-             {/* Mobile Layout */}
-             <div className="md:hidden w-full h-full flex flex-col">
-               {/* Carousel centered at top */}
-               <div className="flex-1 flex justify-center items-center p-4 pb-2">
-                 <div className="w-full max-w-[95vw] h-[60vh]">
-                   <CylinderCarousel
-                     items={projectList}
-                     selectedIndex={selected}
-                     onItemChange={(index: number) => {
-                       setPrevSelected(selected);
-                       setSelected(index);
-                       setSelectedImage(0);
-                     }}
-                   />
-                 </div>
-               </div>
-               
-               {/* Horizontal menu at bottom */}
-               <div className="h-[40vh] flex items-center justify-center p-4 pt-2">
-                 <div className="w-full max-w-[95vw] flex justify-center">
-                   <ProjectNavigation
-                     projects={projectList}
-                     selected={selected}
-                     onSelect={(idx) => {
-                       setPrevSelected(selected);
-                       setSelected(idx);
-                       setSelectedImage(0);
-                     }}
-                     maxVisible={3}
-                     orientation="horizontal"
-                   />
+                   {/* Menu horizontal uniquement pour mobile/tablet */}
+                   <div className="w-full flex justify-center xl:hidden px-2 flex-shrink-0">
+                     <div className="max-w-[400px] w-full">
+                       <ProjectNavigation
+                         projects={projectList}
+                         selected={selected}
+                         onSelect={(idx) => {
+                           setPrevSelected(selected);
+                           setSelected(idx);
+                           setSelectedImage(0);
+                         }}
+                         maxVisible={5}
+                         orientation="horizontal"
+                       />
+                     </div>
+                   </div>
                  </div>
                </div>
              </div>
@@ -572,19 +522,13 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                <div className="flex-1 flex items-center justify-center px-4 md:px-8">
                  <div className="max-w-3xl mx-auto w-full">
                    {/* Main title */}
-                   <div className="text-center mb-12 md:mb-20">
-                     <div className="grid place-items-center">
-                       {/* Ghost: reserves the max width. Invisible but still takes layout space */}
-                       <span className="invisible whitespace-nowrap font-kode text-xl md:text-2xl lg:text-3xl uppercase tracking-wider">
-                         Message sent, I'll get back to you soon.
-                       </span>
-
-                       {/* Real title on top, forced single line */}
-                       <h1 className="col-start-1 row-start-1 whitespace-nowrap font-kode text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider overflow-hidden text-ellipsis">
+                   <div className="text-center mb-12 md:mb-20 px-4">
+                     <div className="flex justify-center items-center">
+                       <h1 className="font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider text-center max-w-full">
                          <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack} enableHover={false}>
-                         {titleText}
-                       </ShuffleText>
-                     </h1>
+                           {titleText}
+                         </ShuffleText>
+                       </h1>
                      </div>
                    </div>
                      

@@ -8,12 +8,14 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string) => string
+  isLanguageReady: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('fr')
+  const [isLanguageReady, setIsLanguageReady] = useState(false)
 
   // Charger la langue sauvegardée ou détecter la langue du navigateur au démarrage
   useEffect(() => {
@@ -35,6 +37,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         setLanguage('fr')
       }
     }
+    
+    // Marquer la langue comme prête après la détection
+    setIsLanguageReady(true)
   }, [])
 
   // Sauvegarder la langue dans localStorage
@@ -144,7 +149,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isLanguageReady }}>
       {children}
     </LanguageContext.Provider>
   )

@@ -19,6 +19,7 @@ export default function ProjectNavigation({
   orientation = 'vertical',
 }: ProjectNavigationProps) {
   const [firstVisible, setFirstVisible] = useState(0)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const { mode } = useBackground()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -109,6 +110,8 @@ export default function ProjectNavigation({
     project: any
     x: number
     y: number
+    width: number
+    fontSize: number
     opacity: number
     scale: number
     isSelected: boolean
@@ -120,34 +123,49 @@ export default function ProjectNavigation({
     const centerIndex = Math.floor(maxVisible / 2)
     
     if (orientation === 'horizontal') {
-      // Layout horizontal responsive pour mobile/tablet
-      if (typeof window === 'undefined') return [];
-      const itemWidth = Math.max(80, Math.min(140, window.innerWidth / maxVisible - 20)) // Responsive
-      const containerWidth = Math.min(400, window.innerWidth * 0.9) // Responsive
-      const totalListWidth = maxVisible * itemWidth
-      const startX = Math.max(0, (containerWidth - totalListWidth) / 2)
+      // Largeur réelle du conteneur (fallback fenêtre)
+      const cw = containerSize.width || (typeof window !== 'undefined' ? window.innerWidth : 0);
+
+      // Calcul de l'espacement responsive basé sur la largeur disponible
+      const minItemWidth = 80; // Largeur minimale pour un item
+      const maxItemWidth = 180; // Largeur maximale pour un item
+      
+      // Calculer la largeur disponible par item en laissant plus d'espace
+      const availableWidthPerItem = cw / maxVisible;
+      const itemWidth = Math.max(minItemWidth, Math.min(maxItemWidth, availableWidthPerItem * 0.7));
+      
+      // Calculer l'espacement restant avec une marge plus généreuse
+      const totalItemsWidth = maxVisible * itemWidth;
+      const remainingSpace = cw - totalItemsWidth;
+      const spacing = Math.max(12, remainingSpace / (maxVisible - 1));
+
+      const totalListWidth = (maxVisible * itemWidth) + ((maxVisible - 1) * spacing);
+      const startX = (cw - totalListWidth) / 2;
+
+      const centerIndex = Math.floor(maxVisible / 2);
+      const maxDistance = Math.floor(maxVisible / 2);
 
       return visibleProjects.map((project, index) => {
-        const x = startX + (index * itemWidth)
-        const y = 0
+        const x = startX + index * (itemWidth + spacing);
+        const y = 0;
 
-        // Calcul de l'opacité et de l'échelle
-        const distanceFromCenter = Math.abs(index - centerIndex)
-        const maxDistance = Math.floor(maxVisible / 2)
-        const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7
-        const scale = 1 - (distanceFromCenter / maxDistance) * 0.3
+        const distanceFromCenter = Math.abs(index - centerIndex);
+        const opacity = 1 - (distanceFromCenter / maxDistance) * 0.7;
+        const scale = 1 - (distanceFromCenter / maxDistance) * 0.3;
 
-        const isSelected = project.originalIndex === selected
+        const isSelected = project.originalIndex === selected;
 
         return {
           project,
           x,
           y,
+          width: itemWidth, // Utiliser la largeur calculée pour éviter la superposition
+          fontSize: 16, // Valeur par défaut, la taille sera gérée par Tailwind
           opacity: Math.max(opacity, 0.3),
           scale: Math.max(scale, 0.7),
           isSelected,
-          globalIndex: project.originalIndex
-        }
+          globalIndex: project.originalIndex,
+        };
       })
     } else {
       // Layout vertical pour desktop (comportement original)
@@ -172,6 +190,8 @@ export default function ProjectNavigation({
           project,
           x,
           y,
+          width: 200, // Largeur fixe pour le menu vertical
+          fontSize: isSelected ? 16 : 14, // Taille fixe pour le menu vertical
           opacity: Math.max(opacity, 0.3),
           scale: Math.max(scale, 0.7),
           isSelected,
@@ -183,10 +203,8 @@ export default function ProjectNavigation({
 
   // Mettre à jour les positions quand nécessaire
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setProjectPositions(createProjectPositions())
-    }
-  }, [selected, firstVisible, orientation, maxVisible, projects.length])
+    setProjectPositions(createProjectPositions())
+  }, [selected, firstVisible, orientation, maxVisible, projects.length, containerSize.width])
 
   // Gestion des touches clavier
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -209,16 +227,21 @@ export default function ProjectNavigation({
     return () => window.removeEventListener('keydown', handleKeyDownWrapper)
   }, [selected, projects.length])
 
-  // Gestion du redimensionnement pour recalculer les positions
+  // Mesure de la taille réelle du conteneur avec ResizeObserver
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleResize = () => {
-      // Force le recalcul des positions en déclenchant un re-render
-      setFirstVisible(prev => prev) // Trigger re-render
-    }
+    if (!containerRef.current) return
+    const el = containerRef.current
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const ro = new ResizeObserver(entries => {
+      const rect = entries[0].contentRect
+      setContainerSize({ width: rect.width, height: rect.height })
+    })
+    ro.observe(el)
+    // première mesure
+    const rect = el.getBoundingClientRect()
+    setContainerSize({ width: rect.width, height: rect.height })
+
+    return () => ro.disconnect()
   }, [])
 
   return (
@@ -226,8 +249,8 @@ export default function ProjectNavigation({
       ref={containerRef}
       className={`relative ${
         orientation === 'horizontal' 
-          ? 'w-full max-w-[400px] h-[80px]' 
-          : 'min-w-[180px] h-[400px]'
+          ? 'w-full h-[80px]' 
+          : 'w-[200px] h-[400px]'
       }`}
       onWheel={handleWheel}
       style={{ 
@@ -257,34 +280,34 @@ export default function ProjectNavigation({
             opacity: { duration: 0.4 },
             scale: { duration: 0.5 },
           }}
-                    className={`
-             absolute pointer-events-auto cursor-pointer select-none
-             font-kode uppercase tracking-wider
-             transition-all duration-300 ease-out z-10
-             ${
-               item.isSelected
-                 ? "font-bold text-xl"
-                 : "font-medium text-base"
-             }
-             ${orientation === 'horizontal' ? 'text-center' : 'text-left'}
-           `}
-            title={item.project.name}
-            style={{
-             transformOrigin: orientation === 'horizontal' ? "center center" : "left center",
-             transform: "translateX(0%)",
-             whiteSpace: "nowrap",
-             maxWidth: orientation === 'horizontal' ? "100px" : "200px",
-             overflow: "hidden",
-             textOverflow: "ellipsis",
-             color: "black", // Texte noir
-             textShadow: "0 0 3px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.6)", // Ombre portée blanche pour la lisibilité
-           }}
+          className={`
+            absolute pointer-events-auto cursor-pointer select-none
+            font-kode uppercase tracking-wider
+            transition-all duration-300 ease-out z-10
+            ${orientation === 'horizontal' ? 'text-center' : 'text-left'}
+            ${orientation === 'horizontal' 
+              ? 'text-[clamp(12px,2.3vw,18px)]' 
+              : 'text-sm sm:text-base'
+            }
+            ${item.isSelected ? 'text-black-500 font-bold' : 'text-gray-800 hover:text-gray-600 font-medium'}
+          `}
+          title={item.project.name}
+          style={{
+            transformOrigin: orientation === 'horizontal' ? "center center" : "left center",
+            transform: "translateX(0%)",
+            width: `${item.width}px`,
+            maxWidth: `${item.width}px`,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            textShadow: item.isSelected ? '0 0 8px rgba(6, 182, 212, 0.3)' : '0 0 3px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.6)',
+          }}
           onClick={(e) => {
              e.stopPropagation()
              onSelect(item.globalIndex)
            }}
         >
-          {truncateTitle(item.project.name)}
+          {item.project.name}
           {item.isSelected && (
             <motion.div
               initial={{ scale: 0 }}

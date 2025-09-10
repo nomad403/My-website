@@ -41,21 +41,33 @@ export default function ParticleText() {
   const isInitializedRef = useRef(false)
   
   // Language context
-  const { t } = useLanguage()
+  const { t, isLanguageReady } = useLanguage()
 
   // État pour les valeurs dynamiques
   const [fontSize, setFontSize] = useState(90) // Valeur par défaut plus grande
   const [pixelDensity, setPixelDensity] = useState(4)
+  const [particleDensity, setParticleDensity] = useState(2)
 
   // Calculer les valeurs de manière sécurisée
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const width = window.innerWidth
-      if (width < 480) setFontSize(24)
-      else if (width < 768) setFontSize(32)
-      else if (width < 1024) setFontSize(50)
-      else if (width < 1440) setFontSize(90)
-      else setFontSize(100)
+      if (width < 480) {
+        setFontSize(24)
+        setParticleDensity(5) // Plus de densité sur mobile
+      } else if (width < 768) {
+        setFontSize(32)
+        setParticleDensity(3) // Densité moyenne sur tablette
+      } else if (width < 1024) {
+        setFontSize(50)
+        setParticleDensity(2) // Densité normale sur desktop
+      } else if (width < 1440) {
+        setFontSize(90)
+        setParticleDensity(2)
+      } else {
+        setFontSize(100)
+        setParticleDensity(2)
+      }
     }
     setPixelDensity(4) // Valeur fixe pour éviter les getters
   }, [])
@@ -66,7 +78,7 @@ export default function ParticleText() {
       repelThreshold: 120,
     },
     particles: {
-      density: 2,
+      density: particleDensity,
       pixelDensity: pixelDensity,
       pLerpAmt: 0.13,
       vLerpAmt: 0.07,
@@ -74,9 +86,9 @@ export default function ParticleText() {
     text: {
       fontColor: [0, 0, 0, 255],
       fontSize: fontSize,
-      message: t('home.subtitle'),
+      message: isLanguageReady ? t('home.subtitle') : '',
     },
-  }), [fontSize, pixelDensity, t])
+  }), [fontSize, pixelDensity, particleDensity, t, isLanguageReady])
 
   const lerp = (start: number, end: number, amt: number) => start + (end - start) * amt
   const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -297,6 +309,26 @@ export default function ParticleText() {
   }
 
   const handleResize = async () => {
+    if (typeof window === 'undefined') return
+    
+    const width = window.innerWidth
+    if (width < 480) {
+      setFontSize(24)
+      setParticleDensity(4)
+    } else if (width < 768) {
+      setFontSize(32)
+      setParticleDensity(3)
+    } else if (width < 1024) {
+      setFontSize(50)
+      setParticleDensity(2)
+    } else if (width < 1440) {
+      setFontSize(90)
+      setParticleDensity(2)
+    } else {
+      setFontSize(100)
+      setParticleDensity(2)
+    }
+    
     if (!setupCanvas()) return
     await waitForFont()
     mapParticles()
@@ -330,6 +362,9 @@ export default function ParticleText() {
     let cancelled = false
 
     const initialize = async () => {
+      // Attendre que la langue soit prête
+      if (!isLanguageReady) return
+      
       if (!setupCanvas()) return
       
       const fontLoaded = await waitForFont()
@@ -362,11 +397,31 @@ export default function ParticleText() {
       }
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
-  }, [])
+  }, [isLanguageReady])
 
   // Effet pour mettre à jour le texte quand la langue change
   useEffect(() => {
     if (isInitializedRef.current) {
+      // Recalculer la taille de police lors du changement de langue
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth
+        if (width < 480) {
+          setFontSize(24)
+          setParticleDensity(5)
+        } else if (width < 768) {
+          setFontSize(32)
+          setParticleDensity(3)
+        } else if (width < 1024) {
+          setFontSize(50)
+          setParticleDensity(2)
+        } else if (width < 1440) {
+          setFontSize(90)
+          setParticleDensity(2)
+        } else {
+          setFontSize(100)
+          setParticleDensity(2)
+        }
+      }
       mapParticles()
     }
   }, [options.text.message])

@@ -5,7 +5,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useLanguage } from "@/app/contexts/LanguageContext"
 import { useBackground } from "@/app/contexts/BackgroundContext"
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  isMobile?: boolean
+}
+
+export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherProps) {
   const { language, setLanguage, t } = useLanguage()
   const { mode } = useBackground()
   const [isOpen, setIsOpen] = useState(false)
@@ -50,7 +54,7 @@ export default function LanguageSwitcher() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={`absolute top-full right-0 mt-2 py-2 rounded-lg shadow-lg border ${
+            className={`absolute top-full ${isMobile ? 'left-0 right-0' : 'right-0'} mt-2 py-2 rounded-lg shadow-lg border ${
               mode === 'night' 
                 ? 'bg-black/90 backdrop-blur-sm border-white/20' 
                 : 'bg-white/90 backdrop-blur-sm border-black/20'

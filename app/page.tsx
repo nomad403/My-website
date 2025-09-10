@@ -357,20 +357,20 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className={`md:hidden mt-4 overflow-hidden ${
+              className={`md:hidden mt-4 overflow-visible ${
                 mode === 'night' ? 'bg-black/90 backdrop-blur-sm' : 'bg-white/90 backdrop-blur-sm'
               } rounded-lg border ${
                 mode === 'night' ? 'border-white/20' : 'border-black/20'
               }`}
             >
-              <div className="p-4 space-y-3 font-jetbrains text-sm font-light">
+              <div className="p-4 space-y-3 font-jetbrains text-sm font-light flex flex-col pb-6">
                 <Link
                   href="/"
                   onClick={(e) => {
                     e.preventDefault()
                     handlePageChange("home")
                   }}
-                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "home" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
@@ -384,7 +384,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("projects")
                   }}
-                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "projects" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
@@ -398,7 +398,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("specialist")
                   }}
-                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "specialist" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
@@ -412,7 +412,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("contact")
                   }}
-                  className={`w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "contact" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
                       : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
@@ -422,8 +422,10 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                 </Link>
                 
                 {/* Language Switcher for mobile */}
-                <div className="pt-2 border-t border-gray-300/20">
-                  <LanguageSwitcher />
+                <div className="pt-2 pb-2 border-t border-gray-300/20">
+                  <div className="w-full relative">
+                    <LanguageSwitcher isMobile={true} />
+                  </div>
                 </div>
               </div>
             </motion.div>
