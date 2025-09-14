@@ -11,6 +11,7 @@ import CustomCursor from "../components/CustomCursor"
 import DynamicFavicon from "@/components/DynamicFavicon"
 import DynamicSocialTags from "@/components/DynamicSocialTags"
 import JsonLdWebsite from "@/components/JsonLdWebsite"
+import CanonicalRedirect from "@/components/CanonicalRedirect"
 
 const enigma = localFont({
   src: "../fonts/EnigmaRegular.woff2",
@@ -74,6 +75,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="author" content="NOMAD403" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="canonical" href="https://nomad403.com" />
+        
+        {/* Prevent duplicate content issues */}
+        <meta name="googlebot" content="index, follow" />
+        <meta name="bingbot" content="index, follow" />
       </head>
       <body className={`${enigma.variable} ${jetBrainsMono.variable} antialiased`}>
         {/* Forcer la présence de la fonte dans le DOM */}
@@ -84,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PageProvider>
               <DynamicSocialTags />
               <JsonLdWebsite />
+              <CanonicalRedirect />
               <BackgroundLayers />
               <CustomCursor />
               {children}
