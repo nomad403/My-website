@@ -44,7 +44,7 @@ export default function DynamicSocialTags() {
         const currentData = pageData[currentPage as keyof typeof pageData] || pageData.home
 
         // Mettre à jour seulement le canonical (les autres balises sont statiques)
-        const canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
+        const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
         if (canonical) {
           canonical.href = currentData.url
         }

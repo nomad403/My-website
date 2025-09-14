@@ -1,58 +1,57 @@
-"use client"
+'use client';
+import { useEffect } from 'react';
+import { useBackground } from '@/app/contexts/BackgroundContext';
 
-import { useEffect } from 'react'
-import { useBackground } from '@/app/contexts/BackgroundContext'
+type Mode = 'day' | 'night';
 
 export default function DynamicFavicon() {
-  const { mode } = useBackground() // 'day' | 'night'
+  const { mode } = useBackground() as { mode: Mode };
 
   useEffect(() => {
-    const el = document.getElementById('app-favicon') as HTMLLinkElement | null
-    if (!el) {
-      console.warn('DynamicFavicon: app-favicon element not found')
-      return
+    if (typeof document === 'undefined') return;
+
+    // Sélection typée
+    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+
+    // Crée si absent
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
     }
 
     // Choix des fichiers (ATTENTION: favicon-black.ico = icône blanche, favicon-white.ico = icône noire)
     // Mode day = icône noire = favicon-white.ico, Mode night = icône blanche = favicon-black.ico
-    const file = mode === 'day' ? '/favicon-white.ico' : '/favicon-black.ico'
-    const nextHref = `${file}?v=${Date.now()}`
+    const expectedFile = mode === 'day' ? '/favicon-white.ico' : '/favicon-black.ico';
+    const newHref = `${expectedFile}?v=${Date.now()}`;
 
-    console.log('DynamicFavicon: Mode changed to', mode, 'Setting favicon to', file)
-
-    // Si déjà bon, ne rien faire
-    if (el.href.endsWith(file) || el.href.includes(file + '?')) {
-      console.log('DynamicFavicon: Favicon already correct, skipping update')
-      return
+    // Évite les changements inutiles
+    if (link.href !== newHref) {
+      link.href = newHref;                 // <-- OK car HTMLLinkElement
+      document.head.appendChild(link);
+      console.log('DynamicFavicon: set', link.href);
     }
 
-    // Mettre à jour + remonter en fin de <head> (certains moteurs utilisent le dernier <link rel="icon">)
-    el.href = nextHref
-    document.head.appendChild(el)
-    console.log('DynamicFavicon: Updated favicon to', nextHref)
-
-    // (Optionnel) Synchroniser l'apple-touch-icon si tu veux qu'il suive aussi
-    const apple = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null
+    // (Optionnel) Synchroniser l'apple-touch-icon
+    const apple = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
     if (apple) {
-      const png = file.replace('.ico', '.png')
-      apple.href = `${png}?v=${Date.now()}`
-      console.log('DynamicFavicon: Updated apple-touch-icon to', apple.href)
+      const png = expectedFile.replace('.ico', '.png');
+      apple.href = `${png}?v=${Date.now()}`;
+      console.log('DynamicFavicon: Updated apple-touch-icon to', apple.href);
     }
 
     // Exposer une fonction de test globale pour debug
     if (typeof window !== 'undefined') {
       (window as any).testFavicon = () => {
-        console.log('Testing favicon change...')
-        const link = document.getElementById('app-favicon')
-        if (link) {
-          const expectedFile = mode === 'day' ? '/favicon-white.ico' : '/favicon-black.ico'
-          link.href = expectedFile + '?v=' + Date.now()
-          document.head.appendChild(link)
-          console.log('Favicon changed to:', link.href)
+        console.log('Testing favicon change...');
+        const testLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+        if (testLink) {
+          testLink.href = newHref;
+          document.head.appendChild(testLink);
+          console.log('Favicon changed to:', testLink.href);
         }
-      }
+      };
     }
-  }, [mode])
+  }, [mode]);
 
-  return null
+  return null;
 }
