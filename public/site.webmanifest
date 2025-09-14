@@ -1,0 +1,21 @@
+{
+  "name": "NOMAD403 - Web, Mobile & AI Developer",
+  "short_name": "NOMAD403",
+  "description": "Freelance developer building custom web apps, mobile applications, and AI-powered tools.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b0f",
+  "theme_color": "#0b0b0f",
+  "icons": [
+    {
+      "src": "/favicon-white.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-white.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

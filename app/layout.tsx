@@ -38,15 +38,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <head>
-        {/* 1) Un favicon "pilotable" par JS (mode jour = icône noire = favicon-white.ico) */}
-        <link id="app-favicon" rel="icon" href="/favicon-white.ico" />
+        {/* Favicon statique pour Google (toujours présent) */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        
+        {/* Variantes auto jour/nuit (sans conflit) */}
+        <link rel="icon" href="/favicon-white.ico" type="image/x-icon" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/favicon-black.ico" type="image/x-icon" media="(prefers-color-scheme: dark)" />
 
-        {/* 2) Fallback auto : OS clair / sombre */}
-        <link rel="icon" media="(prefers-color-scheme: light)" href="/favicon-white.ico" />
-        <link rel="icon" media="(prefers-color-scheme: dark)" href="/favicon-black.ico" />
-
-        {/* Apple */}
+        {/* Apple & PWA */}
         <link rel="apple-touch-icon" href="/favicon-white.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#0b0b0f" />
 
         {/* Open Graph / Facebook - Balises statiques pour les crawlers */}
         <meta property="og:type" content="website" />

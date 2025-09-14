@@ -1,11 +1,14 @@
 User-agent: *
 Allow: /
+Allow: /favicon.ico
+Allow: /favicon-*.ico
+Allow: /favicon-*.png
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
 # Sitemaps
-Sitemap: https://nomad403.com/sitemap.xml
+Sitemap: https://www.nomad403.com/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
