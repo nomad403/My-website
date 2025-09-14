@@ -290,6 +290,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
       case "specialist":
         return (
           <div className="fixed inset-0 w-full h-full overflow-hidden bg-transparent">
+            {/* H1 pour le SEO - invisible mais accessible */}
+            <h1 className="sr-only">Skills & Expertise — Nomad403 (Nomad 403)</h1>
             
             {/* Main content */}
             <div className="relative z-10 w-full h-full flex items-start">
@@ -453,13 +455,50 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                   </div>
                 </div>
               </div>
+              
+              {/* Contenu SEO invisible pour la page specialist */}
+              <div className="sr-only">
+                <p>
+                  Expertise technique de Nomad403, Nomad 403, nomad-403, développeur freelance spécialisé 
+                  dans le développement web, mobile et intégration IA basé à Paris. Compétences 
+                  avancées en technologies modernes pour startups, studios créatifs, marques de luxe 
+                  et entreprises tech. Approche centrée sur l'innovation, la performance et l'expérience utilisateur.
+                </p>
+                <p>
+                  Technologies maîtrisées : Frontend (React.js, Next.js, TypeScript, Tailwind CSS, 
+                  Framer Motion, Three.js, React Three Fiber, Radix UI), Backend (Node.js, Express.js, 
+                  Firebase, JSON API), Mobile (Kotlin, Jetpack Compose, Swift, SwiftUI), 
+                  IA & Automation (Azure OpenAI API, CrewAI, LangChain, Ollama, Power Automate).
+                </p>
+                <p>
+                  Spécialisations : développement d'applications web performantes et scalables, 
+                  création d'applications mobiles natives iOS et Android, intégration d'intelligence 
+                  artificielle et de machine learning, automatisation de processus métier, 
+                  développement d'interfaces utilisateur modernes et interactives.
+                </p>
+                <p>
+                  Services proposés : consulting technique, architecture de solutions, développement 
+                  full-stack, MVP et prototypage rapide, refactoring et optimisation, maintenance 
+                  et évolution. Partenaire de confiance pour les projets ambitieux nécessitant 
+                  expertise technique et vision créative dans l'écosystème tech parisien.
+                </p>
+                <p>
+                  Recherches associées : nomad403 skills, nomad 403 expertise, nomad-403 technologies, 
+                  nomad403 react developer, nomad 403 kotlin, nomad-403 swift, nomad403 typescript, 
+                  nomad 403 nextjs, nomad-403 mobile developer, nomad403 ai integration, 
+                  nomad 403 freelance skills, nomad-403 paris developer.
+                </p>
+              </div>
             </div>
           )
           
-             case "projects":
-         return (
-           <div className="relative w-full h-screen overflow-hidden">
-             <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+            case "projects":
+        return (
+          <div className="relative w-full h-screen overflow-hidden">
+            {/* H1 pour le SEO - invisible mais accessible */}
+            <h1 className="sr-only">Projects — Nomad403 (Nomad 403)</h1>
+            
+            <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
                {/* Layout mobile/desktop */}
                <div className="h-full xl:grid xl:grid-cols-[200px_1fr] gap-2 xl:gap-8 items-center">
                  
@@ -512,12 +551,50 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  </div>
                </div>
              </div>
+             
+             {/* Contenu SEO invisible pour la page projects */}
+             <div className="sr-only">
+               <p>
+                 Portfolio de projets développés par Nomad403, Nomad 403, nomad-403, développeur freelance 
+                 spécialisé dans les solutions digitales pour startups, studios créatifs et entreprises tech. 
+                 Découvrez des réalisations innovantes : applications mobiles natives, plateformes web 
+                 performantes, intégrations d'intelligence artificielle, et solutions d'automatisation.
+               </p>
+               <p>
+                 Projets phares : Monday (application mobile de planification adaptative avec IA), 
+                 TurnUpSphere (plateforme événementielle géolocalisée), AutomatIA (solution d'automatisation 
+                 IA pour le secteur public), Refrig'Air Services (vitrine professionnelle responsive), 
+                 et ce portfolio génératif interactif. Chaque projet démontre l'expertise technique 
+                 et la créativité dans le développement d'expériences utilisateur exceptionnelles.
+               </p>
+               <p>
+                 Technologies utilisées : Next.js, React, TypeScript, Tailwind CSS, Kotlin, 
+                 Jetpack Compose, Swift, SwiftUI, Azure OpenAI, Power Automate, Three.js, 
+                 React Three Fiber. Approche méthodologique : conception UX/UI, architecture 
+                 scalable, développement agile, tests automatisés, déploiement continu.
+               </p>
+               <p>
+                 Services proposés : développement d'applications web et mobiles sur mesure, 
+                 intégration d'intelligence artificielle, consulting technique, MVP et prototypage, 
+                 refactoring et optimisation, maintenance et évolution. Partenaire de confiance 
+                 pour les projets ambitieux nécessitant expertise technique et vision créative.
+               </p>
+               <p>
+                 Recherches associées : nomad403 portfolio, nomad 403 projets, nomad-403 github, 
+                 nomad403 mobile app, nomad 403 web development, nomad-403 react projects, 
+                 nomad403 kotlin, nomad 403 swift, nomad-403 typescript, nomad403 nextjs, 
+                 nomad 403 ai projects, nomad-403 freelance work.
+               </p>
+             </div>
            </div>
          )
 
                                                        case "contact":
            return (
              <div className="relative w-full h-screen flex flex-col">
+               {/* H1 pour le SEO - invisible mais accessible */}
+               <h1 className="sr-only">Contact — Nomad403 (Nomad 403)</h1>
+               
                {/* Formulaire progressif centré */}
                <div className="flex-1 flex items-center justify-center px-4 md:px-8">
                  <div className="max-w-3xl mx-auto w-full">
@@ -686,6 +763,40 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </div>
                    </div>
                  </div>
+               </div>
+               
+               {/* Contenu SEO invisible pour la page contact */}
+               <div className="sr-only">
+                 <p>
+                   Contactez Nomad403, Nomad 403, nomad-403, développeur freelance spécialisé dans le développement 
+                   web, mobile et intégration IA basé à Paris. Partenaire de confiance pour startups, 
+                   studios créatifs, marques de luxe et entreprises tech. Expertise en React, Next.js, 
+                   TypeScript, Kotlin, Swift, et intégration d'intelligence artificielle.
+                 </p>
+                 <p>
+                   Services proposés : développement d'applications web et mobiles sur mesure, 
+                   intégration d'intelligence artificielle, consulting technique, architecture de solutions, 
+                   MVP et prototypage rapide, refactoring et optimisation, maintenance et évolution. 
+                   Approche centrée sur l'expérience utilisateur, la performance et la scalabilité.
+                 </p>
+                 <p>
+                   Technologies maîtrisées : Next.js, React, TypeScript, Tailwind CSS, Kotlin, 
+                   Jetpack Compose, Swift, SwiftUI, Azure OpenAI, Power Automate, Three.js, 
+                   React Three Fiber. Méthodologie : conception UX/UI, architecture scalable, 
+                   développement agile, tests automatisés, déploiement continu.
+                 </p>
+                 <p>
+                   Portfolio créatif et technique démontrant l'excellence dans le développement 
+                   d'interfaces utilisateur modernes, d'expériences interactives 3D, et de solutions 
+                   d'automatisation intelligente. Partenaire de confiance pour les projets ambitieux 
+                   nécessitant expertise technique et vision créative dans l'écosystème tech parisien.
+                 </p>
+                 <p>
+                   Recherches associées : nomad403 contact, nomad 403 freelance, nomad-403 hire, 
+                   nomad403 developer paris, nomad 403 web developer, nomad-403 mobile developer, 
+                   nomad403 react developer, nomad 403 kotlin, nomad-403 swift, nomad403 typescript, 
+                   nomad 403 nextjs, nomad-403 ai developer, nomad403 portfolio contact.
+                 </p>
                </div>
              </div>
            )
