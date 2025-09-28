@@ -40,7 +40,7 @@ const projectList = [
      id: 2,
      name: "TurnUpSphere",
      images: [
-       "/images/turnupsphere.png",
+       "/images/turnupsphere.webp",
        "/placeholder-logo.png"
      ],
     stack: ["Kotlin", "Jetpack Compose", "Firebase", "Google Maps API"],
@@ -80,7 +80,7 @@ const projectList = [
     id: 5,
     name: "Portfolio Nomad403",
     images: [
-      "/images/portfolio.png"
+      "/images/portfolio.webp"
     ],
     stack: ["React", "Three.js", "Canvas API", "Tailwind", "Framer Motion"],
     description: "Portfolio interactif et immersif, pensé comme une expérience technique et esthétique. Navigation 3D, effets HUD, storytelling visuel et démonstration de compétences avancées en frontend et design interactif.",

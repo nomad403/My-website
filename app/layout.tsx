@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon-black.ico" type="image/x-icon" media="(prefers-color-scheme: dark)" />
 
         {/* Apple & PWA */}
-        <link rel="apple-touch-icon" href="/favicon-white.png" />
+        <link rel="apple-touch-icon" href="/favicon-white.ico" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#0b0b0f" />
 
@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PageProvider>
               <DynamicSocialTags />
               <JsonLdWebsite />
-              <CanonicalRedirect />
+              {/* CanonicalRedirect désactivé - les balises canonical sont maintenant correctes */}
               <BackgroundLayers />
               <CustomCursor />
               {children}

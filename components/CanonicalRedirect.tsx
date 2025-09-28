@@ -23,21 +23,25 @@ export default function CanonicalRedirect() {
         const canonicalUrl = canonicalUrls[currentPage as keyof typeof canonicalUrls]
         
         if (canonicalUrl) {
-          // Vérifier si l'URL actuelle correspond à l'URL canonique
           const currentUrl = window.location.href
-          const expectedPath = new URL(canonicalUrl).pathname + window.location.search + window.location.hash
-          const currentPath = window.location.pathname + window.location.search + window.location.hash
+          const canonicalUrlObj = new URL(canonicalUrl)
           
-          // Si on est sur www ou http, rediriger vers la version canonique
-          if (window.location.hostname.startsWith('www.') || window.location.protocol === 'http:') {
+          // Si on est sur nomad403.com (sans www) ou http, rediriger vers www.nomad403.com
+          if (window.location.hostname === 'nomad403.com' || window.location.protocol === 'http:') {
             window.location.replace(canonicalUrl)
             return
           }
           
-          // Si le path ne correspond pas, mettre à jour l'URL sans recharger
-          if (expectedPath !== currentPath) {
-            window.history.replaceState({}, '', expectedPath)
-            console.log('CanonicalRedirect: Updated URL to', expectedPath)
+          // Si on est déjà sur www.nomad403.com, juste vérifier le path
+          if (window.location.hostname === 'www.nomad403.com') {
+            const expectedPath = canonicalUrlObj.pathname + window.location.search + window.location.hash
+            const currentPath = window.location.pathname + window.location.search + window.location.hash
+            
+            // Si le path ne correspond pas, mettre à jour l'URL sans recharger
+            if (expectedPath !== currentPath) {
+              window.history.replaceState({}, '', expectedPath)
+              console.log('CanonicalRedirect: Updated URL to', expectedPath)
+            }
           }
         }
       } catch (error) {
