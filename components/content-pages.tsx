@@ -810,6 +810,45 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
      return (
     <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">
       {getPageContent()}
+      
+      {/* SEO Internal Links - Invisible but accessible to crawlers */}
+      <div className="sr-only">
+        <nav aria-label="Navigation contextuelle SEO">
+          <ul>
+            <li><a href="https://www.nomad403.com/">Retour à l'accueil</a></li>
+            {currentPage === 'projects' && (
+              <>
+                <li><a href="https://www.nomad403.com/specialist">Voir mes compétences techniques</a></li>
+                <li><a href="https://www.nomad403.com/contact">Me contacter pour un projet similaire</a></li>
+              </>
+            )}
+            {currentPage === 'specialist' && (
+              <>
+                <li><a href="https://www.nomad403.com/projects">Voir mes réalisations</a></li>
+                <li><a href="https://www.nomad403.com/contact">Discuter de vos besoins techniques</a></li>
+              </>
+            )}
+            {currentPage === 'contact' && (
+              <>
+                <li><a href="https://www.nomad403.com/projects">Découvrir mes projets</a></li>
+                <li><a href="https://www.nomad403.com/specialist">Consulter mes compétences</a></li>
+              </>
+            )}
+          </ul>
+        </nav>
+        
+        {/* Liens contextuels par mots-clés */}
+        <div>
+          <h3>Liens contextuels</h3>
+          <ul>
+            <li><a href="https://www.nomad403.com/projects">Portfolio développeur React Next.js</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Expertise Kotlin Swift mobile</a></li>
+            <li><a href="https://www.nomad403.com/contact">Développeur freelance Paris</a></li>
+            <li><a href="https://www.nomad403.com/projects">Applications web sur mesure</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Intégration IA Azure OpenAI</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

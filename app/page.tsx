@@ -482,6 +482,31 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
       </div>
 
       
+      {/* SEO Internal Links - Invisible but accessible to crawlers */}
+      <div className="sr-only">
+        <nav aria-label="Navigation interne SEO">
+          <ul>
+            <li><a href="https://www.nomad403.com/">Accueil - Développeur Web Mobile IA</a></li>
+            <li><a href="https://www.nomad403.com/projects">Portfolio Projets - Applications Web Mobile</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Compétences Techniques - React Next.js Kotlin Swift</a></li>
+            <li><a href="https://www.nomad403.com/contact">Contact - Développeur Freelance Paris</a></li>
+          </ul>
+        </nav>
+        
+        {/* Liens contextuels pour les mots-clés importants */}
+        <div>
+          <h2>Services de développement</h2>
+          <ul>
+            <li><a href="https://www.nomad403.com/projects">Développement d'applications web</a></li>
+            <li><a href="https://www.nomad403.com/projects">Applications mobiles iOS Android</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Intégration IA et machine learning</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Développement React Next.js</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Développement Kotlin Swift</a></li>
+            <li><a href="https://www.nomad403.com/contact">Consulting technique</a></li>
+          </ul>
+        </div>
+      </div>
+
       {/* Social media links */}
       <div className="absolute bottom-0 left-0 right-0 z-50 p-8">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
@@ -560,6 +585,16 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
             nomad403 portfolio, nomad 403 web developer, nomad-403 mobile app, nomad403 react, 
             nomad 403 typescript, nomad-403 kotlin, nomad403 swift, nomad 403 ai integration.
           </p>
+          
+          {/* Liens internes contextuels pour la page d'accueil */}
+          <nav>
+            <h3>Navigation interne</h3>
+            <ul>
+              <li><a href="https://www.nomad403.com/projects">Voir mes projets de développement web et mobile</a></li>
+              <li><a href="https://www.nomad403.com/specialist">Découvrir mes compétences techniques</a></li>
+              <li><a href="https://www.nomad403.com/contact">Me contacter pour un projet</a></li>
+            </ul>
+          </nav>
         </div>
       )}
     </div>
