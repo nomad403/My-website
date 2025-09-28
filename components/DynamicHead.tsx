@@ -7,6 +7,16 @@ interface DynamicHeadProps {
   description: string
 }
 
+// Fonction pour obtenir l'URL canonique finale
+function getCanonicalUrl(pathname: string): string {
+  const baseUrl = 'https://www.nomad403.com'
+  
+  // Normaliser le pathname
+  const normalizedPath = pathname === '/' ? '' : pathname
+  
+  return `${baseUrl}${normalizedPath}`
+}
+
 export default function DynamicHead({ title, description }: DynamicHeadProps) {
   useEffect(() => {
     // Mettre à jour le titre de la page
@@ -27,14 +37,15 @@ export default function DynamicHead({ title, description }: DynamicHeadProps) {
     // Mettre à jour l'attribut lang de l'élément html
     document.documentElement.lang = title.includes('Développeur') || title.includes('Projets') || title.includes('Compétences') ? 'fr' : 'en'
     
-    // Ajouter la balise canonical
+    // Ajouter la balise canonical - toujours pointer vers la version finale
     const canonical = document.querySelector('link[rel="canonical"]')
+    const canonicalUrl = getCanonicalUrl(window.location.pathname)
     if (canonical) {
-      canonical.setAttribute('href', window.location.href)
+      canonical.setAttribute('href', canonicalUrl)
     } else {
       const link = document.createElement('link')
       link.rel = 'canonical'
-      link.href = window.location.href
+      link.href = canonicalUrl
       document.head.appendChild(link)
     }
   }, [title, description])

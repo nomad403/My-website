@@ -9,11 +9,10 @@ export default function CanonicalRedirect() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        // Utiliser l'origin actuel pour éviter les erreurs cross-origin
-        const currentOrigin = window.location.origin
-        const baseUrl = currentOrigin // Utiliser l'origin actuel (www ou non-www)
+        // Toujours utiliser la version canonique finale
+        const baseUrl = 'https://www.nomad403.com'
         
-        // URLs canoniques pour chaque page (même origin)
+        // URLs canoniques pour chaque page
         const canonicalUrls = {
           home: baseUrl,
           projects: `${baseUrl}/projects`,
@@ -24,20 +23,21 @@ export default function CanonicalRedirect() {
         const canonicalUrl = canonicalUrls[currentPage as keyof typeof canonicalUrls]
         
         if (canonicalUrl) {
-          const targetUrl = new URL(canonicalUrl)
+          // Vérifier si l'URL actuelle correspond à l'URL canonique
+          const currentUrl = window.location.href
+          const expectedPath = new URL(canonicalUrl).pathname + window.location.search + window.location.hash
+          const currentPath = window.location.pathname + window.location.search + window.location.hash
           
-          // Vérifier que l'origin est identique
-          if (targetUrl.origin === window.location.origin) {
-            const expectedPath = targetUrl.pathname + targetUrl.search + targetUrl.hash
-            const currentPath = window.location.pathname + window.location.search + window.location.hash
-            
-            if (expectedPath !== currentPath) {
-              // Mettre à jour l'URL sans recharger (même origin uniquement)
-              window.history.replaceState({}, '', expectedPath)
-              console.log('CanonicalRedirect: Updated URL to', expectedPath)
-            }
-          } else {
-            console.log('CanonicalRedirect: Skipping cross-origin redirect from', window.location.origin, 'to', targetUrl.origin)
+          // Si on est sur www ou http, rediriger vers la version canonique
+          if (window.location.hostname.startsWith('www.') || window.location.protocol === 'http:') {
+            window.location.replace(canonicalUrl)
+            return
+          }
+          
+          // Si le path ne correspond pas, mettre à jour l'URL sans recharger
+          if (expectedPath !== currentPath) {
+            window.history.replaceState({}, '', expectedPath)
+            console.log('CanonicalRedirect: Updated URL to', expectedPath)
           }
         }
       } catch (error) {
