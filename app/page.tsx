@@ -270,6 +270,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                 e.preventDefault()
                 handlePageChange("home")
               }}
+              aria-label="Accueil - Développeur web mobile freelance Paris NOMAD403"
               className={`nav-link transition-all duration-300 ${currentPage === "home" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
@@ -282,6 +283,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                 e.preventDefault()
                 handlePageChange("projects")
               }}
+              aria-label="Portfolio projets - Développement web React Next.js mobile Kotlin Swift"
               className={`nav-link transition-all duration-300 ${currentPage === "projects" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
@@ -294,6 +296,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                 e.preventDefault()
                 handlePageChange("specialist")
               }}
+              aria-label="Compétences techniques - Expert React Next.js Kotlin Swift IA"
               className={`nav-link transition-all duration-300 ${currentPage === "specialist" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
@@ -306,6 +309,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                 e.preventDefault()
                 handlePageChange("contact")
               }}
+              aria-label="Contact développeur freelance - Devis gratuit projet web mobile"
               className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
               }`}
@@ -371,6 +375,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("home")
                   }}
+                  aria-label="Accueil - Développeur web mobile freelance Paris NOMAD403"
                   className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "home" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -385,6 +390,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("projects")
                   }}
+                  aria-label="Portfolio projets - Développement web React Next.js mobile Kotlin Swift"
                   className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "projects" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -399,6 +405,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("specialist")
                   }}
+                  aria-label="Compétences techniques - Expert React Next.js Kotlin Swift IA"
                   className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "specialist" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -413,6 +420,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
                     e.preventDefault()
                     handlePageChange("contact")
                   }}
+                  aria-label="Contact développeur freelance - Devis gratuit projet web mobile"
                   className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
                     currentPage === "contact" 
                       ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
@@ -516,6 +524,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
               href="https://x.com/_nomad_403" 
               target="_blank" 
               rel="noopener noreferrer"
+              aria-label="Suivre NOMAD403 sur X (Twitter) - Développeur freelance Paris"
               className={`transition-all duration-300 hover:scale-110 ${
                 mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}
@@ -526,6 +535,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
               href="https://www.linkedin.com/in/glenn-richard/" 
               target="_blank" 
               rel="noopener noreferrer"
+              aria-label="Profil LinkedIn de Glenn Richard - Développeur web mobile freelance"
               className={`transition-all duration-300 hover:scale-110 ${
                 mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}
@@ -536,6 +546,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
               href="https://github.com/nomad403" 
               target="_blank" 
               rel="noopener noreferrer"
+              aria-label="Portfolio GitHub de NOMAD403 - Projets React Next.js Kotlin Swift"
               className={`transition-all duration-300 hover:scale-110 ${
                 mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
               }`}

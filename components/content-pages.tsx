@@ -39,10 +39,9 @@ const projectList = [
      {
      id: 2,
      name: "TurnUpSphere",
-     images: [
-       "/images/turnupsphere.webp",
-       "/placeholder-logo.png"
-     ],
+    images: [
+      "/images/turnupsphere.webp"
+    ],
     stack: ["Kotlin", "Jetpack Compose", "Firebase", "Google Maps API"],
     description: "Application mobile dédiée à la scène musicale underground, pensée pour les organisateurs et participants d'événements. Elle permet de créer et gérer des événements sur mesure avec géolocalisation, interface fluide et gestion cloud, dans un univers où la réactivité et la confidentialité sont clés.",
     context: "Projet personnel dédié à la scène musicale underground, pensé pour les organisateurs et participants d'événements.",
