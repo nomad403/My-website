@@ -818,20 +818,20 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
             <li><a href="https://www.nomad403.com/">Retour à l'accueil</a></li>
             {currentPage === 'projects' && (
               <>
-                <li><a href="https://www.nomad403.com/specialist">Voir mes compétences techniques</a></li>
-                <li><a href="https://www.nomad403.com/contact">Me contacter pour un projet similaire</a></li>
+                <li><a href="https://www.nomad403.com/specialist">Voir mes compétences techniques développeur freelance Paris</a></li>
+                <li><a href="https://www.nomad403.com/contact">Me contacter pour un projet React Next.js Kotlin Swift</a></li>
               </>
             )}
             {currentPage === 'specialist' && (
               <>
-                <li><a href="https://www.nomad403.com/projects">Voir mes réalisations</a></li>
-                <li><a href="https://www.nomad403.com/contact">Discuter de vos besoins techniques</a></li>
+                <li><a href="https://www.nomad403.com/projects">Voir mes réalisations développement web mobile</a></li>
+                <li><a href="https://www.nomad403.com/contact">Discuter de vos besoins techniques développeur freelance</a></li>
               </>
             )}
             {currentPage === 'contact' && (
               <>
-                <li><a href="https://www.nomad403.com/projects">Découvrir mes projets</a></li>
-                <li><a href="https://www.nomad403.com/specialist">Consulter mes compétences</a></li>
+                <li><a href="https://www.nomad403.com/projects">Découvrir mes projets React Next.js Kotlin Swift</a></li>
+                <li><a href="https://www.nomad403.com/specialist">Consulter mes compétences développeur web mobile</a></li>
               </>
             )}
           </ul>
@@ -841,11 +841,12 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
         <div>
           <h3>Liens contextuels</h3>
           <ul>
-            <li><a href="https://www.nomad403.com/projects">Portfolio développeur React Next.js</a></li>
-            <li><a href="https://www.nomad403.com/specialist">Expertise Kotlin Swift mobile</a></li>
-            <li><a href="https://www.nomad403.com/contact">Développeur freelance Paris</a></li>
-            <li><a href="https://www.nomad403.com/projects">Applications web sur mesure</a></li>
-            <li><a href="https://www.nomad403.com/specialist">Intégration IA Azure OpenAI</a></li>
+            <li><a href="https://www.nomad403.com/projects">Portfolio développeur React Next.js freelance Paris</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Expertise Kotlin Swift mobile iOS Android</a></li>
+            <li><a href="https://www.nomad403.com/contact">Développeur freelance Paris web mobile</a></li>
+            <li><a href="https://www.nomad403.com/projects">Applications web sur mesure React Next.js</a></li>
+            <li><a href="https://www.nomad403.com/specialist">Intégration IA Azure OpenAI développeur expert</a></li>
+            <li><a href="https://www.nomad403.com/contact">Devis gratuit développeur web mobile freelance</a></li>
           </ul>
         </div>
       </div>

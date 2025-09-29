@@ -3,38 +3,38 @@ import type { Metadata } from "next"
 export const pageMetadata: Record<string, Record<string, Metadata>> = {
   fr: {
     home: {
-      title: "NOMAD403 - Développeur Web, Mobile & IA",
-      description: "Développeur freelance créant des applications web personnalisées, des applications mobiles et des outils alimentés par l'IA. Explorez mon portfolio 3D interactif."
+      title: "NOMAD403 - Développeur Web Mobile Freelance Paris | React Next.js Kotlin Swift",
+      description: "Développeur freelance Paris spécialisé en applications web React Next.js, mobile iOS Android Kotlin Swift, et intégration IA. Portfolio 3D interactif."
     },
     projects: {
-      title: "NOMAD403 - Projets Portfolio | Web, Mobile & IA",
-      description: "Parcourez les projets sélectionnés en développement web, applications mobiles et solutions IA. De qualité, évolutifs et conçus pour l'impact."
+      title: "Portfolio Développeur Web Mobile - Projets React Next.js Kotlin Swift | NOMAD403",
+      description: "Portfolio de projets développement web React Next.js, applications mobiles iOS Android Kotlin Swift, solutions IA. Développeur freelance Paris."
     },
     specialist: {
-      title: "NOMAD403 - Compétences & Expertise | Web, Mobile & IA",
-      description: "Expertise en développement frontend, mobile (iOS & Android) et intégration IA. Solutions modernes et évolutives adaptées à vos besoins."
+      title: "Expert Développeur Web Mobile Freelance - React Next.js Kotlin Swift IA | NOMAD403",
+      description: "Expertise développement web React Next.js, mobile iOS Android Kotlin Swift, intégration IA Azure OpenAI. Développeur freelance Paris expérimenté."
     },
     contact: {
-      title: "NOMAD403 - Contact | Engagez un Développeur Web, Mobile & IA",
-      description: "Contactez-moi pour discuter de votre projet. Disponible pour des collaborations de développement web, mobile et IA freelance."
+      title: "Contact Développeur Web Mobile Freelance Paris - React Next.js Kotlin Swift | NOMAD403",
+      description: "Contactez un développeur freelance Paris expert en React Next.js, mobile Kotlin Swift, intégration IA. Devis gratuit pour votre projet web mobile."
     }
   },
   en: {
     home: {
-      title: "NOMAD403 - Web, Mobile & AI Developer",
-      description: "Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio."
+      title: "NOMAD403 - Freelance Web Mobile Developer Paris | React Next.js Kotlin Swift",
+      description: "Freelance developer Paris specializing in React Next.js web apps, iOS Android mobile apps Kotlin Swift, and AI integration. Interactive 3D portfolio."
     },
     projects: {
-      title: "NOMAD403 - Portfolio Projects | Web, Mobile & AI",
-      description: "Browse selected projects in web development, mobile apps, and AI solutions. High-quality, scalable, and designed for impact."
+      title: "Web Mobile Developer Portfolio - React Next.js Kotlin Swift Projects | NOMAD403",
+      description: "Portfolio of React Next.js web development, iOS Android mobile apps Kotlin Swift, AI solutions. Freelance developer Paris."
     },
     specialist: {
-      title: "NOMAD403 - Skills & Expertise | Web, Mobile & AI",
-      description: "Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs."
+      title: "Expert Freelance Web Mobile Developer - React Next.js Kotlin Swift AI | NOMAD403",
+      description: "Expertise in React Next.js web development, iOS Android mobile Kotlin Swift, Azure OpenAI AI integration. Experienced freelance developer Paris."
     },
     contact: {
-      title: "NOMAD403 - Contact | Hire a Web, Mobile & AI Developer",
-      description: "Get in touch to discuss your project. Available for freelance web, mobile, and AI development collaborations."
+      title: "Contact Freelance Web Mobile Developer Paris - React Next.js Kotlin Swift | NOMAD403",
+      description: "Contact a freelance developer Paris expert in React Next.js, mobile Kotlin Swift, AI integration. Free quote for your web mobile project."
     }
   }
 }
