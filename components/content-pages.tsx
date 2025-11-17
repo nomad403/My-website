@@ -27,7 +27,7 @@ const projectList = [
     id: 1,
     name: "Monday",
     images: [
-      "/images/monday.jpg"
+      "/images/monday.webp"
     ],
     stack: ["Kotlin", "Jetpack Compose", "Firebase", "MVVM"],
     description: "Les journées ne suivent jamais le plan. Elles dérapent, s'accélèrent, changent d'ordre. Monday transforme cette réalité en avantage. L’app anticipe les imprévus, réajuste vos priorités en temps réel, et orchestre votre journée avec une logique aussi souple que précise. Pas de surcharge mentale, pas de friction. Juste un agenda qui s’adapte à vous, naturellement.",
@@ -53,8 +53,11 @@ const projectList = [
     id: 3,
     name: "Refrig'Air Services",
     images: [
-      "/images/refrig_air_services.jpg"
+      "/images/refrig_air_services.webp"
     ],
+    imageFit: "contain" as const,
+    imagePosition: "center",
+    imageBackground: "#020409",
     stack: ["React", "Next.js", "Vercel", "Tailwind CSS"],
     description: "Site vitrine clair, rapide et responsive pour un artisan frigoriste, mettant en avant les services, la zone d'intervention et les atouts métier. L'architecture permet une réutilisation facile pour d'autres professionnels et a généré de nouveaux contacts qualifiés dès les premières semaines.",
     context: "Mission pour un artisan frigoriste souhaitant développer sa présence digitale et capter de nouveaux clients.",
@@ -66,7 +69,7 @@ const projectList = [
     id: 4,
     name: "AutomatIA",
     images: [
-      "/images/seine_saint_denis.png"
+      "/images/seine_saint_denis.webp"
     ],
     stack: ["Power Automate", "Azure OpenAI", "JSON", "Microsoft 365"],
     description: "Automatisation IA pour le secteur public : classement intelligent des mails, extraction d'informations, réponses automatiques adaptées au contexte. Gain de temps significatif pour les agents et validation de l'usage de l'IA dans un cadre public sensible.",

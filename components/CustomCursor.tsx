@@ -3,13 +3,27 @@ import { useEffect, useState } from "react"
 
 export default function CustomCursor() {
   const [pos, setPos] = useState({ x: 0, y: 0 })
+  const [isEnabled, setIsEnabled] = useState(true)
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const prefersCoarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+    setIsEnabled(!prefersCoarsePointer)
+
     const handleMouseMove = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY })
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+
+    if (!prefersCoarsePointer) {
+      window.addEventListener("mousemove", handleMouseMove)
+    }
+
+    return () => {
+      if (!prefersCoarsePointer) {
+        window.removeEventListener("mousemove", handleMouseMove)
+      }
+    }
   }, [])
+
+  if (!isEnabled) return null
 
   return (
     <>

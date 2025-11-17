@@ -1,17 +1,9 @@
 import type React from "react"
 import type { Metadata } from "next"
-import '../styles/globals.css'
+import "../styles/globals.css"
 import { JetBrains_Mono } from "next/font/google"
 import localFont from "next/font/local"
-import { BackgroundProvider } from "./contexts/BackgroundContext"
-import { PageProvider } from "./contexts/PageContext"
-import { LanguageProvider } from "./contexts/LanguageContext"
-import BackgroundLayers from "@/components/BackgroundLayers"
-import CustomCursor from "../components/CustomCursor"
-import DynamicFavicon from "@/components/DynamicFavicon"
-import DynamicSocialTags from "@/components/DynamicSocialTags"
-import JsonLdWebsite from "@/components/JsonLdWebsite"
-import CanonicalRedirect from "@/components/CanonicalRedirect"
+import ClientLayout from "@/components/ClientLayout"
 
 const enigma = localFont({
   src: "../fonts/EnigmaRegular.woff2",
@@ -84,21 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="bingbot" content="index, follow" />
       </head>
       <body className={`${enigma.variable} ${jetBrainsMono.variable} antialiased`}>
-        {/* Forcer la présence de la fonte dans le DOM */}
-        <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">.</span>
-        <LanguageProvider>
-          <BackgroundProvider>
-            <DynamicFavicon />
-            <PageProvider>
-              <DynamicSocialTags />
-              <JsonLdWebsite />
-              {/* CanonicalRedirect désactivé - les balises canonical sont maintenant correctes */}
-              <BackgroundLayers />
-              <CustomCursor />
-              {children}
-            </PageProvider>
-          </BackgroundProvider>
-        </LanguageProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

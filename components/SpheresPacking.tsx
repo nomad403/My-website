@@ -170,6 +170,115 @@ export default function SpheresPacking({
     fadeColors();
   }, [currentPage]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (!visible) {
+      canvas.style.transform = "";
+      return;
+    }
+
+    const prefersCoarsePointer =
+      window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    const deviceOrientationCtor = (window as Record<string, any>).DeviceOrientationEvent;
+    const hasDeviceOrientation = !!deviceOrientationCtor;
+
+    if (!prefersCoarsePointer || !hasDeviceOrientation) {
+      canvas.style.transform = "";
+      return;
+    }
+
+    const needsPermission =
+      typeof deviceOrientationCtor.requestPermission === "function";
+
+    let raf = 0;
+    let animationActive = false;
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    const clamp = (value: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, value));
+
+    const MAX_OFFSET = 35; // pixels
+
+    const updateTransform = () => {
+      currentX += (targetX - currentX) * 0.08;
+      currentY += (targetY - currentY) * 0.08;
+      canvas.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(1.05)`;
+      raf = window.requestAnimationFrame(updateTransform);
+    };
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const beta = clamp(event.beta ?? 0, -45, 45);
+      const gamma = clamp(event.gamma ?? 0, -45, 45);
+      targetX = (gamma / 45) * MAX_OFFSET;
+      targetY = (beta / 45) * MAX_OFFSET;
+
+      if (!animationActive) {
+        animationActive = true;
+        raf = window.requestAnimationFrame(updateTransform);
+      }
+    };
+
+    let orientationAttached = false;
+
+    const attachOrientation = () => {
+      if (orientationAttached) return;
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      orientationAttached = true;
+    };
+
+    const detachOrientation = () => {
+      if (!orientationAttached) return;
+      window.removeEventListener("deviceorientation", handleOrientation, true);
+      orientationAttached = false;
+    };
+
+    let permissionCleanup: (() => void) | null = null;
+
+    if (needsPermission) {
+      const requestPermission = async () => {
+        try {
+          const result = await deviceOrientationCtor.requestPermission();
+          if (result === "granted") {
+            attachOrientation();
+          } else {
+            console.warn("SpheresPacking: permission device orientation refusée");
+          }
+        } catch (error) {
+          console.warn("SpheresPacking: erreur permission device orientation", error);
+        }
+      };
+
+      const handleFirstGesture = () => {
+        requestPermission();
+      };
+
+      window.addEventListener("touchend", handleFirstGesture, { once: true });
+      window.addEventListener("click", handleFirstGesture, { once: true });
+
+      permissionCleanup = () => {
+        window.removeEventListener("touchend", handleFirstGesture);
+        window.removeEventListener("click", handleFirstGesture);
+      };
+    } else {
+      attachOrientation();
+    }
+
+    return () => {
+      permissionCleanup?.();
+      detachOrientation();
+      if (raf) {
+        window.cancelAnimationFrame(raf);
+      }
+      animationActive = false;
+      canvas.style.transform = "";
+    };
+  }, [visible]);
+
   // Déterminer si les spheres doivent être visibles
   const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "specialist" || currentPage === "contact";
 

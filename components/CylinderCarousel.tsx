@@ -5,6 +5,9 @@ interface CarouselItem {
   name: string;
   images: string[];
   description: string;
+  imageFit?: "cover" | "contain";
+  imagePosition?: string;
+  imageBackground?: string;
 }
 
 interface CylinderCarouselProps {
@@ -325,8 +328,18 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
                key={item.id}
                className={`carrousel-item ${index === selectedIndex ? 'selected' : ''}`}
                onClick={() => onItemChange?.(index)}
+               style={{
+                 backgroundColor: item.imageBackground ?? "transparent",
+               }}
              >
-              <img src={item.images[0]} alt={item.name} />
+              <img
+                src={item.images[0]}
+                alt={item.name}
+                style={{
+                  objectFit: item.imageFit ?? "cover",
+                  objectPosition: item.imagePosition ?? "center",
+                }}
+              />
               <div className="item-overlay">
                 <h3>{item.name}</h3>
               </div>
