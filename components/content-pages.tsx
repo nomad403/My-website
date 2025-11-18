@@ -51,7 +51,7 @@ const projectList = [
   },
   {
     id: 3,
-    name: "Refrig'Air Services",
+    name: "Refrig'Air Systemes Energies",
     images: [
       "/images/refrig_air_services.webp"
     ],
