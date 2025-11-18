@@ -174,59 +174,83 @@ export default function SpheresPacking({
     if (typeof window === "undefined") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (!visible) {
-      canvas.style.transform = "";
-      return;
-    }
 
     const prefersCoarsePointer =
       window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-    const deviceOrientationCtor = (window as Record<string, any>).DeviceOrientationEvent;
-    const hasDeviceOrientation = !!deviceOrientationCtor;
 
-    if (!prefersCoarsePointer || !hasDeviceOrientation) {
+    if (!prefersCoarsePointer) {
       canvas.style.transform = "";
       return;
     }
 
+    const deviceOrientationCtor = (window as Record<string, any>)
+      .DeviceOrientationEvent;
+    const hasDeviceOrientation = !!deviceOrientationCtor;
     const needsPermission =
-      typeof deviceOrientationCtor.requestPermission === "function";
+      typeof deviceOrientationCtor?.requestPermission === "function";
+
+    const state = {
+      currentX: 0,
+      currentY: 0,
+      targetX: 0,
+      targetY: 0,
+      gyroX: 0,
+      gyroY: 0,
+      tapX: 0,
+      tapY: 0,
+      tapWeight: 0,
+    };
+
+    const MAX_OFFSET = 35;
+    const TAP_DECAY = 0.92;
 
     let raf = 0;
     let animationActive = false;
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
 
-    const clamp = (value: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, value));
-
-    const MAX_OFFSET = 35; // pixels
-
-    const updateTransform = () => {
-      currentX += (targetX - currentX) * 0.08;
-      currentY += (targetY - currentY) * 0.08;
-      canvas.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(1.05)`;
-      raf = window.requestAnimationFrame(updateTransform);
-    };
-
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      const beta = clamp(event.beta ?? 0, -45, 45);
-      const gamma = clamp(event.gamma ?? 0, -45, 45);
-      targetX = (gamma / 45) * MAX_OFFSET;
-      targetY = (beta / 45) * MAX_OFFSET;
-
+    const startAnimation = () => {
       if (!animationActive) {
         animationActive = true;
         raf = window.requestAnimationFrame(updateTransform);
       }
     };
 
-    let orientationAttached = false;
+    const updateTransform = () => {
+      if (!visible) {
+        canvas.style.transform = "";
+        animationActive = false;
+        return;
+      }
 
+      if (state.tapWeight > 0.001) {
+        state.tapWeight *= TAP_DECAY;
+      } else {
+        state.tapWeight = 0;
+      }
+
+      state.targetX = state.gyroX + state.tapWeight * state.tapX;
+      state.targetY = state.gyroY + state.tapWeight * state.tapY;
+
+      state.currentX += (state.targetX - state.currentX) * 0.08;
+      state.currentY += (state.targetY - state.currentY) * 0.08;
+
+      canvas.style.transform = `translate3d(${state.currentX}px, ${state.currentY}px, 0) scale(1.05)`;
+      raf = window.requestAnimationFrame(updateTransform);
+    };
+
+    const clamp = (value: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, value));
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const beta = clamp(event.beta ?? 0, -45, 45);
+      const gamma = clamp(event.gamma ?? 0, -45, 45);
+      state.gyroX = (gamma / 45) * MAX_OFFSET;
+      state.gyroY = (beta / 45) * MAX_OFFSET;
+      startAnimation();
+    };
+
+    let orientationAttached = false;
     const attachOrientation = () => {
-      if (orientationAttached) return;
+      if (orientationAttached || !hasDeviceOrientation) return;
       window.addEventListener("deviceorientation", handleOrientation, true);
       orientationAttached = true;
     };
@@ -239,14 +263,12 @@ export default function SpheresPacking({
 
     let permissionCleanup: (() => void) | null = null;
 
-    if (needsPermission) {
+    if (hasDeviceOrientation && needsPermission) {
       const requestPermission = async () => {
         try {
           const result = await deviceOrientationCtor.requestPermission();
           if (result === "granted") {
             attachOrientation();
-          } else {
-            console.warn("SpheresPacking: permission device orientation refusée");
           }
         } catch (error) {
           console.warn("SpheresPacking: erreur permission device orientation", error);
@@ -264,13 +286,27 @@ export default function SpheresPacking({
         window.removeEventListener("touchend", handleFirstGesture);
         window.removeEventListener("click", handleFirstGesture);
       };
-    } else {
+    } else if (hasDeviceOrientation) {
       attachOrientation();
     }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const xNorm = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const yNorm = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+      state.tapX = xNorm * MAX_OFFSET;
+      state.tapY = yNorm * MAX_OFFSET;
+      state.tapWeight = 1;
+      startAnimation();
+      event.preventDefault();
+    };
+
+    canvas.addEventListener("pointerdown", handlePointerDown);
 
     return () => {
       permissionCleanup?.();
       detachOrientation();
+      canvas.removeEventListener("pointerdown", handlePointerDown);
       if (raf) {
         window.cancelAnimationFrame(raf);
       }
