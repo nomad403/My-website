@@ -200,10 +200,10 @@ export default function SpheresPacking({
       pointerHover: allowHoverControl,
     };
 
-    const MAX_OFFSET = prefersCoarsePointer ? 35 : 20;
-    const POINTER_DECAY = prefersCoarsePointer ? 0.9 : 0.94;
-    const POINTER_SMOOTHING = prefersCoarsePointer ? 0.2 : 0.12;
-    const POINTER_WEIGHT = prefersCoarsePointer ? 1 : 0.65;
+    const MAX_OFFSET = prefersCoarsePointer ? 45 : 28;
+    const POINTER_DECAY = prefersCoarsePointer ? 0.92 : 0.95;
+    const POINTER_SMOOTHING = prefersCoarsePointer ? 0.25 : 0.16;
+    const POINTER_WEIGHT = prefersCoarsePointer ? 1.2 : 0.85;
 
     let raf = 0;
     let animationActive = false;
@@ -320,17 +320,13 @@ export default function SpheresPacking({
         state.pointerDown = true;
         state.pointerHover = true;
       }
-      if (allowHoverControl || state.pointerDown) {
-        updatePointerFromEvent(event);
-      }
+      updatePointerFromEvent(event);
     };
 
     const handlePointerUp = (event: PointerEvent) => {
       if (event.pointerType === "touch" || event.pointerType === "pen") {
         state.pointerDown = false;
         state.pointerHover = false;
-      }
-      if (!allowHoverControl) {
         state.pointerTargetX = 0;
         state.pointerTargetY = 0;
       }
