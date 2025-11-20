@@ -516,10 +516,10 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
       </div>
 
       {/* Social media links */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 p-8">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
+      <div className="absolute bottom-0 left-0 right-0 z-50 p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center max-w-7xl mx-auto">
           {/* Social media links on the left */}
-          <div className="flex space-x-6 font-jetbrains text-sm font-light uppercase tracking-wider">
+          <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 gap-y-2 font-jetbrains text-xs sm:text-sm font-light uppercase tracking-wider">
             <a 
               href="https://x.com/_nomad_403" 
               target="_blank" 
@@ -556,7 +556,7 @@ export default function HomePage({ initialPage = "home" }: HomePageProps) {
           </div>
           
           {/* Email on the right */}
-          <div className={`font-jetbrains text-sm ${
+          <div className={`font-jetbrains text-xs sm:text-sm text-center sm:text-right break-all ${
             mode === 'night' ? 'text-white' : 'text-black'
           }`}>
             {t('social.email')}

@@ -177,11 +177,7 @@ export default function SpheresPacking({
 
     const prefersCoarsePointer =
       window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-
-    if (!prefersCoarsePointer) {
-      canvas.style.transform = "";
-      return;
-    }
+    const allowHoverControl = !prefersCoarsePointer;
 
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent;
@@ -196,13 +192,18 @@ export default function SpheresPacking({
       targetY: 0,
       gyroX: 0,
       gyroY: 0,
-      tapX: 0,
-      tapY: 0,
-      tapWeight: 0,
+      pointerX: 0,
+      pointerY: 0,
+      pointerTargetX: 0,
+      pointerTargetY: 0,
+      pointerDown: false,
+      pointerHover: allowHoverControl,
     };
 
-    const MAX_OFFSET = 35;
-    const TAP_DECAY = 0.92;
+    const MAX_OFFSET = prefersCoarsePointer ? 35 : 20;
+    const POINTER_DECAY = prefersCoarsePointer ? 0.9 : 0.94;
+    const POINTER_SMOOTHING = prefersCoarsePointer ? 0.2 : 0.12;
+    const POINTER_WEIGHT = prefersCoarsePointer ? 1 : 0.65;
 
     let raf = 0;
     let animationActive = false;
@@ -221,14 +222,21 @@ export default function SpheresPacking({
         return;
       }
 
-      if (state.tapWeight > 0.001) {
-        state.tapWeight *= TAP_DECAY;
-      } else {
-        state.tapWeight = 0;
+      const shouldDecayPointer =
+        prefersCoarsePointer ? !state.pointerDown : !state.pointerHover;
+
+      if (shouldDecayPointer) {
+        state.pointerTargetX *= POINTER_DECAY;
+        state.pointerTargetY *= POINTER_DECAY;
       }
 
-      state.targetX = state.gyroX + state.tapWeight * state.tapX;
-      state.targetY = state.gyroY + state.tapWeight * state.tapY;
+      state.pointerX +=
+        (state.pointerTargetX - state.pointerX) * POINTER_SMOOTHING;
+      state.pointerY +=
+        (state.pointerTargetY - state.pointerY) * POINTER_SMOOTHING;
+
+      state.targetX = state.gyroX + state.pointerX * POINTER_WEIGHT;
+      state.targetY = state.gyroY + state.pointerY * POINTER_WEIGHT;
 
       state.currentX += (state.targetX - state.currentX) * 0.08;
       state.currentY += (state.targetY - state.currentY) * 0.08;
@@ -290,23 +298,71 @@ export default function SpheresPacking({
       attachOrientation();
     }
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const updatePointerFromEvent = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       const xNorm = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       const yNorm = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      state.tapX = xNorm * MAX_OFFSET;
-      state.tapY = yNorm * MAX_OFFSET;
-      state.tapWeight = 1;
+      state.pointerTargetX = xNorm * MAX_OFFSET;
+      state.pointerTargetY = yNorm * MAX_OFFSET;
+      if (event.pointerType === "mouse" || event.pointerType === "pen") {
+        state.pointerHover = true;
+      }
       startAnimation();
-      event.preventDefault();
     };
 
-    canvas.addEventListener("pointerdown", handlePointerDown);
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!allowHoverControl && !state.pointerDown) return;
+      updatePointerFromEvent(event);
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        state.pointerDown = true;
+        state.pointerHover = true;
+      }
+      if (allowHoverControl || state.pointerDown) {
+        updatePointerFromEvent(event);
+      }
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        state.pointerDown = false;
+        state.pointerHover = false;
+      }
+      if (!allowHoverControl) {
+        state.pointerTargetX = 0;
+        state.pointerTargetY = 0;
+      }
+      startAnimation();
+    };
+
+    const handlePointerLeave = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" || event.pointerType === "pen") {
+        state.pointerHover = false;
+      } else {
+        state.pointerDown = false;
+        state.pointerHover = false;
+      }
+      state.pointerTargetX = 0;
+      state.pointerTargetY = 0;
+      startAnimation();
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("pointerup", handlePointerUp, { passive: true });
+    window.addEventListener("pointercancel", handlePointerUp, { passive: true });
+    window.addEventListener("pointerleave", handlePointerLeave, { passive: true });
 
     return () => {
       permissionCleanup?.();
       detachOrientation();
-      canvas.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("pointerleave", handlePointerLeave);
       if (raf) {
         window.cancelAnimationFrame(raf);
       }
