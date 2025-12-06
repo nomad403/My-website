@@ -17,7 +17,7 @@ export default function JsonLdPerson() {
       "name": "NOMAD403",
       "jobTitle": "Web, Mobile & AI Developer",
       "description": "Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.",
-      "url": "https://nomad403.com",
+      "url": "https://www.nomad403.com",
       "sameAs": [
         "https://www.linkedin.com/in/your-profile",
         "https://github.com/your-username",

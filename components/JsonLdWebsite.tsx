@@ -8,7 +8,7 @@ export default function JsonLdWebsite() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const baseUrl = 'https://nomad403.com'
+      const baseUrl = 'https://www.nomad403.com'
       
       // Données structurées par page
       const pageData = {

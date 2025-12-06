@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://nomad403.com
+Host: https://www.nomad403.com
 
 # Sitemaps
-Sitemap: https://nomad403.com/sitemap.xml
+Sitemap: https://www.nomad403.com/sitemap.xml
