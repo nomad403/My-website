@@ -12,10 +12,10 @@
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "framer-motion": "^12.23.3",
-    "next": "15.2.4",
+    "next": "15.2.6",
     "next-sitemap": "^4.2.3",
-    "react": "^19",
-    "react-dom": "^19",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "resend": "^6.0.2",
     "three": "^0.170.0"
   },
