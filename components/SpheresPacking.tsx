@@ -18,6 +18,13 @@ type Spheres2Ctor = (
   spheres: {
     setColors: (colors: number[]) => void;
     light1: { color: { set: (hex: number) => void } };
+    physics?: {
+      center: { x: number; y: number; z: number };
+    };
+    config?: {
+      maxX?: number;
+      maxY?: number;
+    };
   };
 };
 
@@ -52,6 +59,13 @@ export default function SpheresPacking({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const instanceRef = useRef<ReturnType<Spheres2Ctor> | null>(null);
   const currentColorsRef = useRef<number[]>(PAGE_COLORS.home);
+  const tiltRef = useRef({
+    raf: 0,
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -177,7 +191,15 @@ export default function SpheresPacking({
 
     const prefersCoarsePointer =
       window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-    const allowHoverControl = !prefersCoarsePointer;
+
+    if (prefersCoarsePointer) {
+      canvas.style.transform = "scale(1.05)";
+      return () => {
+        canvas.style.transform = "";
+      };
+    }
+
+    const allowHoverControl = true;
 
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent;
@@ -366,6 +388,91 @@ export default function SpheresPacking({
       canvas.style.transform = "";
     };
   }, [visible]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const prefersCoarsePointer =
+      window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    if (!prefersCoarsePointer) return;
+
+    const deviceOrientationCtor = (window as Record<string, any>)
+      .DeviceOrientationEvent;
+    const hasDeviceOrientation = !!deviceOrientationCtor;
+    if (!hasDeviceOrientation) return;
+
+    const clampToUnit = (value: number) =>
+      Math.max(-1, Math.min(1, value));
+
+    const state = tiltRef.current;
+    const damping = 0.12;
+    const strength = 0.65;
+
+    const applyTilt = () => {
+      state.x += (state.targetX - state.x) * damping;
+      state.y += (state.targetY - state.y) * damping;
+
+      const spheres = instanceRef.current?.spheres;
+      const center = spheres?.physics?.center;
+      if (center) {
+        const maxX = spheres.config?.maxX ?? 15;
+        const maxY = spheres.config?.maxY ?? 15;
+        center.x = state.x * maxX * strength;
+        center.y = state.y * maxY * strength;
+      }
+
+      state.raf = requestAnimationFrame(applyTilt);
+    };
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const beta = ((event.beta ?? 0) / 45);
+      const gamma = ((event.gamma ?? 0) / 45);
+      state.targetX = clampToUnit(gamma);
+      state.targetY = clampToUnit(beta);
+    };
+
+    let permissionCleanup: (() => void) | null = null;
+    if (typeof deviceOrientationCtor.requestPermission === "function") {
+      const requestPermission = async () => {
+        try {
+          const result = await deviceOrientationCtor.requestPermission();
+          if (result === "granted") {
+            window.addEventListener("deviceorientation", handleOrientation, true);
+          }
+        } catch (error) {
+          console.warn("SpheresPacking: orientation permission refusée", error);
+        }
+      };
+
+      const handleFirstGesture = () => {
+        requestPermission();
+      };
+
+      window.addEventListener("touchend", handleFirstGesture, { once: true });
+      window.addEventListener("click", handleFirstGesture, { once: true });
+
+      permissionCleanup = () => {
+        window.removeEventListener("touchend", handleFirstGesture);
+        window.removeEventListener("click", handleFirstGesture);
+      };
+    } else {
+      window.addEventListener("deviceorientation", handleOrientation, true);
+    }
+
+    state.raf = requestAnimationFrame(applyTilt);
+
+    return () => {
+      permissionCleanup?.();
+      window.removeEventListener("deviceorientation", handleOrientation, true);
+      if (state.raf) {
+        cancelAnimationFrame(state.raf);
+        state.raf = 0;
+      }
+      state.x = 0;
+      state.y = 0;
+      state.targetX = 0;
+      state.targetY = 0;
+    };
+  }, []);
 
   // Déterminer si les spheres doivent être visibles
   const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "specialist" || currentPage === "contact";
