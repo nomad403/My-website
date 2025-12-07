@@ -65,6 +65,8 @@ export default function SpheresPacking({
     y: 0,
     targetX: 0,
     targetY: 0,
+    baseBeta: null as number | null,
+    baseGamma: null as number | null,
   });
 
   useEffect(() => {
@@ -424,10 +426,19 @@ export default function SpheresPacking({
     };
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      const beta = ((event.beta ?? 0) / 45);
-      const gamma = ((event.gamma ?? 0) / 45);
-      state.targetX = clampToUnit(gamma);
-      state.targetY = clampToUnit(beta);
+      const beta = event.beta ?? 0;
+      const gamma = event.gamma ?? 0;
+
+      if (state.baseBeta === null || state.baseGamma === null) {
+        state.baseBeta = beta;
+        state.baseGamma = gamma;
+      }
+
+      const betaOffset = (beta - state.baseBeta) / 45;
+      const gammaOffset = (gamma - state.baseGamma) / 45;
+
+      state.targetX = clampToUnit(gammaOffset);
+      state.targetY = clampToUnit(betaOffset);
     };
 
     let permissionCleanup: (() => void) | null = null;
@@ -471,6 +482,8 @@ export default function SpheresPacking({
       state.y = 0;
       state.targetX = 0;
       state.targetY = 0;
+      state.baseBeta = null;
+      state.baseGamma = null;
     };
   }, []);
 
