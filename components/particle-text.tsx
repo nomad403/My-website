@@ -308,6 +308,29 @@ export default function ParticleText() {
     mouseRef.current.hover = false
   }
 
+  const getTouchPosition = (event: TouchEvent) => {
+    const touch = event.touches[0] || event.changedTouches[0]
+    return touch ? { x: touch.clientX, y: touch.clientY } : null
+  }
+
+  const handleTouchMove = (event: TouchEvent) => {
+    const pos = getTouchPosition(event)
+    if (!pos) return
+    mouseRef.current = {
+      x: pos.x,
+      y: pos.y,
+      hover: true,
+    }
+  }
+
+  const handleTouchStart = (event: TouchEvent) => {
+    handleTouchMove(event)
+  }
+
+  const handleTouchEnd = () => {
+    mouseRef.current.hover = false
+  }
+
   const handleResize = async () => {
     if (typeof window === 'undefined') return
     
@@ -386,6 +409,10 @@ export default function ParticleText() {
       window.addEventListener("mousemove", handleMouseMove)
       window.addEventListener("mouseleave", handleMouseLeave)
       window.addEventListener("resize", handleResize)
+      window.addEventListener("touchstart", handleTouchStart, { passive: true })
+      window.addEventListener("touchmove", handleTouchMove, { passive: true })
+      window.addEventListener("touchend", handleTouchEnd)
+      window.addEventListener("touchcancel", handleTouchEnd)
     }
 
     return () => {
@@ -394,6 +421,10 @@ export default function ParticleText() {
         window.removeEventListener("mousemove", handleMouseMove)
         window.removeEventListener("mouseleave", handleMouseLeave)
         window.removeEventListener("resize", handleResize)
+        window.removeEventListener("touchstart", handleTouchStart)
+        window.removeEventListener("touchmove", handleTouchMove)
+        window.removeEventListener("touchend", handleTouchEnd)
+        window.removeEventListener("touchcancel", handleTouchEnd)
       }
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }

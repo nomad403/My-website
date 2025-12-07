@@ -438,7 +438,7 @@ export default function SpheresPacking({
       const gammaOffset = (gamma - state.baseGamma) / 45;
 
       state.targetX = clampToUnit(gammaOffset);
-      state.targetY = clampToUnit(betaOffset);
+      state.targetY = clampToUnit(-betaOffset);
     };
 
     let permissionCleanup: (() => void) | null = null;
