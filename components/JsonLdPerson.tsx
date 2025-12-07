@@ -19,9 +19,9 @@ export default function JsonLdPerson() {
       "description": "Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.",
       "url": "https://www.nomad403.com",
       "sameAs": [
-        "https://www.linkedin.com/in/your-profile",
-        "https://github.com/your-username",
-        "https://www.malt.fr/profile/your-profile"
+        "https://www.linkedin.com/in/glenn-richard/",
+        "https://github.com/nomad403",
+        "https://x.com/_nomad_403"
       ],
       "knowsAbout": [
         "Web Development",
