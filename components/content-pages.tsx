@@ -100,14 +100,16 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [prevSelected, setPrevSelected] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
-  const handleProjectSelect = (idx: number) => {
+  const handleProjectSelect = (idx: number, opts?: { openExternal?: boolean }) => {
     setPrevSelected(selected);
     setSelected(idx);
     setSelectedImage(0);
 
-    const project = projectList[idx];
-    if (project?.externalUrl && typeof window !== "undefined") {
-      window.open(project.externalUrl, "_blank", "noopener,noreferrer");
+    if (opts?.openExternal) {
+      const project = projectList[idx];
+      if (project?.externalUrl && typeof window !== "undefined") {
+        window.open(project.externalUrl, "_blank", "noopener,noreferrer");
+      }
     }
   };
 
@@ -534,7 +536,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      <CylinderCarousel
                        items={projectList}
                        selectedIndex={selected}
-                      onItemChange={handleProjectSelect}
+                     onItemChange={handleProjectSelect}
+                     onItemImageClick={(idx) => handleProjectSelect(idx, { openExternal: true })}
                      />
                    </div>
 

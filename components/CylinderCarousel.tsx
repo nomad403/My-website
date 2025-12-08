@@ -14,9 +14,10 @@ interface CylinderCarouselProps {
   items: CarouselItem[];
   selectedIndex: number;
   onItemChange?: (index: number) => void;
+  onItemImageClick?: (index: number) => void;
 }
 
-const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedIndex, onItemChange }) => {
+const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedIndex, onItemChange, onItemImageClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const containerCarrouselRef = useRef<HTMLDivElement>(null);
   const carrouselRef = useRef<HTMLDivElement>(null);
@@ -332,14 +333,19 @@ const CylinderCarousel: React.FC<CylinderCarouselProps> = ({ items, selectedInde
                  backgroundColor: item.imageBackground ?? "transparent",
                }}
              >
-              <img
-                src={item.images[0]}
-                alt={item.name}
-                style={{
-                  objectFit: item.imageFit ?? "cover",
-                  objectPosition: item.imagePosition ?? "center",
-                }}
-              />
+             <img
+               src={item.images[0]}
+               alt={item.name}
+               style={{
+                 objectFit: item.imageFit ?? "cover",
+                 objectPosition: item.imagePosition ?? "center",
+               }}
+               onClick={(event) => {
+                 event.stopPropagation();
+                 onItemChange?.(index);
+                 onItemImageClick?.(index);
+               }}
+             />
               <div className="item-overlay">
                 <h3>{item.name}</h3>
               </div>
