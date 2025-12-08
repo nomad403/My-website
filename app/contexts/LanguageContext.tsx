@@ -72,9 +72,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'specialist.title': 'Compétences & Expertise',
         'specialist.subtitle': 'Web, Mobile & IA',
         'specialist.description': 'Expertise en développement frontend, mobile (iOS & Android) et intégration IA. Solutions modernes et évolutives adaptées à vos besoins.',
-        'specialist.intro': 'Chaque projet est une aventure.',
-        'specialist.text1': 'L\'esprit nomade consiste à explorer, tester et oser embrasser des technologies toujours plus puissantes et sécurisées. Dans un monde numérique en constante évolution, répondre aux nouveaux besoins nécessite une conscience et une adaptation continues.',
-        'specialist.text2': 'En tant que développeur web, mobile et IA, j\'aborde chaque projet avec soin, transformant les défis en opportunités d\'innovation.',
+        'specialist.intro': 'Chaque projet est pour moi une exploration. L’esprit Nomad403 repose sur la curiosité, l’expérimentation et l’adaptation continue, avec une mission claire : créer des outils numériques modernes, rapides et alignés sur vos enjeux.',
+        'specialist.text1': 'Je conçois des sites web sur mesure optimisés pour la performance et le SEO, des applications mobiles fiables et évolutives, ainsi que des solutions d’automatisation et d’IA capables de réduire les tâches répétitives.',
+        'specialist.text2': 'Comprendre votre métier me permet de simplifier votre quotidien, d’améliorer vos processus et de transformer chaque défi en solution tangible et durable.',
         
         // Contact page
         'contact.title': "Lançons un projet ensemble.",
@@ -118,9 +118,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'specialist.title': 'Skills & Expertise',
         'specialist.subtitle': 'Web, Mobile & AI',
         'specialist.description': 'Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.',
-        'specialist.intro': 'Every project is an adventure.',
-        'specialist.text1': 'The nomad spirit is about exploring, testing, and daring to embrace technologies that are ever more powerful and secure. In a digital world that is constantly evolving, meeting new needs requires continuous awareness and adaptation.',
-        'specialist.text2': 'As a web, mobile, and AI developer, I approach each project with care, turning challenges into opportunities for innovation.',
+        'specialist.intro': 'Every project is an exploration. The Nomad403 mindset blends curiosity, experimentation, and constant adaptation to build fast, modern tools that genuinely match your needs.',
+        'specialist.text1': 'I craft custom websites optimized for performance and SEO, reliable and scalable mobile apps, plus automation and AI workflows that eliminate repetitive tasks.',
+        'specialist.text2': 'By understanding your business, I simplify day-to-day operations, smooth out processes, and turn each challenge into something practical and lasting.',
         
         // Contact page
         'contact.title': "Let's kick off a project.",

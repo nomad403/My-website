@@ -325,7 +325,9 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden p-2 transition-colors duration-300 ${
-              mode === 'night' ? 'text-white hover:text-cyan-400' : 'text-black hover:text-cyan-400'
+              mode === 'night'
+                ? isMobileMenuOpen ? 'text-cyan-400' : 'text-white'
+                : isMobileMenuOpen ? 'text-cyan-500' : 'text-black'
             }`}
           >
             <div className="relative w-6 h-6">

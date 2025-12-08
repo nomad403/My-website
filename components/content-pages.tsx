@@ -612,36 +612,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    </div>
                      
                    {/* Simplified form without gooey effect */}
-                   <div className="flex items-center justify-center">
-                     {/* BACK button (left) - fixed position with animation */}
-                     <div className="w-16 flex justify-start">
-                       <AnimatePresence mode="wait">
-                         {currentContactStep > 0 && (
-                           <motion.button
-                             key="back-button"
-                             initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                             animate={{ opacity: 1, scale: 1, x: 0 }}
-                             exit={{ opacity: 0, scale: 0.8, x: -20 }}
-                             transition={{ 
-                               type: "spring", 
-                               stiffness: 300, 
-                               damping: 25,
-                               duration: 0.3 
-                             }}
-                             onClick={() => setCurrentContactStep(prev => prev - 1)}
-                             className="p-3 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-110"
-                           >
-                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                               <line x1="5" y1="12" x2="19" y2="12"></line>
-                               <polyline points="12,5 5,12 12,19"></polyline>
-                             </svg>
-                           </motion.button>
-                         )}
-                       </AnimatePresence>
-                     </div>
-                     
-                     {/* Central field - responsive */}
-                     <div className="flex-1 mx-2 max-w-[600px]">
+                  <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
+                    {/* Central field - responsive */}
+                    <div className="flex-1 mx-2 w-full max-w-[90vw] sm:max-w-[600px]">
                        {contactSteps[currentContactStep].field === 'message' ? (
                          <textarea
                            placeholder={contactSteps[currentContactStep].placeholder}
@@ -679,41 +652,71 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        )}
                      </div>
                      
-                     {/* NEXT/SEND button (right) - fixed position with animation */}
-                     <div className="w-16 flex justify-end">
-                       <motion.button
-                         key={`next-button-${currentContactStep}`}
-                         initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                         animate={{ opacity: 1, scale: 1, x: 0 }}
-                         transition={{ 
-                           type: "spring", 
-                           stiffness: 300, 
-                           damping: 25,
-                           duration: 0.3 
-                         }}
-                         onClick={() => handleContactNext()}
-                         disabled={!contactData[contactSteps[currentContactStep].field]?.trim() || isSending}
-                         className={`p-3 transition-all duration-300 hover:scale-110 ${
-                           contactData[contactSteps[currentContactStep].field]?.trim() && !isSending
-                             ? 'text-cyan-500 hover:text-cyan-600'
-                             : 'text-gray-400 cursor-not-allowed'
-                           }`}
-                       >
-                         {isSending ? (
-                           <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                         ) : currentContactStep === 3 ? (
-                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                             <path d="M22 2L11 13"></path>
-                             <polygon points="22,2 15,2 2,2 2,9 2,22 9,22 22,22 22,15"></polygon>
-                           </svg>
-                         ) : (
-                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                             <line x1="5" y1="12" x2="19" y2="12"></line>
-                             <polyline points="12,5 19,12 12,19"></polyline>
-                           </svg>
-                         )}
-                       </motion.button>
-                     </div>
+                    {/* Navigation buttons (stacked on mobile, inline on desktop) */}
+                    <div className="flex w-full max-w-[90vw] sm:max-w-[600px] justify-between gap-4 md:w-auto md:max-w-none">
+                      <div className="flex-1 flex justify-start">
+                        <AnimatePresence mode="wait">
+                          {currentContactStep > 0 && (
+                            <motion.button
+                              key="back-button"
+                              initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                              animate={{ opacity: 1, scale: 1, x: 0 }}
+                              exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                              transition={{ 
+                                type: "spring", 
+                                stiffness: 300, 
+                                damping: 25,
+                                duration: 0.3 
+                              }}
+                              onClick={() => setCurrentContactStep(prev => prev - 1)}
+                              className="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-300/50 text-gray-600 hover:text-gray-800 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                              </svg>
+                              <span className="font-jetbrains text-sm uppercase tracking-wide">Retour</span>
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      <div className="flex-1 flex justify-end">
+                        <motion.button
+                          key={`next-button-${currentContactStep}`}
+                          initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          transition={{ 
+                            type: "spring", 
+                            stiffness: 300, 
+                            damping: 25,
+                            duration: 0.3 
+                          }}
+                          onClick={() => handleContactNext()}
+                          disabled={!contactData[contactSteps[currentContactStep].field]?.trim() || isSending}
+                          className={`w-full md:w-auto px-4 py-3 rounded-xl border transition-all duration-300 flex items-center justify-center gap-2 ${
+                            contactData[contactSteps[currentContactStep].field]?.trim() && !isSending
+                              ? 'border-cyan-400 text-cyan-500 hover:text-cyan-600 hover:scale-105'
+                              : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="font-jetbrains text-sm uppercase tracking-wide">
+                            {currentContactStep === 3 ? 'Envoyer' : 'Suivant'}
+                          </span>
+                          {isSending ? (
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              {currentContactStep === 3 ? (
+                                <>
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </>
+                              ) : (
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                              )}
+                            </svg>
+                          )}
+                        </motion.button>
+                      </div>
+                    </div>
                    </div>
                    
                    {/* Error message - Fixed reserved space */}
@@ -735,9 +738,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </AnimatePresence>
                    </div>
                    
-                   {/* Horizontal list of completed steps - Fixed reserved space */}
-                   <div className="mt-6 md:mt-8 flex justify-center">
-                     <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
+                  {/* Completed steps (responsive layout) */}
+                  <div className="mt-6 md:mt-8 flex justify-center">
+                    <div className="flex flex-col gap-4 w-full max-w-md md:max-w-none md:flex-row md:flex-wrap md:justify-center md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
                          const isCurrentStep = index === currentContactStep;
@@ -746,17 +749,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                          if (!hasValue) return null;
                          
                          return (
-                           <div
+                          <div
                              key={step.field}
                              onClick={() => setCurrentContactStep(index)}
-                             className={`cursor-pointer transition-all duration-300 ${
+                            className={`cursor-pointer transition-all duration-300 px-4 py-3 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm shadow-sm ${
                                isCurrentStep ? 'text-cyan-600' : 'text-gray-600 hover:text-gray-800'
                              }`}
                            >
-                             <h4 className="font-kode text-xs text-current uppercase tracking-wider mb-1">
+                            <h4 className="font-kode text-xs text-current uppercase tracking-wider mb-1">
                                {step.label}
                              </h4>
-                             <p className="font-jetbrains text-xs md:text-sm text-current leading-relaxed max-w-[150px] md:max-w-[200px] truncate">
+                            <p className="font-jetbrains text-xs md:text-sm text-current leading-relaxed line-clamp-2 md:line-clamp-3">
                                {contactData[step.field]}
                              </p>
                            </div>
