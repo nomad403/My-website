@@ -51,7 +51,7 @@ const projectList = [
   },
   {
     id: 3,
-    name: "Refrig'Air Systemes Energies",
+    name: "ras-energies.com",
     images: [
       "/images/refrig_air_services.webp"
     ],
@@ -64,6 +64,7 @@ const projectList = [
     problem: "Absence de site web crédible, perte de prospects et difficulté à valoriser l'expertise métier en ligne.",
     solution: "Création d'un site vitrine clair, rapide et responsive, mettant en avant les services, la zone d'intervention et les atouts de l'artisan. L'architecture permet une réutilisation facile pour d'autres professionnels.",
     impact: "Crédibilité renforcée dès la mise en ligne, SEO local optimisé, outil duplicable pour d'autres artisans. Le site a généré de nouveaux contacts qualifiés dès les premières semaines.",
+    externalUrl: "https://ras-energies.com",
   },
   {
     id: 4,
@@ -80,7 +81,7 @@ const projectList = [
   },
   {
     id: 5,
-    name: "Portfolio Nomad403",
+    name: "Nomad403",
     images: [
       "/images/portfolio.webp"
     ],
@@ -99,6 +100,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [prevSelected, setPrevSelected] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
+  const handleProjectSelect = (idx: number) => {
+    setPrevSelected(selected);
+    setSelected(idx);
+    setSelectedImage(0);
+
+    const project = projectList[idx];
+    if (project?.externalUrl && typeof window !== "undefined") {
+      window.open(project.externalUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   
   // Language context
   const { t } = useLanguage();
@@ -509,11 +521,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    <ProjectNavigation
                      projects={projectList}
                      selected={selected}
-                     onSelect={(idx) => {
-                       setPrevSelected(selected);
-                       setSelected(idx);
-                       setSelectedImage(0);
-                     }}
+                      onSelect={handleProjectSelect}
                      maxVisible={5}
                      orientation="vertical"
                    />
@@ -526,11 +534,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      <CylinderCarousel
                        items={projectList}
                        selectedIndex={selected}
-                       onItemChange={(index: number) => {
-                         setPrevSelected(selected);
-                         setSelected(index);
-                         setSelectedImage(0);
-                       }}
+                      onItemChange={handleProjectSelect}
                      />
                    </div>
 
@@ -540,11 +544,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        <ProjectNavigation
                          projects={projectList}
                          selected={selected}
-                         onSelect={(idx) => {
-                           setPrevSelected(selected);
-                           setSelected(idx);
-                           setSelectedImage(0);
-                         }}
+                        onSelect={handleProjectSelect}
                          maxVisible={5}
                          orientation="horizontal"
                        />
