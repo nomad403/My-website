@@ -104,6 +104,15 @@ export default function AsciiOverlay({
     const octx = off.getContext("2d", { willReadFrequently: true })!;
     const levels = gradient.length - 1;
 
+    // Buffers réutilisables pour éviter les allocations
+    const out = new Uint8Array(w * h);
+    const g = mode === "sobel" ? new Float32Array(w * h) : null;
+    const lines = new Array(h);
+    const rowBuffers = new Array(h);
+    for (let i = 0; i < h; i++) {
+      rowBuffers[i] = new Array(w);
+    }
+
     let raf = 0;
     let last = 0;
     let frameCount = 0;
@@ -128,27 +137,35 @@ export default function AsciiOverlay({
       octx.drawImage(source, 0, 0, w, h);
       const { data } = octx.getImageData(0, 0, w, h);
 
-      const out = new Uint8Array(w * h);
-      if (mode === "sobel") {
-        const g = new Float32Array(w * h);
+      // Réutiliser les buffers au lieu de les recréer
+      if (mode === "sobel" && g) {
+        // Calcul de luminance optimisé (une seule passe)
         for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-          const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-          g[p] = invert ? 255 - lum : lum;
+          g[p] = invert 
+            ? 255 - (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])
+            : (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
         }
+        // Sobel optimisé : précalculer les indices
         const kx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
         const ky = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
         for (let y = 1; y < h - 1; y++) {
+          const yw = y * w;
           for (let x = 1; x < w - 1; x++) {
-            let gx = 0, gy = 0, idx = y * w + x, p = 0;
+            const idx = yw + x;
+            let gx = 0, gy = 0;
+            let p = 0;
+            // Boucle optimisée avec indices précalculés
             for (let j = -1; j <= 1; j++) {
+              const jw = (y + j) * w;
               for (let i = -1; i <= 1; i++) {
-                const v = g[idx + j * w + i];
+                const v = g[jw + x + i];
                 gx += v * kx[p];
                 gy += v * ky[p];
                 p++;
               }
             }
-            out[idx] = Math.min(255, Math.hypot(gx, gy));
+            // Math.hypot peut être remplacé par une approximation plus rapide
+            out[idx] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
           }
         }
       } else {
@@ -161,21 +178,22 @@ export default function AsciiOverlay({
         }
       }
 
-      // Construire les lignes avec un buffer pour de meilleures performances
-      const lines = new Array(h);
-      
+      // Construire les lignes en réutilisant les buffers
       for (let y = 0; y < h; y++) {
-        const row = new Array(w);
+        const row = rowBuffers[y];
+        const yw = y * w;
         for (let x = 0; x < w; x++) {
-          const v = out[y * w + x];
+          const v = out[yw + x];
           row[x] = gradient[Math.round((v / 255) * levels)];
         }
         lines[y] = row.join("");
       }
       
       // Update du DOM une frame sur deux pour réduire les reflows
+      // Utiliser innerHTML peut être plus rapide que textContent pour de gros contenus
       frameCount++;
       if (frameCount % 2 === 0 && preRef.current) {
+        // Utiliser une seule opération de join au lieu de multiples
         preRef.current.textContent = lines.join("\n");
       }
 
@@ -211,6 +229,7 @@ export default function AsciiOverlay({
         fontSize: `${fontPx}px`,     // <<< important
         lineHeight: `${fontPx}px`,   // <<< important
         whiteSpace: "pre",
+        willChange: "contents", // Optimisation CSS pour les animations fréquentes
       }}
     />
   );

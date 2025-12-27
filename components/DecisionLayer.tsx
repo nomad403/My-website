@@ -504,16 +504,25 @@ export default function DecisionLayer() {
                               transition={{ duration: 0.3, ease: "easeOut" }}
                               className="ml-12 overflow-hidden"
                             >
-                              <p className="font-jetbrains text-sm text-black leading-relaxed pt-2">
-                                <ShuffleText 
-                                  triggerShuffle={isOpen}
-                                  enableHover={false}
-                                  totalDuration={800}
-                                  className=""
-                                >
-                                  {String(q.answer)}
-                                </ShuffleText>
-                              </p>
+                              <div className="font-jetbrains text-sm text-black leading-loose pt-2 max-w-2xl space-y-3">
+                                {String(q.answer)
+                                  .split(/(?<=[.!?])\s+(?=[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸ])/)
+                                  .filter(s => s.trim().length > 0)
+                                  .map((sentence, idx) => {
+                                    return (
+                                      <p key={idx} className="text-justify" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word', hyphens: 'none' }}>
+                                        <ShuffleText 
+                                          triggerShuffle={isOpen}
+                                          enableHover={false}
+                                          totalDuration={800}
+                                          className=""
+                                        >
+                                          {sentence.trim()}
+                                        </ShuffleText>
+                                      </p>
+                                    );
+                                  })}
+                              </div>
                             </motion.div>
                           )}
                           
@@ -674,16 +683,25 @@ export default function DecisionLayer() {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="ml-12 overflow-hidden"
                           >
-                            <p className="font-jetbrains text-sm text-black leading-relaxed pt-2">
-                              <ShuffleText 
-                                triggerShuffle={isOpen}
-                                enableHover={false}
-                                totalDuration={800}
-                                className=""
-                              >
-                                {String(q.answer)}
-                              </ShuffleText>
-                            </p>
+                            <div className="font-jetbrains text-sm text-black leading-loose pt-2 max-w-2xl space-y-3">
+                              {String(q.answer)
+                                .split(/(?<=[.!?])\s+(?=[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸ])/)
+                                .filter(s => s.trim().length > 0)
+                                .map((sentence, idx) => {
+                                  return (
+                                    <p key={idx} className="text-justify" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word', hyphens: 'none' }}>
+                                      <ShuffleText 
+                                        triggerShuffle={isOpen}
+                                        enableHover={false}
+                                        totalDuration={800}
+                                        className=""
+                                      >
+                                        {sentence.trim()}
+                                      </ShuffleText>
+                                    </p>
+                                  );
+                                })}
+                            </div>
                           </motion.div>
                         )}
                         
