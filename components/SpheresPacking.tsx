@@ -36,6 +36,7 @@ const PAGE_COLORS = {
   home: [0xff0000, 0x0, 0xffffff], // Rouge, noir, blanc (couleurs actuelles)
   projects: [0x00e5ff, 0xff00aa, 0x00ff88], // Cyan, magenta, vert cyberpunk
   specialist: [0xff6b00, 0x00e5ff, 0xffffff], // Palette dédiée pour specialist
+  decision: [0x00e5ff, 0x0a0a0f, 0x1a1a2e], // Cyan foncé, noir profond, bleu nuit (interface décision)
   contact: [0xffffff, 0x00e5ff, 0xff6b00], // Palette dédiée pour contact (blanc, cyan, orange)
 };
 
@@ -488,7 +489,7 @@ export default function SpheresPacking({
   }, []);
 
   // Déterminer si les spheres doivent être visibles
-  const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "specialist" || currentPage === "contact";
+  const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "specialist" || currentPage === "contact" || currentPage === "decision";
 
   return (
     <canvas

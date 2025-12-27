@@ -22,7 +22,7 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
   const currentLang = languages.find(lang => lang.code === language)
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 10000 }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
@@ -37,7 +37,7 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
         </span>
         <motion.svg
           className="w-4 h-4"
-          animate={{ rotate: isOpen ? 180 : 0 }}
+          animate={{ rotate: isMobile ? (isOpen ? 180 : 0) : (isOpen ? 0 : 180) }}
           transition={{ duration: 0.2 }}
           fill="none"
           stroke="currentColor"
@@ -50,11 +50,11 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            initial={{ opacity: 0, scale: 0.95, y: isMobile ? -10 : 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            exit={{ opacity: 0, scale: 0.95, y: isMobile ? -10 : 10 }}
             transition={{ duration: 0.2 }}
-            className={`absolute top-full ${isMobile ? 'left-0 right-0' : 'right-0'} mt-2 py-2 rounded-lg shadow-lg border ${
+            className={`absolute ${isMobile ? 'top-full mt-2 left-0 right-0' : 'bottom-full mb-2 right-0'} py-2 rounded-lg shadow-lg border ${
               mode === 'night' 
                 ? 'bg-black/90 backdrop-blur-sm border-white/20' 
                 : 'bg-white/90 backdrop-blur-sm border-black/20'

@@ -699,3 +699,34 @@ body {
   display: none;
 }
 
+/* Edge fade effect pour les listes scrollables - CSS mask pur */
+/* Le fade s'applique uniquement sur desktop (lg et plus) pour éviter les problèmes sur mobile */
+/* Le mask commence dès le début du conteneur (avant le padding interne) */
+.scroll-fade-container {
+  /* Fade progressif : transparent en haut → opaque au centre → opaque au centre → transparent en bas */
+  /* Zone de fade : 64px en haut (Apple-like) et 80px en bas */
+  /* Le fade commence immédiatement sous le header grâce à la structure avec padding interne */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 64px,
+    black calc(100% - 80px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 64px,
+    black calc(100% - 80px),
+    transparent 100%
+  );
+}
+
+/* Désactiver le fade sur mobile pour une meilleure performance et lisibilité */
+@media (max-width: 1023px) {
+  .scroll-fade-container {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+

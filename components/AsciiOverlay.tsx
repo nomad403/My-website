@@ -26,7 +26,7 @@ export default function AsciiOverlay({
   opacity = 0.35,
   fontPx = 7,           
   cover = true,         
-  cols: fixedCols,   
+  cols: fixedCols,
 }: {
   source: HTMLCanvasElement | null;
   fps?: number;
@@ -37,7 +37,7 @@ export default function AsciiOverlay({
   opacity?: number;
   fontPx?: number;
   cover?: boolean;
-  cols?: number;        // garder compat avec ton usage actuel
+  cols?: number;
 }) {
   const preRef = useRef<HTMLPreElement | null>(null);
   const [running, setRunning] = useState(false);
@@ -163,6 +163,7 @@ export default function AsciiOverlay({
 
       // Construire les lignes avec un buffer pour de meilleures performances
       const lines = new Array(h);
+      
       for (let y = 0; y < h; y++) {
         const row = new Array(w);
         for (let x = 0; x < w; x++) {
@@ -171,6 +172,7 @@ export default function AsciiOverlay({
         }
         lines[y] = row.join("");
       }
+      
       // Update du DOM une frame sur deux pour réduire les reflows
       frameCount++;
       if (frameCount % 2 === 0 && preRef.current) {
@@ -204,7 +206,7 @@ export default function AsciiOverlay({
         opacity: visible ? opacity : 0,
         transition: "opacity .35s",
         background: "transparent",
-        color,
+        color: color,
         fontFamily: 'Consolas, Monaco, "Liberation Mono", monospace',
         fontSize: `${fontPx}px`,     // <<< important
         lineHeight: `${fontPx}px`,   // <<< important

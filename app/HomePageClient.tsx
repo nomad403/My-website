@@ -33,6 +33,11 @@ const pageConfig = {
     background: 'day' as const,
     elements: ['contentPages']
   },
+  decision: {
+    sphere: { scale: 1 },
+    background: 'day' as const,
+    elements: ['contentPages']
+  },
   contact: {
     sphere: { scale: 0 },
     background: 'day' as const,
@@ -161,7 +166,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   // Gérer le scroll du body selon la page
   useEffect(() => {
-    if (currentPage === "specialist") {
+    if (currentPage === "specialist" || currentPage === "decision") {
       document.body.classList.remove("no-scroll")
     } else {
       document.body.classList.add("no-scroll")
@@ -178,6 +183,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       
       if (path === "/projects") pageName = "projects"
       else if (path === "/specialist") pageName = "specialist"
+      else if (path === "/decision") pageName = "decision"
       else if (path === "/contact") pageName = "contact"
       
       // Éviter les boucles infinies
@@ -225,17 +231,17 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
         maxSize={1.0}
         currentPage={currentPage}
         onCanvasReady={setBgCanvas}
-        visible={currentPage !== "specialist" && currentPage !== "contact"}
+        visible={currentPage !== "specialist" && currentPage !== "contact" && currentPage !== "decision"}
       />
 
       {/* Real-time ASCII overlay */}
       <AsciiOverlay
         source={bgCanvas}
-        visible={currentPage === "specialist" || currentPage === "contact"}
+        visible={currentPage === "specialist" || currentPage === "contact" || currentPage === "decision"}
         mode={currentPage === "specialist" ? "sobel" : "sobel"}
         invert={false}
-        opacity={currentPage === "specialist" ? 0.35 : 0.4}
-        color={currentPage === "specialist" ? "#00ffc8" : "#ffcc00"}
+        opacity={currentPage === "specialist" ? 0.35 : currentPage === "decision" ? 0.55 : 0.4}
+        color={currentPage === "specialist" ? "#00ffc8" : currentPage === "decision" ? "#00B8D4" : "#ffcc00"}
         fontPx={7}
         cover={true}
       />
@@ -304,6 +310,19 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
             </Link>
             <Link
+              href="/decision"
+              onClick={(e) => {
+                e.preventDefault()
+                handlePageChange("decision")
+              }}
+              aria-label="Couche de décision - Interface de réflexion structurée"
+              className={`nav-link transition-all duration-300 ${currentPage === "decision" ? "active" : ""} ${
+                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
+              }`}
+            >
+              <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.decision')}</ShuffleText>
+            </Link>
+            <Link
               href="/contact"
               onClick={(e) => {
                 e.preventDefault()
@@ -316,9 +335,6 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
             >
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
             </Link>
-            
-            {/* Language Switcher */}
-            <LanguageSwitcher />
           </div>
 
           {/* Mobile Hamburger Button */}
@@ -417,6 +433,21 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
                   <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
                 </Link>
                 <Link
+                  href="/decision"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("decision")
+                  }}
+                  aria-label="Couche de décision - Interface de réflexion structurée"
+                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
+                    currentPage === "decision" 
+                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
+                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.decision')}</ShuffleText>
+                </Link>
+                <Link
                   href="/contact"
                   onClick={(e) => {
                     e.preventDefault()
@@ -443,6 +474,11 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           )}
         </AnimatePresence>
       </nav>
+
+      {/* Language Switcher - Position fixe en bas à droite */}
+      <div className="fixed bottom-6 right-6 z-[9999] pointer-events-auto" style={{ zIndex: 9999 }}>
+        <LanguageSwitcher />
+      </div>
 
       {/* H1 pour le SEO - invisible mais accessible */}
       {currentPage === 'home' && (

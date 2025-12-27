@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ProjectNavigation from "./ProjectNavigation";
 import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
+import DecisionLayer from "./DecisionLayer";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 
 const stacks = [
@@ -593,6 +594,18 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
              </div>
            </div>
          )
+
+                                                       case "decision":
+           return (
+             <div className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-transparent lg:overflow-hidden">
+               {/* H1 pour le SEO - invisible mais accessible */}
+               <h1 className="sr-only">Couche de décision — Nomad403 (Nomad 403)</h1>
+               
+              <div className="relative z-10 w-full min-h-full pointer-events-auto">
+                <DecisionLayer />
+              </div>
+             </div>
+           )
 
                                                        case "contact":
            return (

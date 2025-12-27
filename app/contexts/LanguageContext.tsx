@@ -56,6 +56,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.home': 'ACCUEIL',
         'nav.projects': 'PROJETS',
         'nav.specialist': 'EXPERTISE',
+        'nav.decision': 'DÉCISION',
         'nav.contact': 'CONTACT',
         
         // Home page
@@ -102,6 +103,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.home': 'HOME',
         'nav.projects': 'PROJECTS',
         'nav.specialist': 'SPECIALIST',
+        'nav.decision': 'DECISION',
         'nav.contact': 'CONTACT',
         
         // Home page
