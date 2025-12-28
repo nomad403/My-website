@@ -19,257 +19,258 @@ interface Category {
 const categories: Category[] = [
   {
     id: 1,
-    label: "Pourquoi ce projet ?",
+    label: "Le contexte avant la solution",
     questions: [
       {
         index: "01",
-        question: "Pourquoi créer ou refaire un site web aujourd'hui ?",
+        question: "Pourquoi un site web n’est jamais le véritable point de départ",
         answer:
-          "Créer ou refaire un site web n’est jamais un objectif en soi. En général, ce besoin apparaît parce que quelque chose a changé : ton activité a évolué, ton site actuel ne te ressemble plus, ou il ne remplit plus son rôle. La vraie question n’est donc pas « est-ce qu’il me faut un site », mais « pourquoi maintenant ». Clarifier ce point permet de lancer une création ou une refonte de site web utile, et pas simplement un site « propre »."
+          "Un projet de site web est presque toujours la conséquence visible d’un changement plus profond. Il peut s’agir d’une évolution de l’activité, d’un repositionnement, d’une croissance mal accompagnée ou, au contraire, d’un ralentissement qui interroge. Le site devient alors le support sur lequel se concentrent des attentes multiples : visibilité, crédibilité, clarté ou performance commerciale.\n\nConsidérer le site comme le point de départ conduit souvent à des décisions trop rapides, prises sans compréhension fine du contexte. À l’inverse, identifier ce qui a déclenché le besoin permet de distinguer ce qui relève réellement du site de ce qui concerne l’offre, le discours ou l’organisation. Cette distinction conditionne la pertinence de toute décision ultérieure."
       },
       {
         index: "02",
-        question: "Quel problème ce site web doit-il résoudre concrètement ?",
+        question: "Dans quels cas un projet numérique devient un enjeu structurant",
         answer:
-          "Un site web efficace répond toujours à un problème précis. Cela peut être un manque de visibilité, des demandes peu qualifiées, une activité difficile à comprendre, ou un site internet existant qui ne génère aucun contact. Identifier ce problème dès le départ évite de se concentrer uniquement sur le design. Un bon projet de création de site web ou de refonte commence toujours par cette clarification."
+          "Un projet numérique devient structurant lorsqu’il dépasse la simple question de présence en ligne et commence à engager durablement l’activité. Cela se produit notamment lorsque le site devient un point d’entrée central pour les clients, un support commercial majeur ou le socle d’outils plus larges.\n\nÀ ce stade, les décisions prises influencent non seulement le site, mais aussi la manière dont l’activité se présente, se rend compréhensible et peut évoluer. Ces projets nécessitent donc une approche plus réfléchie, orientée vers la cohérence et les conséquences à moyen terme."
       },
       {
         index: "03",
-        question: "Qu'est-ce que ton site actuel ne permet pas de faire ?",
+        question: "Quand le site est un symptôme plus qu’un problème",
         answer:
-          "Si tu as déjà un site internet, il est important d’identifier ses limites. Est-ce qu’il manque de clarté ? Est-il difficile à mettre à jour ? Donne-t-il une image vraiment professionnelle ? Cette réflexion permet de savoir si une amélioration suffit ou si une refonte de site internet plus structurée est nécessaire. Dans certains cas, le site n’est qu’un symptôme : il révèle un besoin plus large de clarification ou d’outils."
+          "Il est fréquent qu’un site perçu comme inefficace reflète en réalité un problème plus profond : message confus, offre mal hiérarchisée ou priorités floues. Ces éléments finissent par se matérialiser dans le site, quel que soit son niveau de finition.\n\nDans ces situations, refaire le site sans revoir le cadre global revient à déplacer le problème sans le résoudre. Le site devient alors un symptôme, révélant des incohérences existantes plutôt qu’un véritable levier de transformation."
       },
       {
         index: "04",
-        question: "Cherches-tu une simple présence en ligne ou un site web qui apporte des résultats ?",
+        question: "Ce que révèlent les projets lancés par nécessité",
         answer:
-          "Tous les sites web n’ont pas le même rôle. Certains servent principalement à exister et rassurer, d’autres doivent générer des demandes, des prises de rendez-vous ou soutenir une activité commerciale. Clarifier cette différence est essentiel, car elle influence la structure du site web, les contenus et les appels à l’action. Un site web professionnel orienté résultats ne se construit pas de la même façon qu’un site vitrine basique."
+          "Certains projets sont déclenchés par contrainte : site obsolète, image dégradée, difficulté à être contacté ou à être compris. Ces contextes appellent souvent une réponse rapide, mais pas nécessairement une refonte lourde.\n\nL’enjeu consiste à distinguer ce qui relève de l’urgence réelle de ce qui peut être différé. Une analyse posée permet d’éviter un surinvestissement dans des solutions inadaptées au contexte et aux objectifs réels."
       },
       {
         index: "05",
-        question: "Pourquoi ce projet arrive-t-il à ce moment précis ?",
+        question: "Pourquoi la question n’est pas « faut-il un site », mais « pour quoi faire »",
         answer:
-          "Le timing d’un projet de site web est souvent révélateur. Il peut être lié à un lancement d’activité, à une évolution de ton offre, ou à des retours répétés de clients qui cherchent des informations en ligne. Comprendre ce déclencheur aide à prioriser l’essentiel et à éviter de partir sur un projet trop large. Parfois, une création de site web simple et bien cadrée suffit ; parfois, une refonte est plus adaptée."
+          "La création ou la refonte d’un site n’est jamais une finalité en soi. La question centrale porte sur son rôle réel : rassurer, clarifier une offre, générer des contacts ou soutenir un processus commercial.\n\nTant que cette fonction n’est pas clairement définie, le projet reste fragile. Clarifier le rôle du site permet d’orienter les décisions de structure, de contenu et de priorisation, et d’éviter un site qui tente de tout faire sans remplir efficacement aucun objectif."
       },
       {
         index: "06",
-        question: "Ce projet de site web répond-il à une contrainte ou à une ambition ?",
+        question: "Ce que je cherche à comprendre avant toute recommandation",
         answer:
-          "Certains projets sont lancés par nécessité : site obsolète, absence de présence en ligne, manque de crédibilité. D’autres sont portés par une ambition plus forte : mieux se positionner, structurer l’activité, préparer une croissance. Cette distinction est importante, car elle conditionne le type d’accompagnement à rechercher, qu’il s’agisse d’un freelance développeur web, d’une agence web, ou d’une approche progressive par étapes."
+          "Avant d’envisager une solution, il est essentiel de comprendre le contexte global du projet : objectifs réels, contraintes, ressources disponibles, temporalité et niveau d’exigence attendu.\n\nCe travail d’analyse permet de poser un cadre clair et d’éviter des décisions génériques. Il ne vise pas à apporter immédiatement des réponses toutes faites, mais à construire une lecture cohérente des enjeux."
       }
     ]
   },
   {
     id: 2,
-    label: "À quoi doit servir le site ?",
+    label: "Les décisions qui engagent dans la durée",
     questions: [
       {
         index: "01",
-        question: "Quel rôle ce site web doit-il réellement jouer ?",
+        question: "Quelles décisions sont difficiles à corriger après coup",
         answer:
-          "Un site web professionnel peut avoir plusieurs rôles : vitrine pour rassurer, support commercial pour clarifier l’offre, ou outil pour générer des demandes. Identifier le rôle principal évite de disperser les efforts et d’empiler des pages inutiles. Un site qui doit obtenir des contacts ne se structure pas comme un site qui sert uniquement à informer. Cette décision oriente la création du site web, son architecture et sa stratégie de contenu."
+          "Certaines décisions structurent un projet de manière durable, parfois sans que cela soit immédiatement visible. Organisation des contenus, architecture générale ou dépendances techniques font partie de ces choix qui conditionnent fortement la suite.\n\nLeur correction ultérieure est souvent possible, mais rarement simple. Les identifier dès le départ permet de limiter les ajustements coûteux et les refontes successives."
       },
       {
         index: "02",
-        question: "Quels objectifs concrets ce site web doit-il atteindre ?",
+        question: "Pourquoi certaines refontes coûtent plus qu’anticipé",
         answer:
-          "Définir des objectifs concrets permet d’évaluer la réussite du projet. Cela peut être des demandes de devis, des prises de rendez-vous, des appels, ou du trafic qualifié sur des pages clés. Sans objectifs, une création ou une refonte de site reste difficile à piloter. Ces indicateurs aident aussi à choisir quoi faire en premier, puis quoi optimiser après la mise en ligne."
+          "Une refonte devient coûteuse lorsqu’elle vise à corriger des décisions initiales mal posées plutôt qu’à faire évoluer un projet sain. Le coût ne réside alors pas uniquement dans la technique, mais dans la remise en question du cadre global.\n\nPlus un projet avance sans fondations claires, plus les corrections ultérieures nécessitent de revenir en arrière, avec des impacts sur le budget et le planning."
       },
       {
         index: "03",
-        question: "Ce site doit-il surtout informer ou convertir ?",
+        question: "Solution simple ou évolutive : une question de contexte",
         answer:
-          "La différence est simple : informer, c’est rendre ton activité compréhensible et rassurante ; convertir, c’est guider vers une action (contact, devis, rendez-vous). Un site internet orienté conversion nécessite des pages structurées, des preuves (réalisations, avis, cas), et des appels à l’action placés intelligemment. Un site informatif mise plutôt sur la clarté, la hiérarchie des informations et la navigation."
+          "Opposer solution simple et solution évolutive n’a de sens qu’en tenant compte du contexte. Une solution simple peut être parfaitement adaptée à une activité stable, tandis qu’une structure plus évolutive devient nécessaire dès lors que l’activité est appelée à se transformer.\n\nL’enjeu consiste à anticiper sans surdimensionner, en évaluant le besoin réel plutôt qu’en appliquant une règle générale."
       },
       {
         index: "04",
-        question: "Quelles actions un visiteur doit-il pouvoir faire facilement ?",
+        question: "Quand la dette technique devient un enjeu opérationnel",
         answer:
-          "Le type d’action attendu détermine les fonctionnalités réellement utiles. Certains sites sont purement consultatifs, d’autres doivent permettre une prise de rendez-vous, une demande de devis, un téléchargement, ou un achat. Plus l’interaction est exigeante, plus la conception du site web doit être robuste et cohérente. Cette étape évite de sur-développer des fonctionnalités qui ne serviront pas."
+          "La dette technique n’est pas problématique en soi. Elle le devient lorsqu’elle limite la capacité à décider, à évoluer ou à s’adapter.\n\nÀ partir de ce moment, elle cesse d’être un sujet purement technique pour devenir un enjeu opérationnel, influençant directement la conduite du projet."
       },
       {
         index: "05",
-        question: "Le contenu doit-il être mis à jour souvent ou rarement ?",
+        question: "Ce que signifie réellement « prévoir l’évolution »",
         answer:
-          "Un site web peut rester stable pendant des mois, ou nécessiter des mises à jour régulières (offres, actualités, références, contenus). Cette réalité influence le choix de la solution : site simple, CMS, ou approche plus sur mesure. Elle détermine aussi ton niveau d’autonomie : est-ce que tu veux pouvoir modifier le site internet toi-même, ou déléguer ? Clarifier ça dès le départ évite des choix techniques inutiles."
+          "Prévoir l’évolution ne consiste pas à tout anticiper dès le départ, mais à éviter de se fermer des portes. Il s’agit de concevoir un cadre suffisamment clair et souple pour accueillir des évolutions sans remise en cause majeure.\n\nCette approche sécurise l’avenir sans alourdir inutilement la première version du projet."
       },
       {
         index: "06",
-        question: "Quel est le parcours idéal d’un visiteur sur ton site ?",
+        question: "Pourquoi anticiper permet souvent de faire moins, mais mieux",
         answer:
-          "Définir un parcours utilisateur simple permet de structurer la page d’accueil et l’ensemble du site web. Un visiteur doit-il d’abord comprendre l’activité, puis voir des preuves, puis contacter ? Ou doit-il accéder directement à un service précis ? Cette réflexion guide l’architecture de l’information et l’ordre des contenus, ce qui améliore à la fois l’expérience et le référencement naturel."
+          "Une réflexion en amont permet souvent de réduire le périmètre initial tout en renforçant la cohérence globale. Faire moins au départ n’est pas un compromis, mais une manière de concentrer les efforts sur ce qui est réellement structurant.\n\nCette approche favorise des projets plus lisibles, plus durables et plus faciles à faire évoluer."
       }
     ]
   },
   {
     id: 3,
-    label: "Quel type de solution ?",
+    label: "Ma manière d’aborder un projet",
     questions: [
       {
         index: "01",
-        question: "Ce site web doit-il pouvoir évoluer dans le temps ?",
+        question: "Ce que j’analyse avant toute solution technique",
         answer:
-          "Un site web peut être pensé comme une version stable, ou comme une base évolutive. Si ton activité est stable, une structure simple peut suffire. Si ton offre évolue, le site doit pouvoir s’adapter : nouveaux services, nouvelles pages, intégrations futures. Anticiper cette évolution influence la création du site internet et évite une refonte trop tôt. Dans beaucoup de cas, le site est la première brique d’un dispositif numérique plus large."
+          "Avant toute réflexion sur une solution, j’analyse les objectifs réels, les contraintes implicites, la maturité de l’activité et les ressources mobilisables. Cette lecture globale permet de comprendre ce qui est possible, pertinent et soutenable.\n\nElle évite de proposer des réponses déconnectées de la réalité du projet et de son environnement."
       },
       {
         index: "02",
-        question: "As-tu besoin d’un CMS pour gérer le contenu toi-même ?",
+        question: "Comment je distingue l’essentiel de l’accessoire",
         answer:
-          "Un CMS permet de modifier certains contenus sans compétence technique, ce qui est utile si les informations changent régulièrement (offre, tarifs, actualités, références). Si le contenu est stable, un site plus simple peut être plus rapide, plus léger et plus facile à maintenir. Le choix dépend surtout de ta fréquence de mise à jour et du niveau d’autonomie souhaité. L’objectif est d’éviter une solution trop complexe pour un besoin simple."
+          "Toutes les demandes formulées dans un projet sont légitimes, mais toutes ne sont pas prioritaires. Le cadrage consiste à identifier ce qui est structurant et ce qui peut être différé sans impact négatif.\n\nCette distinction permet de concentrer les efforts sur ce qui apporte de la clarté et de la cohérence."
       },
       {
         index: "03",
-        question: "Faut-il intégrer des outils externes (CRM, paiement, réservation) ?",
+        question: "Pourquoi la technologie n’est jamais le premier sujet",
         answer:
-          "L’intégration d’outils externes peut apporter beaucoup de valeur : synchronisation avec un CRM, paiement en ligne, réservation, formulaire avancé, ou connexion à des services métier. Mais ces intégrations augmentent la complexité d’un site web sur mesure et demandent une maintenance adaptée. La bonne question est : est-ce indispensable dès la première version, ou est-ce une évolution prévue plus tard ? Cela aide à cadrer le périmètre et le budget."
+          "Aborder la technologie trop tôt conduit souvent à figer des choix avant même d’avoir clarifié le cadre. Une même technologie peut être pertinente ou inadaptée selon le contexte.\n\nElle n’a de sens qu’une fois les objectifs, contraintes et priorités clairement posés."
       },
       {
         index: "04",
-        question: "Le site doit-il être multilingue dès le départ ?",
+        question: "Comment je hiérarchise les priorités d’un projet",
         answer:
-          "Un site multilingue demande une organisation précise : structure des pages, traduction, cohérence des contenus et optimisation du référencement par langue. Cela peut aussi ajouter des contraintes de contenu et de maintenance. Si l’international n’est pas une priorité immédiate, il est souvent plus raisonnable de préparer le terrain sans tout lancer dès la V1. L’objectif est de ne pas alourdir la création du site web inutilement."
+          "Hiérarchiser revient à accepter que tout ne peut pas être traité avec la même intensité au même moment. Cette hiérarchie s’appuie sur la valeur, la complexité et les risques associés.\n\nElle permet de construire un projet lisible, avec des étapes claires et des décisions assumées."
       },
       {
         index: "05",
-        question: "Quel niveau de performance et de rapidité est attendu ?",
+        question: "Ce que je choisis volontairement de ne pas faire",
         answer:
-          "La performance d’un site web influence directement l’expérience et le référencement. Un site lent perd des visiteurs et convertit moins bien, même si le design est réussi. Les exigences dépendent de l’usage : vitrine simple, site avec contenus riches, ou site avec fonctionnalités avancées. Clarifier ce niveau attendu permet d’adapter la solution technique, l’hébergement et les optimisations dès le début de la création ou de la refonte."
+          "Dans certains projets, la solidité repose autant sur ce qui est volontairement écarté que sur ce qui est ajouté. Certaines fonctionnalités peuvent être pertinentes à terme, mais contre-productives dans une première phase.\n\nLes différer permet de préserver la cohérence et d’éviter une complexité prématurée."
       },
       {
         index: "06",
-        question: "Le site doit-il être pensé mobile-first ?",
+        question: "Comment un projet flou devient lisible et structuré",
         answer:
-          "Aujourd’hui, une grande partie du trafic arrive depuis le mobile. Un site responsive est donc la base, mais l’enjeu réel est : est-ce que l’expérience mobile doit être prioritaire ? Selon ton secteur, les visiteurs peuvent consulter et contacter depuis leur téléphone. Penser mobile-first influence la hiérarchie des contenus, la navigation et la conversion. C’est un choix de conception, pas un détail technique."
+          "Un projet flou n’est pas un problème en soi. Il le devient lorsqu’aucun travail n’est fait pour en clarifier les contours.\n\nPar un travail progressif de reformulation et de hiérarchisation, il est possible de transformer ce flou initial en décisions éclairées."
       }
     ]
   },
   {
     id: 4,
-    label: "Quel niveau d'engagement ?",
+    label: "Arbitrages et cohérence du projet",
     questions: [
       {
         index: "01",
-        question: "Quel niveau d’investissement est cohérent avec tes objectifs ?",
+        question: "Pourquoi tout ne doit pas être fait dès le départ",
         answer:
-          "L’investissement doit être proportionnel à ce que tu attends du site web. Un site vitrine simple peut suffire pour une présence en ligne professionnelle. Un site web sur mesure, avec une identité forte, une stratégie de conversion et des intégrations, demande plus de temps et de budget. L’objectif est d’aligner attentes et réalité : vouloir un résultat ambitieux avec un budget minimal mène souvent à des compromis invisibles… jusqu’à la mise en ligne."
+          "Chercher à tout intégrer dès la première version fragilise souvent le projet. Cette approche conduit à des choix précipités et à une complexité inutile.\n\nUne version initiale solide repose sur la capacité à identifier l’essentiel tout en laissant de la place pour des évolutions futures."
       },
       {
         index: "02",
-        question: "Quel budget veux-tu consacrer à la création ou la refonte du site ?",
+        question: "Quand simplifier renforce un projet",
         answer:
-          "Parler budget n’est pas une question de prix “au hasard”, c’est une question de périmètre. Un budget serré oriente vers une version plus simple, ou un lancement par étapes. Un budget plus confortable permet un design plus travaillé, une meilleure structure, et des fonctionnalités utiles. Être clair sur ce point évite les malentendus et permet de proposer une solution cohérente, que ce soit avec un freelance ou une agence."
+          "La simplification n’est pas une perte de valeur. Elle renforce la compréhension, l’usage et la cohérence globale du projet.\n\nUn projet lisible est plus facile à faire évoluer, à expliquer et à maintenir."
       },
       {
         index: "03",
-        question: "Préférerais-tu un lancement complet ou une version initiale évolutive ?",
+        question: "Comment choisir entre plusieurs options raisonnables",
         answer:
-          "Un lancement complet vise un site abouti dès le départ. Une approche progressive consiste à créer une première version solide, puis à améliorer en fonction des retours et des priorités. Cette méthode est souvent plus efficace quand le budget est limité ou quand le besoin n’est pas totalement stabilisé. Elle réduit le risque de sur-investir dans des fonctionnalités inutiles dès la V1, tout en gardant un site web professionnel."
+          "Il arrive que plusieurs options soient viables. Le choix repose alors sur leur cohérence avec le contexte, les contraintes et les priorités à moyen terme.\n\nCe type de décision dépasse le cadre purement technique."
       },
       {
         index: "04",
-        question: "Quel est le coût de ne pas avoir (ou de garder) ce site tel qu’il est ?",
+        question: "L’intérêt d’une approche progressive et maîtrisée",
         answer:
-          "Parfois, le vrai coût n’est pas le projet, mais l’inaction : opportunités perdues, prospects qui ne te contactent pas, manque de crédibilité, temps perdu à répéter les mêmes explications. Évaluer ce coût aide à mesurer l’intérêt d’une création ou d’une refonte de site internet. Si l’impact est réel, investir dans un site web mieux structuré devient une décision rationnelle, pas une dépense “marketing”."
+          "Découper un projet en phases permet de sécuriser les décisions et de limiter les risques.\n\nCette approche facilite les ajustements et l’observation des usages réels."
       },
       {
         index: "05",
-        question: "As-tu prévu un minimum de budget pour la maintenance et les évolutions ?",
+        question: "Pourquoi certaines décisions gagnent à être différées",
         answer:
-          "Un site web n’est pas un objet figé : il nécessite au minimum un hébergement fiable, des mises à jour de sécurité (selon la solution), et parfois des ajustements. Même un site simple doit rester sain et à jour. Prévoir un petit budget de maintenance évite les mauvaises surprises et protège la qualité du projet dans le temps. C’est souvent ce qui fait la différence entre un site durable et un site abandonné."
+          "Toutes les décisions n’ont pas le même degré d’urgence. Différer certaines d’entre elles permet d’éviter des choix prématurés.\n\nCette retenue contribue à une meilleure maîtrise du projet dans le temps."
       },
       {
         index: "06",
-        question: "Quel retour sur investissement attends-tu de ce site web ?",
+        question: "Maintenir une cohérence globale dans le temps",
         answer:
-          "Le ROI dépend du rôle du site. Pour une vitrine, il peut être indirect : crédibilité, image professionnelle, clarté. Pour un site orienté acquisition, il peut être plus mesurable : nombre de demandes, taux de conversion, leads qualifiés. Avoir une attente réaliste permet de dimensionner correctement la création du site web et d’identifier ce qu’il faudra mesurer et améliorer après la mise en ligne."
+          "La cohérence repose sur des choix initiaux clairs et une attention constante aux décisions prises au fil du temps.\n\nElle permet au projet de rester lisible malgré les évolutions."
       }
     ]
   },
   {
     id: 5,
-    label: "Avec qui travailler ?",
+    label: "Mon rôle dans ce type de projet",
     questions: [
       {
         index: "01",
-        question: "As-tu besoin d’un exécutant ou d’un partenaire ?",
+        question: "Dans quels contextes mon intervention est pertinente",
         answer:
-          "Un exécutant suit des instructions précises et livre un résultat défini. Un partenaire aide à cadrer, poser les bonnes questions, et proposer des solutions adaptées au contexte. Pour un projet simple et déjà bien défini, un exécutant peut suffire. Pour une création ou une refonte de site web où les objectifs ne sont pas encore clairs, un partenaire apporte une vraie valeur. Cette distinction influence directement le résultat final."
+          "Mon intervention est pertinente lorsque le projet engage des décisions durables et nécessite une réflexion structurée avant l’exécution.\n\nDans des contextes plus simples, une approche plus directe peut suffire."
       },
       {
         index: "02",
-        question: "Quel niveau d’accompagnement veux-tu pendant le projet ?",
+        question: "Ce que j’apporte au-delà de la réalisation",
         answer:
-          "Certains projets demandent uniquement de la réalisation technique. D’autres nécessitent de l’accompagnement : clarification des besoins, structuration des pages, amélioration du parcours, conseils sur le contenu et le référencement. Plus l’enjeu est important, plus cet accompagnement devient utile. La bonne question est : veux-tu simplement “un site”, ou un site web professionnel pensé comme un outil ?"
+          "Au-delà de la réalisation, j’apporte un cadre de réflexion et une aide à la décision.\n\nCet apport vise à sécuriser les choix effectués et à éviter des ajustements coûteux."
       },
       {
         index: "03",
-        question: "Freelance développeur web ou agence : qu’est-ce qui te convient le mieux ?",
+        question: "Ce que je ne propose volontairement pas",
         answer:
-          "Un freelance développeur web offre souvent un contact direct, plus de souplesse et une forte réactivité. Une agence web apporte une équipe, des processus établis, et peut absorber des projets plus larges. Le bon choix dépend du périmètre, du délai, et du besoin d’interlocuteurs multiples ou d’un point de contact unique. L’essentiel est d’avoir une collaboration claire et un niveau de qualité aligné avec tes objectifs."
+          "Je n’interviens pas sur des projets purement exécutifs sans réflexion préalable.\n\nDans certains cas, une solution standard est plus adaptée."
       },
       {
         index: "04",
-        question: "La proximité géographique (ex. Paris) est-elle vraiment importante ?",
+        question: "Ma place entre exécution, conseil et accompagnement",
         answer:
-          "La proximité peut aider si tu veux des échanges en présentiel, surtout en phase de cadrage. Mais aujourd’hui, un projet de création de site web peut très bien se gérer à distance avec des outils efficaces. La question n’est pas tant la distance que la qualité des échanges et la clarté du processus. Si la proximité apporte une valeur réelle, elle peut compter ; sinon, elle ne doit pas être le critère principal."
+          "Selon le contexte, mon rôle peut aller d’un cadrage ponctuel à un accompagnement plus continu.\n\nL’objectif reste d’apporter de la clarté et de préserver la cohérence du projet."
       },
       {
         index: "05",
-        question: "Quelles compétences sont réellement nécessaires pour ce site ?",
+        question: "Comment je travaille avec des décideurs",
         answer:
-          "Un site web peut nécessiter des compétences très différentes : design, intégration, développement, SEO, performance, ou intégration d’outils externes. Un projet simple peut être géré par un profil polyvalent ; un projet plus ambitieux peut demander plusieurs expertises. Clarifier les besoins évite de payer pour des compétences inutiles, ou au contraire de sous-estimer la complexité d’une refonte de site internet."
+          "Le travail repose sur des échanges clairs et une compréhension partagée des enjeux.\n\nLes décisions sont prises de manière éclairée et assumée."
       },
       {
         index: "06",
-        question: "Quel niveau de réactivité et de disponibilité attends-tu ?",
+        question: "Ce que signifie concrètement travailler ensemble",
         answer:
-          "Les attentes sur la réactivité doivent être claires dès le départ. Une création de site web avec une date de lancement précise demande plus de disponibilité, des validations rapides et un rythme soutenu. Un projet plus flexible permet un calendrier plus confortable. Le but est d’éviter les frustrations : si l’un attend une livraison rapide et l’autre un rythme plus lent, le projet se dégrade."
+          "Travailler ensemble implique un engagement réciproque, une transparence et un respect du cadre défini.\n\nCes conditions permettent d’avancer sereinement."
       }
     ]
   },
   {
     id: 6,
-    label: "Est-ce le bon moment ?",
+    label: "Décider d’avancer ensemble",
     questions: [
       {
         index: "01",
-        question: "Es-tu prêt à lancer ce projet de site web correctement ?",
+        question: "Quand mon approche est adaptée",
         answer:
-          "Lancer un projet de site web demande un minimum de disponibilité : échanges, validations, retours sur les maquettes, et décisions rapides. Si tu n’as pas le temps ou l’énergie, le projet risque de s’étirer et de perdre en qualité. Il vaut parfois mieux attendre quelques semaines et démarrer dans de bonnes conditions. Un site web professionnel se construit plus facilement quand le cadre est clair."
+          "Mon approche est adaptée lorsque le projet nécessite une réflexion approfondie avant l’exécution.\n\nElle s’adresse à des projets engageant l’activité au-delà du court terme."
       },
       {
         index: "02",
-        question: "As-tu le contenu nécessaire pour alimenter le site ?",
+        question: "Quand elle ne l’est probablement pas",
         answer:
-          "Un site internet a besoin de contenu : texte, images, description des services, preuves (réalisations, avis), et informations pratiques. Si rien n’est prêt, le projet peut être bloqué ou livré “vide”, ce qui réduit son impact. La bonne approche consiste à identifier l’essentiel pour la V1, puis à enrichir. Selon le cas, tu peux produire ce contenu en interne ou te faire accompagner."
+          "Elle l’est moins lorsque le besoin est strictement opérationnel ou entièrement défini à l’avance.\n\nDans ces cas, une intervention plus directe est souvent plus pertinente."
       },
       {
         index: "03",
-        question: "Ton activité est-elle suffisamment claire pour être présentée ?",
+        question: "À quoi sert un premier échange",
         answer:
-          "Un site web met en mots une activité. Si ton offre est encore floue, le site risque d’être confus, et tu devras le modifier très vite. Le but n’est pas d’être parfait, mais d’avoir une proposition suffisamment stable. Dans le cas contraire, une approche par étapes (site simple d’abord, puis évolution) évite une refonte prématurée."
+          "Un premier échange permet de vérifier l’adéquation entre le contexte du projet et mon approche.\n\nIl vise à poser un premier cadre, sans engagement prématuré."
       },
       {
         index: "04",
-        question: "Y a-t-il une date limite ou un lancement à respecter ?",
+        question: "Ce que j’attends avant de m’engager",
         answer:
-          "Une deadline change la stratégie. Si tu dois sortir rapidement (lancement, événement, campagne), il peut être préférable de viser une première version plus simple et solide, plutôt qu’un projet trop ambitieux. Accélérer un projet de création de site web demande souvent plus de budget, plus de disponibilité, ou des compromis. L’important est de choisir une approche réaliste pour respecter la date sans sacrifier la qualité."
+          "Avant tout engagement, j’attends une compréhension claire des enjeux, des contraintes et des attentes.\n\nCette clarté est indispensable pour éviter toute ambiguïté."
       },
       {
         index: "05",
-        question: "As-tu les ressources pour maintenir le site après la mise en ligne ?",
+        question: "Les conditions d’une collaboration saine",
         answer:
-          "Après la mise en ligne, un site web vit : petites corrections, évolutions, mise à jour du contenu, et parfois sécurité selon la solution choisie. Si tu n’as pas les ressources (temps, budget, organisation), le site peut se dégrader et devenir obsolète. Prévoir un minimum de maintenance, même simple, protège l’investissement. C’est un point souvent sous-estimé dans les projets de création ou refonte."
+          "Une collaboration saine repose sur la confiance, la transparence et la capacité à prendre des décisions partagées.\n\nCes éléments sécurisent le projet."
       },
       {
         index: "06",
-        question: "Ce projet est-il une priorité maintenant, ou peut-il attendre ?",
+        question: "Pourquoi la clarté prime toujours sur la promesse",
         answer:
-          "Tous les projets ne sont pas urgents. Si tu n’as pas de besoin clair, pas de temps, ou pas de budget cohérent, il est souvent préférable d’attendre plutôt que de lancer un projet par obligation. À l’inverse, si ton site actuel te pénalise réellement, remettre à plus tard coûte parfois plus cher. L’objectif est de choisir le bon moment pour maximiser l’impact de la création ou de la refonte du site web."
+          "La clarté permet de construire des projets durables.\n\nLes promesses non fondées fragilisent les décisions, tandis qu’un cadre clair les sécurise."
       }
     ]
   }
 ];
+
 
 export default function DecisionLayer() {
   const [activeCategory, setActiveCategory] = useState(1)
@@ -681,7 +682,7 @@ export default function DecisionLayer() {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="ml-12 overflow-hidden"
+                            className="overflow-hidden"
                           >
                             <div className="font-jetbrains text-sm text-black leading-loose pt-2 max-w-2xl space-y-3">
                               {String(q.answer)
@@ -707,7 +708,7 @@ export default function DecisionLayer() {
                         
                         {/* Micro-text (pour les questions sans réponses) */}
                         {!hasAnswer && q.microText && (
-                          <p className="font-jetbrains text-sm text-gray-500 ml-12">
+                          <p className="font-jetbrains text-sm text-gray-500">
                             {q.microText}
                           </p>
                         )}

@@ -241,7 +241,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
         mode={currentPage === "specialist" ? "sobel" : "sobel"}
         invert={false}
         opacity={currentPage === "specialist" ? 0.35 : currentPage === "decision" ? 0.55 : 0.4}
-        color={currentPage === "specialist" ? "#00ffc8" : currentPage === "decision" ? "#00B8D4" : "#ffcc00"}
+        color={currentPage === "specialist" ? "#00ffc8" : currentPage === "decision" ? "#5DD3F0" : "#ffcc00"}
         fontPx={7}
         cover={true}
       />
