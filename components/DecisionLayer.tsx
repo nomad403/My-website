@@ -235,7 +235,7 @@ const categories: Category[] = [
         index: "01",
         question: "Quand mon approche est adaptée",
         answer:
-          "Mon approche est adaptée lorsque le projet nécessite une réflexion approfondie avant l’exécution. Ces projets se caractérisent par plusieurs indicateurs : budget significatif (généralement au-delà de 15-20k€), enjeux stratégiques pour l’activité, complexité organisationnelle ou technique, ou besoin de cohérence à long terme.\n\nDans ces contextes, l’approche classique « brief → devis → réalisation » est insuffisante. Elle ne permet pas d’identifier les enjeux cachés, d’évaluer les conséquences des décisions, ou de construire une solution réellement adaptée au contexte. Mon intervention apporte un cadre méthodique d’analyse et de décision qui transforme un besoin flou en projet structuré.\n\nElle s’adresse à des projets engageant l’activité au-delà du court terme. Ces projets conditionnent la manière dont l’activité se présente, se rend compréhensible, et peut évoluer. Les décisions prises ont des conséquences durables, et il est essentiel qu’elles soient prises en connaissance de cause plutôt que par défaut ou par précipitation.\n\nCette approche nécessite un investissement initial en temps et en réflexion, mais cet investissement est rapidement rentabilisé par la qualité des décisions prises et l’évitement des ajustements coûteux. Le résultat est un projet plus solide, plus cohérent, et plus facile à faire évoluer dans le temps."
+          "Mon approche est adaptée lorsque le projet nécessite une réflexion approfondie avant l’exécution. Ces projets se caractérisent par plusieurs indicateurs : budget significatif, enjeux stratégiques pour l’activité, complexité organisationnelle ou technique, ou besoin de cohérence à long terme.\n\nDans ces contextes, l’approche classique « brief → devis → réalisation » est insuffisante. Elle ne permet pas d’identifier les enjeux cachés, d’évaluer les conséquences des décisions, ou de construire une solution réellement adaptée au contexte. Mon intervention apporte un cadre méthodique d’analyse et de décision qui transforme un besoin flou en projet structuré.\n\nElle s’adresse à des projets engageant l’activité au-delà du court terme. Ces projets conditionnent la manière dont l’activité se présente, se rend compréhensible, et peut évoluer. Les décisions prises ont des conséquences durables, et il est essentiel qu’elles soient prises en connaissance de cause plutôt que par défaut ou par précipitation.\n\nCette approche nécessite un investissement initial en temps et en réflexion, mais cet investissement est rapidement rentabilisé par la qualité des décisions prises et l’évitement des ajustements coûteux. Le résultat est un projet plus solide, plus cohérent, et plus facile à faire évoluer dans le temps."
       },
       {
         index: "02",
@@ -288,13 +288,12 @@ export default function DecisionLayer() {
 
   const toggleQuestion = (questionKey: string) => {
     setOpenQuestions((prev) => {
-      const next = new Set(prev)
-      if (next.has(questionKey)) {
-        next.delete(questionKey)
-      } else {
-        next.add(questionKey)
+      // Si la question est déjà ouverte, on la ferme
+      if (prev.has(questionKey)) {
+        return new Set<string>()
       }
-      return next
+      // Sinon, on ferme toutes les autres et on ouvre uniquement celle-ci
+      return new Set<string>([questionKey])
     })
   }
 
@@ -557,8 +556,9 @@ export default function DecisionLayer() {
                 className="space-y-6"
               >
                 <p className="font-jetbrains text-base text-black leading-relaxed">
-                  Ces questions structurent la réflexion sans imposer de réponse. 
-                  Elles servent de base pour évaluer la pertinence et la faisabilité du projet.
+                  Ces questions n'ont pas vocation à fournir des réponses immédiates.
+                  <br />
+                  Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
                 </p>
                 
                 <a
@@ -581,7 +581,7 @@ export default function DecisionLayer() {
       )}
 
       {/* Mobile: Categories horizontalement au-dessus des questions */}
-      <div className="lg:hidden px-4 sm:px-6 pt-20 pb-32">
+      <div className="lg:hidden px-4 sm:px-6 pt-20 pb-32 scroll-fade-container">
         {/* Liste des catégories en horizontal scrollable */}
         <div 
           ref={mobileCategoriesRef}
@@ -728,8 +728,9 @@ export default function DecisionLayer() {
             className="space-y-6 pt-16"
           >
             <p className="font-jetbrains text-sm text-black leading-relaxed">
-              Ces questions structurent la réflexion sans imposer de réponse. 
-              Elles servent de base pour évaluer la pertinence et la faisabilité du projet.
+              Ces questions n'ont pas vocation à fournir des réponses immédiates.
+              <br />
+              Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
             </p>
             
             <a

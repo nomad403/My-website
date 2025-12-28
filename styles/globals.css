@@ -722,11 +722,5 @@ body {
   );
 }
 
-/* Désactiver le fade sur mobile pour une meilleure performance et lisibilité */
-@media (max-width: 1023px) {
-  .scroll-fade-container {
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-}
+/* Le fade est maintenant activé sur mobile également */
 
