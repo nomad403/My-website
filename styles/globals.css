@@ -587,11 +587,11 @@ body {
   filter: contrast(2.5) brightness(1.8) saturate(1);
 }
 
-/* Responsive breakpoints pour le carrousel */
+/* Responsive breakpoints pour le carrousel - optimisé pour écrans moyens */
 @media screen and (max-width: 480px) {
   .container-carrousel {
-    --widthItem: 280px;
-    --heightItem: 160px;
+    --widthItem: min(85vw, 280px);
+    --heightItem: min(45vh, 160px);
     perspective: 1200px;
   }
   
@@ -602,47 +602,35 @@ body {
 
 @media screen and (min-width: 481px) and (max-width: 767px) {
   .container-carrousel {
-    --widthItem: 320px;
-    --heightItem: 180px;
+    --widthItem: min(80vw, 320px);
+    --heightItem: min(50vh, 180px);
     perspective: 1400px;
   }
 }
 
 @media screen and (min-width: 768px) and (max-width: 1023px) {
   .container-carrousel {
-    --widthItem: 400px;
-    --heightItem: 240px;
+    --widthItem: min(70vw, 400px);
+    --heightItem: min(55vh, 240px);
     perspective: 1600px;
   }
 }
 
-@media screen and (min-width: 1024px) {
+/* Breakpoint spécifique pour écrans moyens de PC (1024px - 1280px) */
+@media screen and (min-width: 1024px) and (max-width: 1280px) {
   .container-carrousel {
-    --widthItem: 450px;
-    --heightItem: 280px;
-    perspective: 1800px;
+    --widthItem: min(60vw, 420px);
+    --heightItem: min(60vh, 250px);
+    perspective: 1700px;
   }
 }
 
-/* Centrage parfait pour tous les breakpoints */
-@media screen and (max-width: 767px) {
+/* Grands écrans (> 1280px) */
+@media screen and (min-width: 1281px) {
   .container-carrousel {
-    --widthItem: min(85vw, 300px);
-    --heightItem: min(45vh, 160px);
-  }
-}
-
-@media screen and (min-width: 768px) and (max-width: 1023px) {
-  .container-carrousel {
-    --widthItem: min(75vw, 450px);
-    --heightItem: min(55vh, 280px);
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .container-carrousel {
-    --widthItem: min(65vw, 550px);
+    --widthItem: min(55vw, 550px);
     --heightItem: min(65vh, 350px);
+    perspective: 1800px;
   }
 }
 

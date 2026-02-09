@@ -373,7 +373,7 @@ export default function DecisionLayer() {
       <div className="hidden lg:block fixed top-40 left-0 right-0 z-20 pointer-events-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative" style={{ width: '240px' }}>
-            <div className="space-y-12 pointer-events-auto">
+            <div className="space-y-6 pointer-events-auto max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar">
               {categories.map((category, index) => (
                 <button
                   key={category.id}
@@ -404,7 +404,7 @@ export default function DecisionLayer() {
                       : "opacity-100 text-black hover:text-cyan-400"
                   }`}
                 >
-                  <h2 className="font-kode text-sm uppercase tracking-wider leading-relaxed relative pl-4 font-light" style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none', color: activeCategory === category.id ? undefined : '#000000' }}>
+                  <h2 className="font-kode text-xs uppercase tracking-wider leading-tight relative pl-4 font-light" style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none', color: activeCategory === category.id ? undefined : '#000000' }}>
                     {activeCategory === category.id && (
                       <>
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-cyan-400 rounded-full"></span>
@@ -423,7 +423,7 @@ export default function DecisionLayer() {
       </div>
 
       {/* Main container - Layout avec colonne fixe (catégories) et colonne scrollable (questions) - Desktop uniquement */}
-      <div className="hidden lg:block relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-40 pointer-events-auto">
+      <div className="hidden lg:block relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-32 pointer-events-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 lg:gap-16">
           
           {/* Spacer for fixed categories on desktop */}
@@ -435,12 +435,12 @@ export default function DecisionLayer() {
           {/* Sur mobile (< lg), le scroll interne est désactivé (pas de max-h) et le fade est désactivé via CSS */}
           {/* Sur desktop (>= lg), le scroll interne est activé avec max-h et le fade fonctionne */}
           <div 
-            className="scroll-fade-container lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:overscroll-contain custom-scrollbar pr-2 relative z-0"
+            className="scroll-fade-container lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto lg:overscroll-contain custom-scrollbar pr-2 relative z-0"
             id="question-column"
             style={{ zIndex: 0 }}
           >
             {/* Wrapper interne avec padding pour le layout */}
-            <div className="pt-8 pb-40 space-y-32 lg:space-y-40">
+            <div className="pt-8 pb-32 space-y-24 lg:space-y-28">
             {/* Afficher uniquement les questions de la catégorie active */}
             {categories
               .filter((category) => category.id === activeCategory)
@@ -475,7 +475,7 @@ export default function DecisionLayer() {
                                 <span className="font-kode text-xs text-gray-500 tracking-wider">
                                   {q.index}
                                 </span>
-                                <h3 className="font-jetbrains text-xl md:text-2xl text-black font-light leading-relaxed group-hover:text-cyan-400 transition-colors duration-300">
+                                <h3 className="font-jetbrains text-base md:text-lg lg:text-lg xl:text-xl text-black font-light leading-relaxed group-hover:text-cyan-400 transition-colors duration-300">
                                   {q.question}
                                 </h3>
                                 <span className="ml-auto text-cyan-400 text-lg transition-transform duration-300" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>
@@ -489,7 +489,7 @@ export default function DecisionLayer() {
                               <span className="font-kode text-xs text-gray-500 tracking-wider">
                                 {q.index}
                               </span>
-                              <h3 className="font-jetbrains text-xl md:text-2xl font-light leading-relaxed" style={{ color: '#000000' }}>
+                              <h3 className="font-jetbrains text-base md:text-lg lg:text-lg xl:text-xl font-light leading-relaxed" style={{ color: '#000000' }}>
                                 {q.question}
                               </h3>
                             </div>
@@ -504,7 +504,7 @@ export default function DecisionLayer() {
                               transition={{ duration: 0.3, ease: "easeOut" }}
                               className="ml-12 overflow-hidden"
                             >
-                              <div className="font-jetbrains text-sm text-black leading-loose pt-2 max-w-2xl space-y-3">
+                              <div className="font-jetbrains text-sm md:text-sm lg:text-base xl:text-base text-black leading-loose pt-2 max-w-2xl space-y-3">
                                 {String(q.answer)
                                   .split(/(?<=[.!?])\s+(?=[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸ])/)
                                   .filter(s => s.trim().length > 0)
@@ -547,7 +547,7 @@ export default function DecisionLayer() {
       {/* Utilisation d'un portal pour sortir du contexte de stacking */}
       {mounted && typeof window !== 'undefined' && createPortal(
         <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-[9999] pointer-events-none" style={{ zIndex: 9999 }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
             <div className="max-w-2xl lg:ml-[240px] pointer-events-auto" style={{ zIndex: 10000 }}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -555,7 +555,7 @@ export default function DecisionLayer() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="space-y-6"
               >
-                <p className="font-jetbrains text-base text-black leading-relaxed">
+                <p className="font-jetbrains text-xs md:text-sm text-black leading-relaxed">
                   Ces questions n'ont pas vocation à fournir des réponses immédiates.
                   <br />
                   Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
@@ -655,7 +655,7 @@ export default function DecisionLayer() {
                               <span className="font-kode text-xs text-gray-500 tracking-wider">
                                 {q.index}
                               </span>
-                              <h3 className="font-jetbrains text-lg font-light leading-relaxed group-hover:text-cyan-400 transition-colors duration-300" style={{ color: '#000000' }}>
+                              <h3 className="font-jetbrains text-base md:text-lg lg:text-lg xl:text-xl font-light leading-relaxed group-hover:text-cyan-400 transition-colors duration-300" style={{ color: '#000000' }}>
                                 {q.question}
                               </h3>
                               <span className="ml-auto text-cyan-400 text-lg transition-transform duration-300" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>
@@ -669,7 +669,7 @@ export default function DecisionLayer() {
                             <span className="font-kode text-xs text-gray-500 tracking-wider">
                               {q.index}
                             </span>
-                            <h3 className="font-jetbrains text-lg font-light leading-relaxed" style={{ color: '#000000' }}>
+                            <h3 className="font-jetbrains text-base md:text-lg lg:text-lg xl:text-xl font-light leading-relaxed" style={{ color: '#000000' }}>
                               {q.question}
                             </h3>
                           </div>
@@ -684,7 +684,7 @@ export default function DecisionLayer() {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="overflow-hidden"
                           >
-                            <div className="font-jetbrains text-sm text-black leading-loose pt-2 max-w-2xl space-y-3">
+                            <div className="font-jetbrains text-sm md:text-sm lg:text-base xl:text-base text-black leading-loose pt-2 max-w-2xl space-y-3">
                               {String(q.answer)
                                 .split(/(?<=[.!?])\s+(?=[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸ])/)
                                 .filter(s => s.trim().length > 0)
@@ -727,7 +727,7 @@ export default function DecisionLayer() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="space-y-6 pt-16"
           >
-            <p className="font-jetbrains text-sm text-black leading-relaxed">
+            <p className="font-jetbrains text-xs md:text-sm text-black leading-relaxed">
               Ces questions n'ont pas vocation à fournir des réponses immédiates.
               <br />
               Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
