@@ -488,8 +488,11 @@ export default function SpheresPacking({
     };
   }, []);
 
-  // Déterminer si les spheres doivent être visibles
-  const isVisible = currentPage === "home" || currentPage === "projects" || currentPage === "specialist" || currentPage === "contact" || currentPage === "decision";
+  // Déterminer si les spheres doivent être visibles visuellement
+  // Sur les pages avec ASCII, le canvas est actif mais caché visuellement pour l'ASCII
+  const pagesWithAscii = ["home", "projects", "specialist", "decision", "contact"];
+  const visuallyHidden = pagesWithAscii.includes(currentPage);
+  const shouldShowVisually = visible && !visuallyHidden;
 
   return (
     <canvas
@@ -504,9 +507,9 @@ export default function SpheresPacking({
         display: "block",
         width: "100vw",
         height: "100vh",
-        opacity: visible ? 1 : 0,   // <<< cache le canvas sans le tuer
+        opacity: shouldShowVisually ? 1 : 0,   // Caché visuellement si ASCII actif, mais canvas reste actif
         transition: "opacity 0.5s ease-in-out",
-        visibility: isVisible ? "visible" : "hidden",
+        visibility: visible ? "visible" : "hidden", // Toujours visible si visible=true pour que le canvas soit rendu
       }}
     />
   );

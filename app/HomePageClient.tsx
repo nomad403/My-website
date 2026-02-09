@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useBackground } from "./contexts/BackgroundContext"
@@ -21,27 +21,67 @@ const pageConfig = {
   home: {
     sphere: { scale: 1 },
     background: 'day' as const,
-    elements: ['particleText', 'homeContent']
+    elements: ['particleText', 'homeContent'],
+    ascii: {
+      visible: true,
+      mode: 'sobel' as const,
+      invert: false,
+      opacity: 0.8, // Augmenté pour plus d'intensité néon
+      color: '#ff0000', // Rouge néon intense et vibrant pour home
+      fontPx: 7
+    }
   },
   projects: {
     sphere: { scale: 3.5 },
     background: 'day' as const,
-    elements: ['contentPages']
+    elements: ['contentPages'],
+    ascii: {
+      visible: true,
+      mode: 'sobel' as const,
+      invert: false,
+      opacity: 0.4,
+      color: '#ff00f1', // Violet cyber pour projects
+      fontPx: 7
+    }
   },
   specialist: {
     sphere: { scale: 1 },
     background: 'day' as const,
-    elements: ['contentPages']
+    elements: ['contentPages'],
+    ascii: {
+      visible: true,
+      mode: 'sobel' as const,
+      invert: false,
+      opacity: 0.5,
+      color: '#00ffc8',
+      fontPx: 7
+    }
   },
   decision: {
     sphere: { scale: 1 },
     background: 'day' as const,
-    elements: ['contentPages']
+    elements: ['contentPages'],
+    ascii: {
+      visible: true,
+      mode: 'sobel' as const,
+      invert: false,
+      opacity: 0.65,
+      color: '#5DD3F0',
+      fontPx: 7
+    }
   },
   contact: {
     sphere: { scale: 0 },
     background: 'day' as const,
-    elements: []
+    elements: [],
+    ascii: {
+      visible: true,
+      mode: 'sobel' as const,
+      invert: false,
+      opacity: 0.7,
+      color: '#ffcc00',
+      fontPx: 7
+    }
   }
 }
 
@@ -162,7 +202,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
     }, 2500)
   }
 
-  const currentConfig = pageConfig[currentPage as keyof typeof pageConfig]
+  // Mémoriser la configuration pour éviter les recalculs
+  const currentConfig = useMemo(() => {
+    return pageConfig[currentPage as keyof typeof pageConfig] || pageConfig.home
+  }, [currentPage])
 
   // Gérer le scroll du body selon la page
   useEffect(() => {
@@ -225,24 +268,25 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       <JsonLdPerson />
       
       {/* Background: Sphere packing outside R3F */}
+      {/* Toujours actif pour alimenter le canvas, même si visuellement caché pour l'ASCII */}
       <SpheresPacking
         count={200}
         minSize={0.5}
         maxSize={1.0}
         currentPage={currentPage}
         onCanvasReady={setBgCanvas}
-        visible={currentPage !== "specialist" && currentPage !== "contact" && currentPage !== "decision"}
+        visible={true} // Toujours actif pour que le canvas soit rendu
       />
 
-      {/* Real-time ASCII overlay */}
+      {/* Real-time ASCII overlay - Configuration centralisée */}
       <AsciiOverlay
         source={bgCanvas}
-        visible={currentPage === "specialist" || currentPage === "contact" || currentPage === "decision"}
-        mode={currentPage === "specialist" ? "sobel" : "sobel"}
-        invert={false}
-        opacity={currentPage === "specialist" ? 0.35 : currentPage === "decision" ? 0.55 : 0.4}
-        color={currentPage === "specialist" ? "#00ffc8" : currentPage === "decision" ? "#5DD3F0" : "#ffcc00"}
-        fontPx={7}
+        visible={currentConfig.ascii.visible}
+        mode={currentConfig.ascii.mode}
+        invert={currentConfig.ascii.invert}
+        opacity={currentConfig.ascii.opacity}
+        color={currentConfig.ascii.color}
+        fontPx={currentConfig.ascii.fontPx}
         cover={true}
       />
       

@@ -66,7 +66,7 @@ export default function ParticleText() {
         setParticleDensity(2)
       } else {
         setFontSize(100)
-        setParticleDensity(2)
+        setParticleDensity(1)
       }
     }
     setPixelDensity(4) // Valeur fixe pour éviter les getters
