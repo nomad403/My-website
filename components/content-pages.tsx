@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ProjectNavigation from "./ProjectNavigation";
-import CylinderCarousel from "./CylinderCarousel";
 import ShuffleText from "./ShuffleText";
 import DecisionLayer from "./DecisionLayer";
+import ProjectsCarousel from "./ProjectsCarousel";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 
 const stacks = [
@@ -23,97 +22,9 @@ interface ContentPagesProps {
   isVisible?: boolean
 }
 
-const projectList = [
-  {
-    id: 1,
-    name: "Monday",
-    images: [
-      "/images/monday.webp"
-    ],
-    stack: ["Kotlin", "Jetpack Compose", "Firebase", "MVVM"],
-    description: "Les journées ne suivent jamais le plan. Elles dérapent, s'accélèrent, changent d'ordre. Monday transforme cette réalité en avantage. L’app anticipe les imprévus, réajuste vos priorités en temps réel, et orchestre votre journée avec une logique aussi souple que précise. Pas de surcharge mentale, pas de friction. Juste un agenda qui s’adapte à vous, naturellement.",
-    context: "Projet personnel conçu pour répondre aux besoins d'organisation des indépendants et professionnels mobiles.",
-    problem: "Planifier efficacement des journées où chaque contrainte (trafic, météo, temps d'apprentissage) peut bouleverser l'agenda. Les outils classiques manquent d'adaptabilité et de recommandations contextuelles.",
-    solution: "Développement d'une application mobile de planification adaptative : l'IA ajuste l'emploi du temps en temps réel, propose des recommandations personnalisées et intègre des flows interactifs, des sliders custom et des statistiques gamifiées pour une expérience engageante.",
-    impact: "Démonstration concrète d'un système IA connecté au contexte utilisateur. L'application a permis de valider des choix d'architecture modernes et d'explorer l'UX de la planification intelligente.",
-  },
-     {
-     id: 2,
-     name: "TurnUpSphere",
-    images: [
-      "/images/turnupsphere.webp"
-    ],
-    stack: ["Kotlin", "Jetpack Compose", "Firebase", "Google Maps API"],
-    description: "Application mobile dédiée à la scène musicale underground, pensée pour les organisateurs et participants d'événements. Elle permet de créer et gérer des événements sur mesure avec géolocalisation, interface fluide et gestion cloud, dans un univers où la réactivité et la confidentialité sont clés.",
-    context: "Projet personnel dédié à la scène musicale underground, pensé pour les organisateurs et participants d'événements.",
-    problem: "Créer et gérer des événements sur mesure, avec des besoins de géolocalisation et de simplicité d'usage, dans un univers où la réactivité et la confidentialité sont clés.",
-    solution: "Application mobile complète : création d'événements, interface fluide, logique MVVM, intégration Google Maps et gestion des données via Firestore. L'expérience utilisateur est pensée pour la rapidité et la personnalisation.",
-    impact: "Preuve de maîtrise d'un projet mobile de bout en bout : UI moderne, logique événementielle robuste, gestion cloud. L'application a servi de vitrine technique et de laboratoire UX.",
-  },
-  {
-    id: 3,
-    name: "ras-energies.com",
-    images: [
-      "/images/refrig_air_services.webp"
-    ],
-    imageFit: "contain" as const,
-    imagePosition: "center",
-    imageBackground: "#020409",
-    stack: ["React", "Next.js", "Vercel", "Tailwind CSS"],
-    description: "Site vitrine clair, rapide et responsive pour un artisan frigoriste, mettant en avant les services, la zone d'intervention et les atouts métier. L'architecture permet une réutilisation facile pour d'autres professionnels et a généré de nouveaux contacts qualifiés dès les premières semaines.",
-    context: "Mission pour un artisan frigoriste souhaitant développer sa présence digitale et capter de nouveaux clients.",
-    problem: "Absence de site web crédible, perte de prospects et difficulté à valoriser l'expertise métier en ligne.",
-    solution: "Création d'un site vitrine clair, rapide et responsive, mettant en avant les services, la zone d'intervention et les atouts de l'artisan. L'architecture permet une réutilisation facile pour d'autres professionnels.",
-    impact: "Crédibilité renforcée dès la mise en ligne, SEO local optimisé, outil duplicable pour d'autres artisans. Le site a généré de nouveaux contacts qualifiés dès les premières semaines.",
-    externalUrl: "https://ras-energies.com",
-  },
-  {
-    id: 4,
-    name: "AutomatIA",
-    images: [
-      "/images/seine_saint_denis.webp"
-    ],
-    stack: ["Power Automate", "Azure OpenAI", "JSON", "Microsoft 365"],
-    description: "Automatisation IA pour le secteur public : classement intelligent des mails, extraction d'informations, réponses automatiques adaptées au contexte. Gain de temps significatif pour les agents et validation de l'usage de l'IA dans un cadre public sensible.",
-    context: "Projet mené pour le Conseil départemental, secteur public, dans le cadre de la gestion administrative de l'aide à domicile (APA).",
-    problem: "Gestion manuelle chronophage des mails et des pièces jointes, risque d'erreurs et surcharge de travail pour les agents.",
-    solution: "Mise en place d'une automatisation IA : classement intelligent des mails, extraction d'informations des pièces jointes, réponses automatiques adaptées au contexte. Intégration fluide avec l'écosystème Microsoft 365.",
-    impact: "Gain de temps significatif pour les agents, réduction des erreurs, projet pilote validant l'usage de l'IA dans un cadre public sensible. Expérience valorisante sur l'IA appliquée à des enjeux réels.",
-  },
-  {
-    id: 5,
-    name: "Nomad403",
-    images: [
-      "/images/portfolio.webp"
-    ],
-    stack: ["React", "Three.js", "Canvas API", "Tailwind", "Framer Motion"],
-    description: "Portfolio interactif et immersif, pensé comme une expérience technique et esthétique. Navigation 3D, effets HUD, storytelling visuel et démonstration de compétences avancées en frontend et design interactif.",
-    context: "Projet personnel de branding, destiné à affirmer une identité forte et différenciante sur le marché des développeurs indépendants.",
-    problem: "Se démarquer dans un univers saturé de portfolios génériques, tout en démontrant des compétences avancées en frontend et design interactif.",
-    solution: "Conception d'une navigation en croix, menu 3D interactif, effets HUD et canvas, storytelling visuel immersif. L'ensemble du site est pensé comme une expérience, à la fois technique et esthétique.",
-    impact: "Mémorisation immédiate, retours très positifs de la part de clients et recruteurs, preuve de polyvalence et d'innovation. Le portfolio a généré de nouvelles opportunités et renforcé la marque personnelle.",
-  },
-];
-
 export default function ContentPages({ currentPage, onBack, isVisible = true }: ContentPagesProps) {
-  const [selected, setSelected] = useState(0);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [prevSelected, setPrevSelected] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffledTexts, setShuffledTexts] = useState<{[key: string]: string}>({});
-  const handleProjectSelect = (idx: number, opts?: { openExternal?: boolean }) => {
-    setPrevSelected(selected);
-    setSelected(idx);
-    setSelectedImage(0);
-
-    if (opts?.openExternal) {
-      const project = projectList[idx];
-      if (project?.externalUrl && typeof window !== "undefined") {
-        window.open(project.externalUrl, "_blank", "noopener,noreferrer");
-      }
-    }
-  };
-
   
   // Language context
   const { t } = useLanguage();
@@ -306,7 +217,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
       case "specialist":
         return (
-          <div className="fixed inset-0 w-full h-full overflow-hidden bg-transparent">
+          <div className="relative w-full h-full overflow-hidden bg-transparent">
             {/* H1 pour le SEO - invisible mais accessible */}
             <h1 className="sr-only">Skills & Expertise — Nomad403 (Nomad 403)</h1>
             
@@ -511,52 +422,22 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
           
             case "projects":
         return (
-          <div className="relative w-full h-screen overflow-hidden">
+          <div className="relative w-full h-full flex items-center justify-center">
             {/* H1 pour le SEO - invisible mais accessible */}
             <h1 className="sr-only">Projects — Nomad403 (Nomad 403)</h1>
             
-            <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-               {/* Layout mobile/desktop */}
-               <div className="h-full xl:grid xl:grid-cols-[200px_1fr] gap-2 xl:gap-8 items-center">
-                 
-                 {/* Menu vertical pour desktop */}
-                 <div className="hidden xl:block">
-                   <ProjectNavigation
-                     projects={projectList}
-                     selected={selected}
-                      onSelect={handleProjectSelect}
-                     maxVisible={5}
-                     orientation="vertical"
-                   />
-                 </div>
-
-                 {/* Carrousel + menu horizontal regroupés */}
-                 <div className="flex flex-col items-center justify-center w-full h-full">
-                   {/* Carrousel */}
-                   <div className="w-full max-w-[clamp(300px,90vw,800px)] aspect-[16/10] mb-6 flex-shrink-0">
-                     <CylinderCarousel
-                       items={projectList}
-                       selectedIndex={selected}
-                     onItemChange={handleProjectSelect}
-                     onItemImageClick={(idx) => handleProjectSelect(idx, { openExternal: true })}
-                     />
-                   </div>
-
-                   {/* Menu horizontal uniquement pour mobile/tablet */}
-                   <div className="w-full flex justify-center xl:hidden px-2 flex-shrink-0">
-                     <div className="max-w-[400px] w-full">
-                       <ProjectNavigation
-                         projects={projectList}
-                         selected={selected}
-                        onSelect={handleProjectSelect}
-                         maxVisible={5}
-                         orientation="horizontal"
-                       />
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
+            {/* Carrousel horizontal centré verticalement */}
+            <div className="w-full h-[clamp(400px,60vh,600px)] px-4 md:px-8 overflow-visible">
+              <ProjectsCarousel
+                items={[
+                  { id: 1, name: "Monday", image: "/images/monday.webp" },
+                  { id: 2, name: "TurnUpSphere", image: "/images/turnupsphere.webp" },
+                  { id: 3, name: "ras-energies.com", image: "/images/refrig_air_services.webp", url: "https://ras-energies.com" },
+                  { id: 4, name: "AutomatIA", image: "/images/seine_saint_denis.webp" },
+                  { id: 5, name: "Nomad403", image: "/images/portfolio.webp" },
+                ]}
+              />
+            </div>
              
              {/* Contenu SEO invisible pour la page projects */}
              <div className="sr-only">
@@ -597,11 +478,11 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
                                                        case "decision":
            return (
-             <div className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-transparent lg:overflow-hidden">
+             <div className="relative w-full h-full overflow-y-auto overflow-x-hidden bg-transparent lg:overflow-hidden">
                {/* H1 pour le SEO - invisible mais accessible */}
                <h1 className="sr-only">Couche de décision — Nomad403 (Nomad 403)</h1>
                
-              <div className="relative z-10 w-full min-h-full pointer-events-auto">
+              <div className="relative z-10 w-full h-full pointer-events-auto">
                 <DecisionLayer />
               </div>
              </div>
@@ -609,15 +490,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
                                                        case "contact":
            return (
-             <div className="relative w-full h-screen flex flex-col">
+             <div className="relative w-full h-full flex items-center justify-center">
                {/* H1 pour le SEO - invisible mais accessible */}
                <h1 className="sr-only">Contact — Nomad403 (Nomad 403)</h1>
                
                {/* Formulaire progressif centré */}
-               <div className="flex-1 flex items-center justify-center px-4 md:px-8">
-                 <div className="max-w-3xl mx-auto w-full">
-                   {/* Main title */}
-                   <div className="text-center mb-12 md:mb-20 px-4">
+               <div className="w-full max-w-3xl mx-auto px-4 md:px-8">
+                 {/* Main title */}
+                 <div className="text-center mb-8 md:mb-12 px-4">
                      <div className="flex justify-center items-center">
                        <h1 className="font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider text-center max-w-full">
                          <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack} enableHover={false}>
@@ -625,12 +505,12 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                          </ShuffleText>
                        </h1>
                      </div>
-                   </div>
+                 </div>
                      
-                   {/* Simplified form without gooey effect */}
-                  <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
-                    {/* Central field - responsive */}
-                    <div className="flex-1 mx-2 w-full max-w-[90vw] sm:max-w-[600px]">
+                 {/* Simplified form without gooey effect */}
+                 <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
+                   {/* Central field - responsive */}
+                   <div className="flex-1 mx-2 w-full max-w-[90vw] sm:max-w-[600px]">
                        {contactSteps[currentContactStep].field === 'message' ? (
                          <textarea
                            placeholder={contactSteps[currentContactStep].placeholder}
@@ -668,8 +548,8 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                        )}
                      </div>
                      
-                    {/* Navigation buttons (stacked on mobile, inline on desktop) */}
-                    <div className="flex w-full max-w-[90vw] sm:max-w-[600px] justify-between gap-4 md:w-auto md:max-w-none">
+                   {/* Navigation buttons (stacked on mobile, inline on desktop) */}
+                   <div className="flex w-full max-w-[90vw] sm:max-w-[600px] justify-between gap-4 md:w-auto md:max-w-none">
                       <div className="flex-1 flex justify-start">
                         <AnimatePresence mode="wait">
                           {currentContactStep > 0 && (
@@ -731,12 +611,12 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                             </svg>
                           )}
                         </motion.button>
-                      </div>
-                    </div>
+                     </div>
                    </div>
+                 </div>
                    
-                   {/* Error message - Fixed reserved space */}
-                   <div className="mt-4 text-center min-h-[24px]">
+                 {/* Error message - Fixed reserved space */}
+                 <div className="mt-4 text-center min-h-[24px]">
                      <AnimatePresence mode="wait">
                    {sendStatus === 'error' && (
                      <motion.div 
@@ -752,10 +632,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </motion.div>
                    )}
                      </AnimatePresence>
-                   </div>
+                 </div>
                    
-                  {/* Completed steps (responsive layout) */}
-                  <div className="mt-6 md:mt-8 flex justify-center">
+                 {/* Completed steps (responsive layout) */}
+                 <div className="mt-6 md:mt-8 flex justify-center">
                     <div className="flex flex-col gap-4 w-full max-w-md md:max-w-none md:flex-row md:flex-wrap md:justify-center md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
@@ -782,12 +662,10 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                          );
                        })}
                      </div>
-                   </div>
                  </div>
-               </div>
-               
-               {/* Contenu SEO invisible pour la page contact */}
-               <div className="sr-only">
+                 
+                 {/* Contenu SEO invisible pour la page contact */}
+                 <div className="sr-only">
                  <p>
                    Contactez Nomad403, Nomad 403, nomad-403, développeur freelance spécialisé dans le développement 
                    web, mobile et intégration IA basé à Paris. Partenaire de confiance pour startups, 
@@ -818,6 +696,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    nomad403 react developer, nomad 403 kotlin, nomad-403 swift, nomad403 typescript, 
                    nomad 403 nextjs, nomad-403 ai developer, nomad403 portfolio contact.
                  </p>
+                 </div>
                </div>
              </div>
            )
@@ -829,7 +708,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
 
      return (
-    <div className="relative w-full h-screen z-20 overflow-hidden pointer-events-auto">
+    <div className="relative w-full h-full z-20 overflow-hidden pointer-events-auto">
       {getPageContent()}
       
       {/* SEO Internal Links - Invisible but accessible to crawlers */}

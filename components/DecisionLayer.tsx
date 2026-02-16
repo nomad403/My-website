@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
 import ShuffleText from "./ShuffleText"
 
@@ -276,15 +275,11 @@ export default function DecisionLayer() {
   const [activeCategory, setActiveCategory] = useState(1)
   const [openQuestions, setOpenQuestions] = useState<Set<string>>(new Set())
   const [userSelectedCategory, setUserSelectedCategory] = useState<number | null>(null)
-  const [mounted, setMounted] = useState(false)
   const questionRefs = useRef<(HTMLElement | null)[]>([])
   const categoryRefs = useRef<(HTMLElement | null)[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
   const mobileCategoriesRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const toggleQuestion = (questionKey: string) => {
     setOpenQuestions((prev) => {
@@ -538,47 +533,38 @@ export default function DecisionLayer() {
                   </div>
                 </motion.div>
               ))}
+              
+              {/* END OF PAGE - Concluding text and CTA */}
+              <div className="mt-16 mb-8 md:mb-12 lg:mb-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className="space-y-2 md:space-y-3 max-w-lg"
+                >
+                  <p className="font-jetbrains text-[10px] md:text-xs text-black leading-relaxed">
+                    Ces questions n'ont pas vocation à fournir des réponses immédiates.
+                    <br />
+                    Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
+                  </p>
+                  
+                  <a
+                    href="/contact"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      window.location.href = '/contact'
+                    }}
+                    className="inline-block font-jetbrains text-[10px] md:text-xs text-cyan-400 hover:text-cyan-300 transition-colors duration-300 border-b border-cyan-400/30 hover:border-cyan-400/60 pb-1 cursor-pointer"
+                  >
+                    Échanger sur la pertinence du projet
+                  </a>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* END OF PAGE - Concluding text and CTA (Fixed Bottom) - Desktop uniquement */}
-      {/* Utilisation d'un portal pour sortir du contexte de stacking */}
-      {mounted && typeof window !== 'undefined' && createPortal(
-        <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-[9999] pointer-events-none" style={{ zIndex: 9999 }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-            <div className="max-w-2xl lg:ml-[240px] pointer-events-auto" style={{ zIndex: 10000 }}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="space-y-6"
-              >
-                <p className="font-jetbrains text-xs md:text-sm text-black leading-relaxed">
-                  Ces questions n'ont pas vocation à fournir des réponses immédiates.
-                  <br />
-                  Elles structurent la réflexion et permettent d'évaluer la pertinence et la faisabilité d'un projet, à la lumière de son contexte réel.
-                </p>
-                
-                <a
-                  href="/contact"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    window.location.href = '/contact'
-                  }}
-                  className="inline-block font-jetbrains text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300 border-b border-cyan-400/30 hover:border-cyan-400/60 pb-1 cursor-pointer"
-                  style={{ position: 'relative', zIndex: 10001 }}
-                >
-                  Échanger sur la pertinence du projet
-                </a>
-              </motion.div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
 
       {/* Mobile: Categories horizontalement au-dessus des questions */}
       <div className="lg:hidden px-4 sm:px-6 pt-20 pb-32 scroll-fade-container">

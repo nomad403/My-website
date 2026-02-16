@@ -532,7 +532,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       )}
 
       {/* Main content - Elements with declarative transitions */}
-      <div className="relative w-full min-h-screen z-20">
+      <div className="relative w-full h-screen z-20">
         
         {/* Particle Text - visible only on home */}
         <motion.div 

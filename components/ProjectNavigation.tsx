@@ -127,26 +127,42 @@ export default function ProjectNavigation({
       const cw = containerSize.width || (typeof window !== 'undefined' ? window.innerWidth : 0);
 
       // Calcul de l'espacement responsive basé sur la largeur disponible
-      const minItemWidth = 80; // Largeur minimale pour un item
-      const maxItemWidth = 180; // Largeur maximale pour un item
+      const minItemWidth = 80; // Largeur minimale pour un item non sélectionné
+      const maxItemWidth = 180; // Largeur maximale pour un item non sélectionné
+      const selectedMinWidth = 120; // Largeur minimale pour le projet sélectionné
+      const selectedMaxWidth = 250; // Largeur maximale pour le projet sélectionné
       
       // Calculer la largeur disponible par item en laissant plus d'espace
       const availableWidthPerItem = cw / maxVisible;
-      const itemWidth = Math.max(minItemWidth, Math.min(maxItemWidth, availableWidthPerItem * 0.7));
+      const baseItemWidth = Math.max(minItemWidth, Math.min(maxItemWidth, availableWidthPerItem * 0.7));
       
-      // Calculer l'espacement restant avec une marge plus généreuse
-      const totalItemsWidth = maxVisible * itemWidth;
-      const remainingSpace = cw - totalItemsWidth;
-      const spacing = Math.max(12, remainingSpace / (maxVisible - 1));
-
-      const totalListWidth = (maxVisible * itemWidth) + ((maxVisible - 1) * spacing);
-      const startX = (cw - totalListWidth) / 2;
-
       const centerIndex = Math.floor(maxVisible / 2);
       const maxDistance = Math.floor(maxVisible / 2);
 
+      // Calculer les largeurs pour chaque item (le sélectionné peut être plus large)
+      const itemWidths = visibleProjects.map((project, index) => {
+        const isSelected = project.originalIndex === selected;
+        if (isSelected) {
+          // Pour le projet sélectionné, utiliser une largeur plus grande
+          // Essayer d'estimer la largeur nécessaire pour le nom complet
+          const estimatedTextWidth = project.name.length * 8; // Estimation approximative
+          return Math.max(selectedMinWidth, Math.min(selectedMaxWidth, Math.max(baseItemWidth, estimatedTextWidth + 20)));
+        }
+        return baseItemWidth;
+      });
+
+      // Recalculer l'espacement avec les nouvelles largeurs
+      const totalItemsWidth = itemWidths.reduce((sum, width) => sum + width, 0);
+      const remainingSpace = cw - totalItemsWidth;
+      // Espacement minimum plus généreux pour éviter le chevauchement
+      const spacing = Math.max(16, remainingSpace / (maxVisible - 1));
+
+      // Calculer les positions X en tenant compte des largeurs variables
+      let currentX = (cw - totalItemsWidth - (spacing * (maxVisible - 1))) / 2;
+
       return visibleProjects.map((project, index) => {
-        const x = startX + index * (itemWidth + spacing);
+        const x = currentX;
+        currentX += itemWidths[index] + spacing;
         const y = 0;
 
         const distanceFromCenter = Math.abs(index - centerIndex);
@@ -159,7 +175,7 @@ export default function ProjectNavigation({
           project,
           x,
           y,
-          width: itemWidth, // Utiliser la largeur calculée pour éviter la superposition
+          width: itemWidths[index], // Largeur spécifique pour chaque item
           fontSize: 16, // Valeur par défaut, la taille sera gérée par Tailwind
           opacity: Math.max(opacity, 0.3),
           scale: Math.max(scale, 0.7),
@@ -255,7 +271,9 @@ export default function ProjectNavigation({
       onWheel={handleWheel}
       style={{ 
         pointerEvents: 'auto',
-        transform: orientation === 'horizontal' ? 'none' : undefined // Reset des transforms en mode horizontal
+        transform: orientation === 'horizontal' ? 'none' : undefined, // Reset des transforms en mode horizontal
+        zIndex: 40,
+        position: 'relative',
       }}
       tabIndex={0} // Pour permettre le focus et les événements clavier
     >
@@ -281,9 +299,9 @@ export default function ProjectNavigation({
             scale: { duration: 0.5 },
           }}
           className={`
-            absolute pointer-events-auto cursor-pointer select-none
+            absolute cursor-pointer select-none
             font-kode uppercase tracking-wider
-            transition-all duration-300 ease-out z-10
+            transition-all duration-300 ease-out
             ${orientation === 'horizontal' ? 'text-center' : 'text-left'}
             ${orientation === 'horizontal' 
               ? 'text-[clamp(12px,2.3vw,18px)]' 
@@ -294,27 +312,30 @@ export default function ProjectNavigation({
           title={item.project.name}
           style={{
             transformOrigin: orientation === 'horizontal' ? "center center" : "left center",
-            transform: "translateX(0%)",
             width: `${item.width}px`,
-            maxWidth: `${item.width}px`,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            minHeight: orientation === 'horizontal' ? '48px' : 'auto',
+            padding: orientation === 'horizontal' ? '12px 0' : '8px 0',
+            maxWidth: item.isSelected && orientation === 'horizontal' ? 'none' : `${item.width}px`,
+            overflow: item.isSelected && orientation === 'horizontal' ? 'visible' : "hidden",
+            textOverflow: item.isSelected && orientation === 'horizontal' ? 'clip' : "ellipsis",
             whiteSpace: "nowrap",
             textShadow: item.isSelected ? '0 0 8px rgba(6, 182, 212, 0.3)' : '0 0 3px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: orientation === 'horizontal' ? 'center' : 'flex-start',
+            pointerEvents: 'auto',
+            zIndex: 50,
           }}
           onClick={(e) => {
+             e.preventDefault()
              e.stopPropagation()
              onSelect(item.globalIndex)
            }}
+          onMouseDown={(e) => {
+             e.stopPropagation()
+           }}
         >
           {item.project.name}
-          {item.isSelected && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-orange-500 rounded-full shadow-lg border-2 border-orange-300"
-            />
-          )}
         </motion.div>
       ))}
     </div>

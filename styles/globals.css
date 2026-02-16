@@ -500,10 +500,8 @@ body {
   height: var(--heightItem);
   perspective: 1600px;
   transition: all 0.3s ease-out;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
+  margin: auto;
 }
 
 .carrousel {
@@ -632,6 +630,16 @@ body {
     --heightItem: min(65vh, 350px);
     perspective: 1800px;
   }
+}
+
+/* Styles pour le carrousel horizontal */
+.horizontal-carousel-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.horizontal-carousel-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Scrollbar personnalisée pour le textarea du formulaire de contact */
