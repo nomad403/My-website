@@ -519,8 +519,8 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
         </AnimatePresence>
       </nav>
 
-      {/* Language Switcher - Position fixe en bas à droite */}
-      <div className="fixed bottom-6 right-6 z-[9999] pointer-events-auto" style={{ zIndex: 9999 }}>
+      {/* Language Switcher - Position fixe en bas à droite (masqué sur mobile) */}
+      <div className="hidden md:block fixed bottom-6 right-6 z-[9999] pointer-events-auto" style={{ zIndex: 9999 }}>
         <LanguageSwitcher />
       </div>
 
