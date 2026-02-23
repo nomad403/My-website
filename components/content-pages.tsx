@@ -435,6 +435,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                   { id: 3, name: "ras-energies.com", image: "/images/refrig_air_services.webp", url: "https://ras-energies.com" },
                   { id: 4, name: "AutomatIA", image: "/images/seine_saint_denis.webp" },
                   { id: 5, name: "Nomad403", image: "/images/portfolio.webp" },
+                  { id: 6, name: "Savage Block Party", image: "/images/savage_block_party.webp", url: "https://savage-block-party.vercel.app" },
                 ]}
               />
             </div>
