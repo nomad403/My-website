@@ -1,12 +1,14 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from 'react';
+import ShuffleText from './ShuffleText';
 
 interface ProjectItem {
   id: number;
   name: string;
   image: string;
   url?: string;
+  description?: string;
 }
 
 interface ProjectsCarouselProps {
@@ -24,6 +26,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
   const itemWidthRef = useRef<number>(0);
   const isScrollingRef = useRef(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
   
   // États séparés pour touch et mouse pour éviter les conflits
   const touchState = useRef({
@@ -311,9 +314,12 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
               }
             };
 
+            const isHovered = hoveredItemId === item.id;
+            const itemKey = `${item.id}-${index}`;
+
             return (
             <div
-              key={`${item.id}-${index}`}
+              key={itemKey}
               className="carousel-item flex-shrink-0 flex flex-col"
               style={{
                 width: 'clamp(280px, 70vw, 500px)',
@@ -322,6 +328,8 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
               }}
               onClick={handleItemClick}
               onTouchEnd={handleTouchClick}
+              onMouseEnter={() => setHoveredItemId(item.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
             >
               {/* Conteneur unique centré verticalement contenant titre + image */}
               <div className="flex-1 min-h-0 flex items-center justify-center">
@@ -334,12 +342,36 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                   </div>
 
                   {/* Image 16:9 - maintient le ratio 16:9 */}
-                  <div className="relative w-full overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+                  <div 
+                    className="relative w-full overflow-hidden" 
+                    style={{ paddingBottom: '56.25%' }}
+                  >
                     <img
                       src={item.image}
                       alt={item.name}
                       className="absolute inset-0 w-full h-full object-cover shadow-lg"
                     />
+                    {/* Description avec effet shuffle text au hover */}
+                    {item.description && (
+                      <div 
+                        className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
+                        style={{
+                          opacity: isHovered ? 1 : 0,
+                          pointerEvents: isHovered ? 'auto' : 'none',
+                        }}
+                      >
+                        <div className="px-4 py-3">
+                          <ShuffleText
+                            triggerShuffle={isHovered}
+                            enableHover={false}
+                            totalDuration={600}
+                            className="text-white text-xs md:text-sm font-jetbrains leading-relaxed"
+                          >
+                            {item.description}
+                          </ShuffleText>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
