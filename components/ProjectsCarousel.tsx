@@ -24,9 +24,28 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
   const itemWidthRef = useRef<number>(0);
   const isScrollingRef = useRef(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+  
+  // États séparés pour touch et mouse pour éviter les conflits
+  const touchState = useRef({
+    isActive: false,
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    lastMoveTime: 0,
+    hasMoved: false,
+  });
+  
+  // Détection du type d'appareil
+  const isTouchDevice = useRef(false);
+  useEffect(() => {
+    isTouchDevice.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }, []);
 
-  // Gestion du drag
+  // Gestion du drag (desktop uniquement)
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignorer les mouse events sur mobile (ils sont émis après touch)
+    if (isTouchDevice.current) return;
+    
     dragStartPos.current = { x: e.pageX, y: e.pageY };
     setIsDragging(true);
     if (carouselRef.current) {
@@ -36,41 +55,102 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
   };
 
   const handleMouseLeave = () => {
+    if (isTouchDevice.current) return;
     setIsDragging(false);
     dragStartPos.current = null;
   };
 
   const handleMouseUp = () => {
+    if (isTouchDevice.current) return;
     setIsDragging(false);
     dragStartPos.current = null;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !carouselRef.current) return;
+    if (isTouchDevice.current || !isDragging || !carouselRef.current) return;
     e.preventDefault();
     const x = e.pageX - carouselRef.current.offsetLeft;
     const walk = (x - startX) * 2;
     carouselRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  // Gestion du touch
+  // Gestion du touch (mobile) - avec distinction tap/swipe
   const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
+    if (!carouselRef.current) return;
+    
+    const touch = e.touches[0];
+    touchState.current = {
+      isActive: true,
+      startX: touch.pageX,
+      startY: touch.pageY,
+      startScrollLeft: carouselRef.current.scrollLeft,
+      lastMoveTime: Date.now(),
+      hasMoved: false,
+    };
+    
+    // Permettre le scroll natif horizontal sur le conteneur
     if (carouselRef.current) {
-      setStartX(e.touches[0].pageX - carouselRef.current.offsetLeft);
-      setScrollLeft(carouselRef.current.scrollLeft);
+      carouselRef.current.style.touchAction = 'pan-x';
     }
   };
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchState.current.isActive || !carouselRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.pageX - touchState.current.startX);
+    const deltaY = Math.abs(touch.pageY - touchState.current.startY);
+    
+    // Si le mouvement horizontal est plus important que vertical, c'est un swipe horizontal
+    if (deltaX > deltaY && deltaX > 10) {
+      touchState.current.hasMoved = true;
+      // Prévenir le scroll vertical de la page seulement si c'est un swipe horizontal
+      e.preventDefault();
+      
+      const x = touch.pageX - carouselRef.current.offsetLeft;
+      const walk = (x - touchState.current.startX) * 2;
+      carouselRef.current.scrollLeft = touchState.current.startScrollLeft - walk;
+    } else if (deltaY > deltaX && deltaY > 10) {
+      // Si c'est un swipe vertical, réinitialiser et permettre le scroll vertical
+      touchState.current.hasMoved = false;
+      if (carouselRef.current) {
+        carouselRef.current.style.touchAction = 'pan-y';
+      }
+    }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !carouselRef.current) return;
-    const x = e.touches[0].pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    carouselRef.current.scrollLeft = scrollLeft - walk;
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchState.current.isActive) return;
+    
+    // Réinitialiser touchAction
+    if (carouselRef.current) {
+      carouselRef.current.style.touchAction = '';
+    }
+    
+    // Si c'était un swipe, ne pas déclencher de clic
+    if (touchState.current.hasMoved) {
+      // Réinitialiser après un court délai pour éviter les clics accidentels
+      setTimeout(() => {
+        touchState.current = {
+          isActive: false,
+          startX: 0,
+          startY: 0,
+          startScrollLeft: 0,
+          lastMoveTime: 0,
+          hasMoved: false,
+        };
+      }, 100);
+    } else {
+      // C'était un tap, réinitialiser immédiatement
+      touchState.current = {
+        isActive: false,
+        startX: 0,
+        startY: 0,
+        startScrollLeft: 0,
+        lastMoveTime: 0,
+        hasMoved: false,
+      };
+    }
   };
 
   // Calculer la largeur d'un item (avec gap)
@@ -186,6 +266,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
           cursor: isDragging ? 'grabbing' : 'grab',
           scrollBehavior: 'auto', // 'auto' pour repositionnement instantané
           WebkitOverflowScrolling: 'touch',
+          // touchAction géré dynamiquement selon la direction du swipe
         }}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseLeave}
@@ -202,7 +283,12 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
         >
           {infiniteItems.map((item, index) => {
             const handleItemClick = (e: React.MouseEvent) => {
-              // Ne pas déclencher le clic si c'était un drag
+              // Sur mobile, ignorer les clics si c'était un swipe
+              if (isTouchDevice.current && touchState.current.hasMoved) {
+                return;
+              }
+              
+              // Ne pas déclencher le clic si c'était un drag (desktop)
               if (dragStartPos.current) {
                 const deltaX = Math.abs(e.pageX - dragStartPos.current.x);
                 const deltaY = Math.abs(e.pageY - dragStartPos.current.y);
@@ -217,6 +303,13 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                 window.open(item.url, '_blank', 'noopener,noreferrer');
               }
             };
+            
+            const handleTouchClick = (e: React.TouchEvent) => {
+              // Gérer les clics sur mobile séparément
+              if (!touchState.current.hasMoved && item.url) {
+                window.open(item.url, '_blank', 'noopener,noreferrer');
+              }
+            };
 
             return (
             <div
@@ -228,6 +321,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                 cursor: item.url ? 'pointer' : 'default',
               }}
               onClick={handleItemClick}
+              onTouchEnd={handleTouchClick}
             >
               {/* Conteneur unique centré verticalement contenant titre + image */}
               <div className="flex-1 min-h-0 flex items-center justify-center">
