@@ -26,8 +26,8 @@ const pageConfig = {
       visible: true,
       mode: 'sobel' as const,
       invert: false,
-      opacity: 0.8, // Augmenté pour plus d'intensité néon
-      color: '#ff0000', // Rouge néon intense et vibrant pour home
+      opacity: 0.8, 
+      color: '#ff0000',
       fontPx: 7
     }
   },
@@ -40,7 +40,7 @@ const pageConfig = {
       mode: 'sobel' as const,
       invert: false,
       opacity: 0.4,
-      color: '#ff00f1', // Violet cyber pour projects
+      color: '#ff00f1',
       fontPx: 7
     }
   },
