@@ -435,7 +435,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                   { id: 3, name: "ras-energies.com", image: "/images/refrig_air_services.webp", url: "https://paris.ras-energies.com", description: "Site web vitrine" },
                   { id: 4, name: "AutomatIA", image: "/images/seine_saint_denis.webp", description: "Automatisation, IA, Identification de processus, RGPD" },
                   { id: 5, name: "Nomad403", image: "/images/portfolio.webp", description: "Site web intéractif" },
-                  { id: 6, name: "Savage Block Party", image: "/images/savage_block_party.webp", url: "https://savage-block-party.vercel.app", description: "Site web vitrine, E-commerce" },
+                  { id: 6, name: "Savage Block Party", image: "/images/savage_block_party.webp", url: "https://savage-block-party.glennrichard-dev.workers.dev/", description: "Site web vitrine, E-commerce" },
                 ]}
               />
             </div>
