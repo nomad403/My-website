@@ -22,12 +22,23 @@ export function useProgressiveLoad(
     const particlesAt = asciiAt + stageDelays.particles
 
     const timers = [
-      setTimeout(() => setStage("spheres"), stageDelays.spheres),
-      setTimeout(() => setStage("ascii"), asciiAt),
+      setTimeout(
+        () => setStage((prev) => (prev === "shell" ? "spheres" : prev)),
+        stageDelays.spheres
+      ),
+      setTimeout(
+        () => setStage((prev) => (prev === "shell" || prev === "spheres" ? "ascii" : prev)),
+        asciiAt
+      ),
     ]
 
     if (!skipParticles) {
-      timers.push(setTimeout(() => setStage("particles"), particlesAt))
+      timers.push(
+        setTimeout(
+          () => setStage((prev) => (prev === "ascii" ? "particles" : prev)),
+          particlesAt
+        )
+      )
     }
 
     return () => timers.forEach(clearTimeout)

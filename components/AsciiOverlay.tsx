@@ -42,7 +42,7 @@ export default function AsciiOverlay({
   domUpdateEvery?: number;
 }) {
   const preRef = useRef<HTMLPreElement | null>(null);
-  const [running, setRunning] = useState(false);
+  const runningRef = useRef(false);
   const [mounted, setMounted] = useState(false);
   const [grid, setGrid] = useState({ cols: fixedCols ?? 150, rows: 0 });
 
@@ -90,15 +90,15 @@ export default function AsciiOverlay({
   }, [cover, fontPx, fixedCols]);
 
   useEffect(() => {
-    if (!source || !preRef.current || !visible) {
-      setRunning(false);
+    if (!source || !preRef.current || !visible || grid.cols <= 0 || grid.rows <= 0) {
+      runningRef.current = false;
       if (preRef.current) preRef.current.textContent = "";
       return;
     }
-    setRunning(true);
+    runningRef.current = true;
 
-    const w = grid.cols;             // <<< plein écran en colonnes
-    const h = grid.rows;             // <<< plein écran en lignes
+    const w = grid.cols;
+    const h = grid.rows;
     if (typeof document === 'undefined') return;
     const off = document.createElement("canvas");
     off.width = w;
@@ -121,7 +121,7 @@ export default function AsciiOverlay({
     const frameDelay = 1000 / fps;
 
     const draw = (t: number) => {
-      if (!running) return;
+      if (!runningRef.current) return;
       if (t - last < frameDelay) {
         raf = requestAnimationFrame(draw);
         return;
@@ -203,10 +203,10 @@ export default function AsciiOverlay({
 
     raf = requestAnimationFrame(draw);
     return () => {
-      setRunning(false);
+      runningRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, running, domUpdateEvery]);
+  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;
