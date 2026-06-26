@@ -552,7 +552,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           initial={{ opacity: 0 }}
           animate={{ opacity: isPreloaded && homeVisible && showParticles ? 1 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{ pointerEvents: homeVisible && showParticles ? "auto" : "none" }}
+          style={{ pointerEvents: "none" }}
         >
           {showParticles && homeVisible && <ParticleText />}
         </motion.div>

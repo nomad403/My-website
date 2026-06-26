@@ -54,6 +54,8 @@ export default function ParticleText() {
   const isInitializedRef = useRef(false)
   const lastFrameRef = useRef(0)
   const profileRef = useRef<ReturnType<typeof usePerformanceProfile>["profile"]>(null)
+  const isCoarsePointerRef = useRef(false)
+  const touchBurstTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { t, isLanguageReady } = useLanguage()
   const { profile } = usePerformanceProfile()
@@ -321,11 +323,23 @@ export default function ParticleText() {
     animationRef.current = requestAnimationFrame(animate)
   }
 
+  const clearTouchBurst = () => {
+    if (touchBurstTimerRef.current) {
+      clearTimeout(touchBurstTimerRef.current)
+      touchBurstTimerRef.current = null
+    }
+    mouseRef.current.hover = false
+  }
+
   const handleMouseMove = (event: MouseEvent) => {
+    // Après un tap mobile, le navigateur émet des mousemove synthétiques qui
+    // laissent hover=true indéfiniment (pas de mouseleave sur tactile).
+    if (isCoarsePointerRef.current) return
     mouseRef.current = { x: event.clientX, y: event.clientY, hover: true }
   }
 
   const handleMouseLeave = () => {
+    if (isCoarsePointerRef.current) return
     mouseRef.current.hover = false
   }
 
@@ -335,17 +349,23 @@ export default function ParticleText() {
   }
 
   const handleTouchMove = (event: TouchEvent) => {
+    if (isCoarsePointerRef.current) return
     const pos = getTouchPosition(event)
     if (!pos) return
     mouseRef.current = { x: pos.x, y: pos.y, hover: true }
   }
 
   const handleTouchStart = (event: TouchEvent) => {
-    handleTouchMove(event)
+    const pos = getTouchPosition(event)
+    if (!pos) return
+    mouseRef.current = { x: pos.x, y: pos.y, hover: true }
+    clearTouchBurst()
+    // Impulsion brève au tap — pas de maintien au doigt sur mobile.
+    touchBurstTimerRef.current = setTimeout(clearTouchBurst, 220)
   }
 
   const handleTouchEnd = () => {
-    mouseRef.current.hover = false
+    clearTouchBurst()
   }
 
   const handleResize = async () => {
@@ -401,6 +421,9 @@ export default function ParticleText() {
       animationRef.current = requestAnimationFrame(animate)
     }
 
+    isCoarsePointerRef.current =
+      window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+
     initialize()
 
     window.addEventListener("mousemove", handleMouseMove)
@@ -413,6 +436,7 @@ export default function ParticleText() {
 
     return () => {
       cancelled = true
+      clearTouchBurst()
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseleave", handleMouseLeave)
       window.removeEventListener("resize", handleResize)
