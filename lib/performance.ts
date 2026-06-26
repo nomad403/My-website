@@ -63,7 +63,7 @@ const LOW_PROFILE: PerformanceProfile = {
   ascii: {
     fps: 24,
     fontPxOverride: 10,
-    forceMode: "plain",
+    forceMode: null,
     domUpdateEvery: 3,
   },
   particles: {
