@@ -24,10 +24,11 @@ export default function AsciiOverlay({
   visible = true,
   color = "#0ff",
   opacity = 0.35,
-  fontPx = 7,           
-  cover = true,         
+  fontPx = 7,
+  cover = true,
   cols: fixedCols,
   domUpdateEvery = 2,
+  pageKey = "home",
 }: {
   source: HTMLCanvasElement | null;
   fps?: number;
@@ -40,6 +41,7 @@ export default function AsciiOverlay({
   cover?: boolean;
   cols?: number;
   domUpdateEvery?: number;
+  pageKey?: string;
 }) {
   const preRef = useRef<HTMLPreElement | null>(null);
   const runningRef = useRef(false);
@@ -90,11 +92,17 @@ export default function AsciiOverlay({
   }, [cover, fontPx, fixedCols]);
 
   useEffect(() => {
-    if (!source || !preRef.current || !visible || grid.cols <= 0 || grid.rows <= 0) {
+    if (!visible || grid.cols <= 0 || grid.rows <= 0) {
       runningRef.current = false;
       if (preRef.current) preRef.current.textContent = "";
       return;
     }
+
+    if (!source || !preRef.current) {
+      runningRef.current = false;
+      return;
+    }
+
     runningRef.current = true;
 
     const w = grid.cols;
@@ -206,7 +214,7 @@ export default function AsciiOverlay({
       runningRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery]);
+  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, pageKey, color, opacity]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;

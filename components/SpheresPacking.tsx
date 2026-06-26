@@ -214,6 +214,15 @@ export default function SpheresPacking({
     fadeColors();
   }, [currentPage]);
 
+  // Réveille le rendu WebGL après navigation (Safari mobile peut le suspendre)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === "undefined") return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }, [currentPage]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const canvas = canvasRef.current;

@@ -491,14 +491,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
                                                        case "contact":
            return (
-             <div className="relative w-full h-full flex items-center justify-center">
+             <div className="relative w-full h-full flex items-center justify-center px-4 pt-16 pb-28 md:px-8 md:pt-24 md:pb-32 box-border">
                {/* H1 pour le SEO - invisible mais accessible */}
                <h1 className="sr-only">Contact — Nomad403 (Nomad 403)</h1>
                
                {/* Formulaire progressif centré */}
-               <div className="w-full max-w-3xl mx-auto px-4 md:px-8">
+               <div className="w-full max-w-3xl mx-auto">
                  {/* Main title */}
-                 <div className="text-center mb-8 md:mb-12 px-4">
+                 <div className="text-center mb-6 md:mb-12 px-4">
                      <div className="flex justify-center items-center">
                        <h1 className="font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider text-center max-w-full">
                          <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack} enableHover={false}>
@@ -637,7 +637,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                    
                  {/* Completed steps (responsive layout) */}
                  <div className="mt-6 md:mt-8 flex justify-center">
-                    <div className="flex flex-col gap-4 w-full max-w-md md:max-w-none md:flex-row md:flex-wrap md:justify-center md:gap-6 lg:gap-12 min-h-[80px] md:min-h-[100px]">
+                    <div className={`flex flex-col gap-4 w-full max-w-md md:max-w-none md:flex-row md:flex-wrap md:justify-center md:gap-6 lg:gap-12${contactSteps.some((step) => contactData[step.field]?.trim()) ? " min-h-[80px] md:min-h-[100px]" : ""}`}>
                        {contactSteps.map((step, index) => {
                          const hasValue = contactData[step.field]?.trim();
                          const isCurrentStep = index === currentContactStep;

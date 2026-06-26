@@ -12,7 +12,14 @@ export function useProgressiveLoad(
   options?: { skipParticles?: boolean }
 ) {
   const [stage, setStage] = useState<LoadStage>("shell")
+  const [asciiReady, setAsciiReady] = useState(false)
   const skipParticles = options?.skipParticles ?? false
+
+  useEffect(() => {
+    if (stage === "ascii" || stage === "particles") {
+      setAsciiReady(true)
+    }
+  }, [stage])
 
   useEffect(() => {
     if (!profile) return
@@ -44,5 +51,11 @@ export function useProgressiveLoad(
     return () => timers.forEach(clearTimeout)
   }, [profile, skipParticles])
 
-  return { stage, ...getLoadStageFlags(stage) }
+  const flags = getLoadStageFlags(stage)
+
+  return {
+    stage,
+    ...flags,
+    showAscii: asciiReady || flags.showAscii,
+  }
 }

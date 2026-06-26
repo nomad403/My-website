@@ -299,6 +299,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       {showAscii && asciiSettings && (
         <AsciiOverlay
           source={bgCanvas}
+          pageKey={currentPage}
           visible={currentConfig.ascii.visible}
           mode={asciiSettings.mode}
           invert={currentConfig.ascii.invert}
