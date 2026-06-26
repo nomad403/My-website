@@ -19,6 +19,7 @@ import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useSmartPreload } from "@/hooks/useSmartPreload"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
+import { useGyroscopeAccessible } from "@/hooks/useGyroscopeAccessible"
 import { resolveAsciiSettings } from "@/lib/performance"
 
 const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), { ssr: false })
@@ -103,6 +104,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
+  const gyroAccessible = useGyroscopeAccessible(isMobileViewport)
   const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile, {
     skipParticles: isMobileViewport,
   })
@@ -582,8 +584,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           {homeVisible && isMobileViewport && isLanguageReady && (
             <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28">
               <MobileHomeSubtitle
-                text={t("home.subtitle")}
+                subtitle={t("home.subtitle")}
+                rotateHint={t("home.rotateHint")}
                 triggerShuffle={isPreloaded && showAscii}
+                gyroAccessible={gyroAccessible}
                 mode={mode}
               />
             </div>

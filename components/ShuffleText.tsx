@@ -11,6 +11,7 @@ interface ShuffleTextProps {
   triggerShuffle?: boolean // Nouvelle prop pour déclencher l'effet programmatiquement
   enableHover?: boolean
   totalDuration?: number       // NEW: durée fixe globale
+  shuffleKey?: number
 }
 
 export default function ShuffleText({ 
@@ -22,6 +23,7 @@ export default function ShuffleText({
   triggerShuffle,
   enableHover = true,
   totalDuration = 900,         // NEW
+  shuffleKey = 0,
 }: ShuffleTextProps) {
   const [isShuffling, setIsShuffling] = useState(false)
   const [displayText, setDisplayText] = useState(children)
@@ -32,6 +34,12 @@ export default function ShuffleText({
       startShuffleAnimation()
     }
   }, [triggerShuffle])
+
+  useEffect(() => {
+    if (shuffleKey > 0 && !isShuffling) {
+      startShuffleAnimation()
+    }
+  }, [shuffleKey, children])
 
   useEffect(() => {
     if (!isShuffling) setDisplayText(children)

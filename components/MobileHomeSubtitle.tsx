@@ -2,16 +2,27 @@
 
 import { useEffect, useRef, useState } from "react"
 import ShuffleText from "@/components/ShuffleText"
+import {
+  markGyroHintShown,
+  wasGyroHintShown,
+} from "@/hooks/useGyroscopeAccessible"
 
 interface MobileHomeSubtitleProps {
-  text: string
+  subtitle: string
+  rotateHint: string
   triggerShuffle: boolean
+  gyroAccessible: boolean
   mode: "day" | "night"
 }
 
 const MIN_FONT_PX = 9
 const MAX_FONT_PX = 24
 const LETTER_SPACING_EM = 0.08
+const SHUFFLE_MS = 1200
+const SUBTITLE_HOLD_MS = 2200
+const ROTATE_HOLD_MS = 2600
+
+type DisplayPhase = "subtitle" | "rotate"
 
 function measureTextWidth(text: string, fontSize: number) {
   const probe = document.createElement("span")
@@ -32,8 +43,8 @@ function measureTextWidth(text: string, fontSize: number) {
   return width
 }
 
-function fitFontSize(text: string, availableWidth: number) {
-  if (availableWidth <= 0 || !text) return MIN_FONT_PX
+function fitFontSize(texts: string[], availableWidth: number) {
+  if (availableWidth <= 0 || texts.length === 0) return MIN_FONT_PX
 
   let min = MIN_FONT_PX
   let max = MAX_FONT_PX
@@ -41,7 +52,8 @@ function fitFontSize(text: string, availableWidth: number) {
 
   while (min <= max) {
     const mid = Math.floor((min + max) / 2)
-    if (measureTextWidth(text, mid) <= availableWidth) {
+    const fitsAll = texts.every((text) => measureTextWidth(text, mid) <= availableWidth)
+    if (fitsAll) {
       best = mid
       min = mid + 1
     } else {
@@ -53,26 +65,64 @@ function fitFontSize(text: string, availableWidth: number) {
 }
 
 export default function MobileHomeSubtitle({
-  text,
+  subtitle,
+  rotateHint,
   triggerShuffle,
+  gyroAccessible,
   mode,
 }: MobileHomeSubtitleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const sequenceStartedRef = useRef(false)
   const [fontSize, setFontSize] = useState(16)
+  const [phase, setPhase] = useState<DisplayPhase>("subtitle")
+  const [shuffleKey, setShuffleKey] = useState(0)
+
+  const displayedText = phase === "rotate" ? rotateHint : subtitle
+  const fitTexts = [subtitle, rotateHint]
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     const update = () => {
-      setFontSize(fitFontSize(text, container.clientWidth))
+      setFontSize(fitFontSize(fitTexts, container.clientWidth))
     }
 
     update()
     const ro = new ResizeObserver(update)
     ro.observe(container)
     return () => ro.disconnect()
-  }, [text])
+  }, [subtitle, rotateHint])
+
+  useEffect(() => {
+    if (!triggerShuffle || !gyroAccessible || sequenceStartedRef.current || wasGyroHintShown()) {
+      return
+    }
+
+    sequenceStartedRef.current = true
+
+    const toRotate = window.setTimeout(() => {
+      setPhase("rotate")
+      setShuffleKey((key) => key + 1)
+    }, SUBTITLE_HOLD_MS + SHUFFLE_MS)
+
+    const toSubtitle = window.setTimeout(() => {
+      setPhase("subtitle")
+      setShuffleKey((key) => key + 1)
+      markGyroHintShown()
+    }, SUBTITLE_HOLD_MS + SHUFFLE_MS + ROTATE_HOLD_MS + SHUFFLE_MS)
+
+    return () => {
+      window.clearTimeout(toRotate)
+      window.clearTimeout(toSubtitle)
+    }
+  }, [triggerShuffle, gyroAccessible])
+
+  useEffect(() => {
+    if (!gyroAccessible) {
+      setPhase("subtitle")
+    }
+  }, [subtitle, rotateHint])
 
   return (
     <div ref={containerRef} className="w-full min-w-0">
@@ -87,13 +137,14 @@ export default function MobileHomeSubtitle({
         }}
       >
         <ShuffleText
-          triggerShuffle={triggerShuffle}
+          triggerShuffle={triggerShuffle && shuffleKey === 0}
+          shuffleKey={shuffleKey}
           enableHover={false}
-          totalDuration={1200}
+          totalDuration={SHUFFLE_MS}
           shuffleDuration={150}
           letterDelay={12}
         >
-          {text}
+          {displayedText}
         </ShuffleText>
       </p>
     </div>
