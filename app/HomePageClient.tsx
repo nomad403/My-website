@@ -8,6 +8,7 @@ import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
+import MobileHomeSubtitle from "@/components/MobileHomeSubtitle"
 import DynamicHead from "@/components/DynamicHead"
 import DynamicFavicon from "@/components/DynamicFavicon"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
@@ -564,22 +565,12 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
         >
           {showParticles && homeVisible && !isMobileViewport && <ParticleText />}
           {homeVisible && isMobileViewport && isLanguageReady && (
-            <div className="absolute inset-0 flex items-center justify-center px-6 pt-16 pb-28">
-              <p
-                className={`font-kode text-center text-base uppercase tracking-[0.2em] leading-relaxed max-w-xs ${
-                  mode === "night" ? "text-white" : "text-black"
-                }`}
-              >
-                <ShuffleText
-                  triggerShuffle={isPreloaded && showAscii}
-                  enableHover={false}
-                  totalDuration={1200}
-                  shuffleDuration={150}
-                  letterDelay={12}
-                >
-                  {t("home.subtitle")}
-                </ShuffleText>
-              </p>
+            <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28">
+              <MobileHomeSubtitle
+                text={t("home.subtitle")}
+                triggerShuffle={isPreloaded && showAscii}
+                mode={mode}
+              />
             </div>
           )}
         </motion.div>
