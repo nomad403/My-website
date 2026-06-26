@@ -1,13 +1,11 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
-import ParticleText from "@/components/particle-text"
-import SpheresPacking from "@/components/SpheresPacking"
-import AsciiOverlay from "@/components/AsciiOverlay"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
 import DynamicHead from "@/components/DynamicHead"
@@ -16,6 +14,14 @@ import LanguageSwitcher from "@/components/LanguageSwitcher"
 import JsonLdPerson from "@/components/JsonLdPerson"
 import { getPageMetadata } from "@/config/metadata"
 import { useLanguage } from "./contexts/LanguageContext"
+import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
+import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
+import { useSmartPreload } from "@/hooks/useSmartPreload"
+import { resolveAsciiSettings } from "@/lib/performance"
+
+const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), { ssr: false })
+const AsciiOverlay = dynamic(() => import("@/components/AsciiOverlay"), { ssr: false })
+const ParticleText = dynamic(() => import("@/components/particle-text"), { ssr: false })
 
 const pageConfig = {
   home: {
@@ -91,8 +97,10 @@ interface HomePageClientProps {
 
 export default function HomePageClient({ initialPage = "home" }: HomePageClientProps) {
   const [currentPage, setCurrentPage] = useState(initialPage)
-  const [isPreloaded, setIsPreloaded] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const { profile } = usePerformanceProfile()
+  const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile)
   
   // Language context
   const { t, language } = useLanguage()
@@ -109,12 +117,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   // Background canvas reference (spheres packing)
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
-
-  // Simple preloading
-  useEffect(() => {
-    const timer = setTimeout(() => setIsPreloaded(true), 1000)
-    return () => clearTimeout(timer)
-  }, [])
+  const isPreloaded = useSmartPreload(profile, stage, bgCanvas)
 
   // Sync local page with global router
   useEffect(() => {
@@ -207,6 +210,11 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
     return pageConfig[currentPage as keyof typeof pageConfig] || pageConfig.home
   }, [currentPage])
 
+  const asciiSettings = useMemo(() => {
+    if (!profile) return null
+    return resolveAsciiSettings(currentConfig.ascii, profile)
+  }, [currentConfig, profile])
+
   // Gérer le scroll du body selon la page
   useEffect(() => {
     if (currentPage === "specialist" || currentPage === "decision") {
@@ -267,28 +275,32 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       />
       <JsonLdPerson />
       
-      {/* Background: Sphere packing outside R3F */}
-      {/* Toujours actif pour alimenter le canvas, même si visuellement caché pour l'ASCII */}
-      <SpheresPacking
-        count={200}
-        minSize={0.5}
-        maxSize={1.0}
-        currentPage={currentPage}
-        onCanvasReady={setBgCanvas}
-        visible={true} // Toujours actif pour que le canvas soit rendu
-      />
+      {/* Background: chargement progressif selon le profil performance */}
+      {showSpheres && profile && (
+        <SpheresPacking
+          count={profile.spheres.count}
+          minSize={0.5}
+          maxSize={1.0}
+          currentPage={currentPage}
+          onCanvasReady={setBgCanvas}
+          visible={true}
+        />
+      )}
 
-      {/* Real-time ASCII overlay - Configuration centralisée */}
-      <AsciiOverlay
-        source={bgCanvas}
-        visible={currentConfig.ascii.visible}
-        mode={currentConfig.ascii.mode}
-        invert={currentConfig.ascii.invert}
-        opacity={currentConfig.ascii.opacity}
-        color={currentConfig.ascii.color}
-        fontPx={currentConfig.ascii.fontPx}
-        cover={true}
-      />
+      {showAscii && asciiSettings && (
+        <AsciiOverlay
+          source={bgCanvas}
+          visible={currentConfig.ascii.visible}
+          mode={asciiSettings.mode}
+          invert={currentConfig.ascii.invert}
+          opacity={currentConfig.ascii.opacity}
+          color={currentConfig.ascii.color}
+          fontPx={asciiSettings.fontPx}
+          fps={asciiSettings.fps}
+          domUpdateEvery={asciiSettings.domUpdateEvery}
+          cover={true}
+        />
+      )}
       
       <div className="relative w-full h-screen overflow-hidden">
         {/* Loading screen */}
@@ -534,15 +546,15 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       {/* Main content - Elements with declarative transitions */}
       <div className="relative w-full h-screen z-20">
         
-        {/* Particle Text - visible only on home */}
+        {/* Particle Text - visible only on home, chargé en dernier */}
         <motion.div 
           className="absolute inset-0 z-10"
           initial={{ opacity: 0 }}
-          animate={{ opacity: isPreloaded && homeVisible ? 1 : 0 }}
+          animate={{ opacity: isPreloaded && homeVisible && showParticles ? 1 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{ pointerEvents: homeVisible ? "auto" : "none" }}
+          style={{ pointerEvents: homeVisible && showParticles ? "auto" : "none" }}
         >
-          <ParticleText />
+          {showParticles && homeVisible && <ParticleText />}
         </motion.div>
 
         {/* Content Pages - visible on projects, specialist, contact */}

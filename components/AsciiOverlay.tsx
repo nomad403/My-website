@@ -27,6 +27,7 @@ export default function AsciiOverlay({
   fontPx = 7,           
   cover = true,         
   cols: fixedCols,
+  domUpdateEvery = 2,
 }: {
   source: HTMLCanvasElement | null;
   fps?: number;
@@ -38,6 +39,7 @@ export default function AsciiOverlay({
   fontPx?: number;
   cover?: boolean;
   cols?: number;
+  domUpdateEvery?: number;
 }) {
   const preRef = useRef<HTMLPreElement | null>(null);
   const [running, setRunning] = useState(false);
@@ -192,8 +194,7 @@ export default function AsciiOverlay({
       // Update du DOM une frame sur deux pour réduire les reflows
       // Utiliser innerHTML peut être plus rapide que textContent pour de gros contenus
       frameCount++;
-      if (frameCount % 2 === 0 && preRef.current) {
-        // Utiliser une seule opération de join au lieu de multiples
+      if (frameCount % domUpdateEvery === 0 && preRef.current) {
         preRef.current.textContent = lines.join("\n");
       }
 
@@ -205,7 +206,7 @@ export default function AsciiOverlay({
       setRunning(false);
       cancelAnimationFrame(raf);
     };
-  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, running]);
+  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, running, domUpdateEvery]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;

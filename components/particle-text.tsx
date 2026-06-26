@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useMemo } from "react"
 import { useLanguage } from "@/app/contexts/LanguageContext"
+import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
+import { getParticleLayout } from "@/lib/performance"
 
 interface ParticleOptions {
   mouse: {
@@ -30,47 +32,50 @@ interface Particle {
   by: number
 }
 
+interface MapRegion {
+  width: number
+  height: number
+  offsetX: number
+  offsetY: number
+  centerX: number
+  centerY: number
+}
+
 export default function ParticleText() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bufferCanvasRef = useRef<HTMLCanvasElement>(null)
+  const mapCanvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(null)
   const particlesRef = useRef<Particle[]>([])
   const mouseRef = useRef({ x: 0, y: 0, hover: false })
   const repelRef = useRef({ x: 0, y: 0 })
   const dimensionsRef = useRef({ width: 0, height: 0, centerX: 0, centerY: 0 })
+  const mapRegionRef = useRef<MapRegion>({ width: 0, height: 0, offsetX: 0, offsetY: 0, centerX: 0, centerY: 0 })
   const isInitializedRef = useRef(false)
-  
-  // Language context
-  const { t, isLanguageReady } = useLanguage()
+  const lastFrameRef = useRef(0)
+  const profileRef = useRef<ReturnType<typeof usePerformanceProfile>["profile"]>(null)
 
-  // État pour les valeurs dynamiques
-  const [fontSize, setFontSize] = useState(90) // Valeur par défaut plus grande
+  const { t, isLanguageReady } = useLanguage()
+  const { profile } = usePerformanceProfile()
+
+  profileRef.current = profile
+
+  const [fontSize, setFontSize] = useState(90)
   const [pixelDensity, setPixelDensity] = useState(4)
   const [particleDensity, setParticleDensity] = useState(2)
 
-  // Calculer les valeurs de manière sécurisée
+  const applyLayout = (width: number) => {
+    if (!profile) return
+    const layout = getParticleLayout(width, profile)
+    setFontSize(layout.fontSize)
+    setPixelDensity(layout.pixelDensity)
+    setParticleDensity(layout.particleDensity)
+  }
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const width = window.innerWidth
-      if (width < 480) {
-        setFontSize(24)
-        setParticleDensity(5) // Plus de densité sur mobile
-      } else if (width < 768) {
-        setFontSize(32)
-        setParticleDensity(3) // Densité moyenne sur tablette
-      } else if (width < 1024) {
-        setFontSize(50)
-        setParticleDensity(2) // Densité normale sur desktop
-      } else if (width < 1440) {
-        setFontSize(90)
-        setParticleDensity(2)
-      } else {
-        setFontSize(100)
-        setParticleDensity(1)
-      }
-    }
-    setPixelDensity(4) // Valeur fixe pour éviter les getters
-  }, [])
+    if (!profile || typeof window === "undefined") return
+    applyLayout(window.innerWidth)
+  }, [profile])
 
   const options: ParticleOptions = useMemo(() => ({
     mouse: {
@@ -86,7 +91,7 @@ export default function ParticleText() {
     text: {
       fontColor: [0, 0, 0, 255],
       fontSize: fontSize,
-      message: isLanguageReady ? t('home.subtitle') : '',
+      message: isLanguageReady ? t("home.subtitle") : "",
     },
   }), [fontSize, pixelDensity, particleDensity, t, isLanguageReady])
 
@@ -98,9 +103,11 @@ export default function ParticleText() {
   const setupCanvas = () => {
     const canvas = canvasRef.current
     const bufferCanvas = bufferCanvasRef.current
-    if (!canvas || !bufferCanvas) return false
+    const mapCanvas = mapCanvasRef.current
+    const currentProfile = profileRef.current
+    if (!canvas || !bufferCanvas || !mapCanvas || !currentProfile) return false
 
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false
     const width = window.innerWidth
     const height = window.innerHeight
     if (width <= 0 || height <= 0) return false
@@ -112,6 +119,23 @@ export default function ParticleText() {
 
     bufferCanvas.width = width
     bufferCanvas.height = height
+
+    const mapWidth = Math.floor(width * currentProfile.particles.mapRegionWidthRatio)
+    const mapHeight = Math.floor(height * currentProfile.particles.mapRegionHeightRatio)
+    const offsetX = Math.floor((width - mapWidth) / 2)
+    const offsetY = Math.floor((height - mapHeight) / 2)
+
+    mapCanvas.width = mapWidth
+    mapCanvas.height = mapHeight
+
+    mapRegionRef.current = {
+      width: mapWidth,
+      height: mapHeight,
+      offsetX,
+      offsetY,
+      centerX: mapWidth * 0.5,
+      centerY: mapHeight * 0.5,
+    }
 
     dimensionsRef.current = {
       width,
@@ -128,59 +152,47 @@ export default function ParticleText() {
     return true
   }
 
-  const getEnigmaFamily = () => {
-    try {
-      if (typeof window === "undefined" || !document.documentElement) {
-        return "enigma"
-      }
-      return "enigma"
-    } catch (error) {
-      console.warn("Error getting font family:", error)
-      return "enigma"
-    }
-  }
+  const getEnigmaFamily = () => "enigma"
 
   const mapParticles = () => {
-    const bufferCanvas = bufferCanvasRef.current
-    if (!bufferCanvas) return
+    const mapCanvas = mapCanvasRef.current
+    if (!mapCanvas) return
 
-    const ctx = bufferCanvas.getContext("2d", { willReadFrequently: true })
+    const ctx = mapCanvas.getContext("2d", { willReadFrequently: true })
     if (!ctx) return
 
-    const { width, height, centerX, centerY } = dimensionsRef.current
+    const { width, height, centerX, centerY } = mapRegionRef.current
+    const { width: screenW, height: screenH } = dimensionsRef.current
     if (width <= 0 || height <= 0) return
+
+    const { offsetX, offsetY } = mapRegionRef.current
 
     try {
       ctx.clearRect(0, 0, width, height)
-      
+
       const fontFamily = getEnigmaFamily()
-      let fontSize = options.text.fontSize
-      
-      ctx.font = `${fontSize}px "${fontFamily}", monospace`
+      let textFontSize = options.text.fontSize
+
+      ctx.font = `${textFontSize}px "${fontFamily}", monospace`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillStyle = "white"
-      
-      const testText = "A"
-      let metrics = ctx.measureText(testText)
-      
-      if (metrics.width < 5) {
-        console.warn("Font not loaded, using fallback")
-        ctx.font = `${fontSize}px monospace`
+
+      if (ctx.measureText("A").width < 5) {
+        ctx.font = `${textFontSize}px monospace`
       }
-      
-      const textMetrics = ctx.measureText(options.text.message)
-      const maxWidth = width * 0.9
-      
+
+      const maxWidth = width * 0.95
+      let textMetrics = ctx.measureText(options.text.message)
+
       if (textMetrics.width > maxWidth) {
-        while (textMetrics.width > maxWidth && fontSize > 12) {
-          fontSize -= 2
-          ctx.font = `${fontSize}px "${fontFamily}", monospace`
-          const newMetrics = ctx.measureText(options.text.message)
-          if (newMetrics.width <= maxWidth) break
+        while (textMetrics.width > maxWidth && textFontSize > 12) {
+          textFontSize -= 2
+          ctx.font = `${textFontSize}px "${fontFamily}", monospace`
+          textMetrics = ctx.measureText(options.text.message)
         }
       }
-      
+
       ctx.fillText(options.text.message, centerX, centerY)
 
       const imageData = ctx.getImageData(0, 0, width, height)
@@ -189,14 +201,14 @@ export default function ParticleText() {
 
       for (let i = 0; i < pixelData.length; i += 4) {
         if (pixelData[i + 3] > 0 && i % (options.particles.pixelDensity * 2) === 0) {
-          const x = rand(width)
-          const y = rand(height)
-          const bx = (i / 4) % width
-          const by = Math.floor(i / 4 / width)
+          const localX = (i / 4) % width
+          const localY = Math.floor(i / 4 / width)
+          const bx = localX + offsetX
+          const by = localY + offsetY
 
           particles.push({
-            x,
-            y,
+            x: rand(screenW),
+            y: rand(screenH),
             vx: 0,
             vy: 0,
             bx,
@@ -237,7 +249,8 @@ export default function ParticleText() {
   const renderParticles = () => {
     const canvas = canvasRef.current
     const bufferCanvas = bufferCanvasRef.current
-    if (!canvas || !bufferCanvas) return
+    const currentProfile = profileRef.current
+    if (!canvas || !bufferCanvas || !currentProfile) return
 
     const ctx = canvas.getContext("2d")
     const bufferCtx = bufferCanvas.getContext("2d", { willReadFrequently: true })
@@ -277,10 +290,12 @@ export default function ParticleText() {
       bufferCtx.putImageData(imageData, 0, 0)
 
       ctx.save()
-      ctx.filter = "blur(10px) brightness(220%)"
-      ctx.drawImage(bufferCanvas, 0, 0)
-      ctx.filter = "blur(0px)"
-      ctx.globalCompositeOperation = "lighter"
+      if (currentProfile.particles.enableBlur) {
+        ctx.filter = "blur(10px) brightness(220%)"
+        ctx.drawImage(bufferCanvas, 0, 0)
+        ctx.filter = "blur(0px)"
+        ctx.globalCompositeOperation = "lighter"
+      }
       ctx.drawImage(bufferCanvas, 0, 0)
       ctx.restore()
     } catch (error) {
@@ -288,8 +303,18 @@ export default function ParticleText() {
     }
   }
 
-  const animate = () => {
+  const animate = (timestamp: number) => {
     if (!isInitializedRef.current) return
+
+    const currentProfile = profileRef.current
+    const targetFps = currentProfile?.particles.targetFps ?? 60
+    const frameInterval = targetFps < 60 ? 1000 / targetFps : 0
+
+    if (frameInterval > 0 && timestamp - lastFrameRef.current < frameInterval) {
+      animationRef.current = requestAnimationFrame(animate)
+      return
+    }
+    lastFrameRef.current = timestamp
 
     updateParticles()
     renderParticles()
@@ -297,11 +322,7 @@ export default function ParticleText() {
   }
 
   const handleMouseMove = (event: MouseEvent) => {
-    mouseRef.current = {
-      x: event.clientX,
-      y: event.clientY,
-      hover: true,
-    }
+    mouseRef.current = { x: event.clientX, y: event.clientY, hover: true }
   }
 
   const handleMouseLeave = () => {
@@ -316,11 +337,7 @@ export default function ParticleText() {
   const handleTouchMove = (event: TouchEvent) => {
     const pos = getTouchPosition(event)
     if (!pos) return
-    mouseRef.current = {
-      x: pos.x,
-      y: pos.y,
-      hover: true,
-    }
+    mouseRef.current = { x: pos.x, y: pos.y, hover: true }
   }
 
   const handleTouchStart = (event: TouchEvent) => {
@@ -332,26 +349,8 @@ export default function ParticleText() {
   }
 
   const handleResize = async () => {
-    if (typeof window === 'undefined') return
-    
-    const width = window.innerWidth
-    if (width < 480) {
-      setFontSize(24)
-      setParticleDensity(4)
-    } else if (width < 768) {
-      setFontSize(32)
-      setParticleDensity(3)
-    } else if (width < 1024) {
-      setFontSize(50)
-      setParticleDensity(2)
-    } else if (width < 1440) {
-      setFontSize(90)
-      setParticleDensity(2)
-    } else {
-      setFontSize(100)
-      setParticleDensity(2)
-    }
-    
+    if (typeof window === "undefined" || !profile) return
+    applyLayout(window.innerWidth)
     if (!setupCanvas()) return
     await waitForFont()
     mapParticles()
@@ -361,19 +360,19 @@ export default function ParticleText() {
     try {
       const fontFamily = getEnigmaFamily()
       const fontStr = `${options.text.fontSize}px "${fontFamily}", monospace`
-      
+
       await document.fonts.load(fontStr, options.text.message)
-      
+
       await Promise.race([
-        (document as any).fonts?.load(fontStr, options.text.message),
+        (document as Document & { fonts?: FontFaceSet }).fonts?.load(fontStr, options.text.message),
         new Promise((r) => setTimeout(r, 1200)),
       ])
-      
+
       await Promise.race([
-        (document as any).fonts?.ready ?? Promise.resolve(),
+        (document as Document & { fonts?: FontFaceSet }).fonts?.ready ?? Promise.resolve(),
         new Promise((r) => setTimeout(r, 500)),
       ])
-      
+
       return true
     } catch (error) {
       console.warn("Font loading failed, using fallback:", error)
@@ -382,85 +381,65 @@ export default function ParticleText() {
   }
 
   useEffect(() => {
+    if (!profile) return
+
     let cancelled = false
 
     const initialize = async () => {
-      // Attendre que la langue soit prête
       if (!isLanguageReady) return
-      
       if (!setupCanvas()) return
-      
+
       const fontLoaded = await waitForFont()
-      
       if (cancelled) return
-      
+
       if (!fontLoaded) {
         console.warn("Using fallback font for particle text")
       }
-      
+
       mapParticles()
       isInitializedRef.current = true
-      animate()
+      animationRef.current = requestAnimationFrame(animate)
     }
 
     initialize()
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener("mousemove", handleMouseMove)
-      window.addEventListener("mouseleave", handleMouseLeave)
-      window.addEventListener("resize", handleResize)
-      window.addEventListener("touchstart", handleTouchStart, { passive: true })
-      window.addEventListener("touchmove", handleTouchMove, { passive: true })
-      window.addEventListener("touchend", handleTouchEnd)
-      window.addEventListener("touchcancel", handleTouchEnd)
-    }
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseleave", handleMouseLeave)
+    window.addEventListener("resize", handleResize)
+    window.addEventListener("touchstart", handleTouchStart, { passive: true })
+    window.addEventListener("touchmove", handleTouchMove, { passive: true })
+    window.addEventListener("touchend", handleTouchEnd)
+    window.addEventListener("touchcancel", handleTouchEnd)
 
     return () => {
       cancelled = true
-      if (typeof window !== 'undefined') {
-        window.removeEventListener("mousemove", handleMouseMove)
-        window.removeEventListener("mouseleave", handleMouseLeave)
-        window.removeEventListener("resize", handleResize)
-        window.removeEventListener("touchstart", handleTouchStart)
-        window.removeEventListener("touchmove", handleTouchMove)
-        window.removeEventListener("touchend", handleTouchEnd)
-        window.removeEventListener("touchcancel", handleTouchEnd)
-      }
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseleave", handleMouseLeave)
+      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("touchstart", handleTouchStart)
+      window.removeEventListener("touchmove", handleTouchMove)
+      window.removeEventListener("touchend", handleTouchEnd)
+      window.removeEventListener("touchcancel", handleTouchEnd)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
+      isInitializedRef.current = false
     }
-  }, [isLanguageReady])
+  }, [isLanguageReady, profile])
 
-  // Effet pour mettre à jour le texte quand la langue change
   useEffect(() => {
-    if (isInitializedRef.current) {
-      // Recalculer la taille de police lors du changement de langue
-      if (typeof window !== 'undefined') {
-        const width = window.innerWidth
-        if (width < 480) {
-          setFontSize(24)
-          setParticleDensity(5)
-        } else if (width < 768) {
-          setFontSize(32)
-          setParticleDensity(3)
-        } else if (width < 1024) {
-          setFontSize(50)
-          setParticleDensity(2)
-        } else if (width < 1440) {
-          setFontSize(90)
-          setParticleDensity(2)
-        } else {
-          setFontSize(100)
-          setParticleDensity(2)
-        }
-      }
+    if (isInitializedRef.current && profile) {
+      applyLayout(window.innerWidth)
+      setupCanvas()
       mapParticles()
     }
-  }, [options.text.message])
+  }, [options.text.message, profile])
+
+  if (!profile) return null
 
   return (
     <>
       <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none" }} />
       <canvas ref={bufferCanvasRef} style={{ display: "none" }} />
+      <canvas ref={mapCanvasRef} style={{ display: "none" }} />
     </>
   )
 }

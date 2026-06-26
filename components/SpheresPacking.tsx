@@ -131,6 +131,33 @@ export default function SpheresPacking({
     };
   }, [count, minSize, maxSize, onCanvasReady]);
 
+  // Pause la simulation WebGL quand l'onglet est masqué
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    let paused = false;
+
+    const handleVisibility = () => {
+      const inst = instanceRef.current;
+      if (!inst) return;
+
+      if (document.hidden && !paused) {
+        try {
+          inst.togglePause();
+        } catch {}
+        paused = true;
+      } else if (!document.hidden && paused) {
+        try {
+          inst.togglePause();
+        } catch {}
+        paused = false;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   useEffect(() => {
     if (!instanceRef.current) return;
 
