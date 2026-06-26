@@ -62,7 +62,7 @@ const LOW_PROFILE: PerformanceProfile = {
   spheres: { count: 80 },
   ascii: {
     fps: 24,
-    fontPxOverride: 10,
+    fontPxOverride: null,
     forceMode: null,
     domUpdateEvery: 3,
   },

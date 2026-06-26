@@ -6,14 +6,23 @@ type Mode = "plain" | "dither" | "sobel";
 
 // Helper pour mesurer la largeur réelle d'un caractère
 function measureCharWidth(px: number, family = 'Consolas, Monaco, "Liberation Mono", monospace') {
-  if (typeof document === 'undefined') return 8; // Fallback pour SSR
+  if (typeof document === 'undefined') return px * 0.6;
   const c = document.createElement("canvas");
   const ctx = c.getContext("2d")!;
   ctx.font = `${px}px ${family}`;
-  // "M" et "W" sont sûrs en monospace; on peut moyenner
   const w1 = ctx.measureText("M").width;
   const w2 = ctx.measureText("W").width;
-  return (w1 + w2) / 2;
+  const measured = (w1 + w2) / 2;
+  // Marge conservative : évite un débordement si la police n'est pas encore chargée
+  return Math.max(measured, px * 0.6);
+}
+
+function getViewportSize() {
+  if (typeof window === 'undefined') return { width: 0, height: 0 };
+  return {
+    width: window.visualViewport?.width ?? window.innerWidth,
+    height: window.visualViewport?.height ?? window.innerHeight,
+  };
 }
 
 export default function AsciiOverlay({
@@ -70,26 +79,30 @@ export default function AsciiOverlay({
     const family = 'Consolas, Monaco, "Liberation Mono", monospace';
     const calc = () => {
       if (typeof window === 'undefined') return;
-      // largeur réelle d'un caractère pour la police utilisée par le <pre>
-      const charW = measureCharWidth(fontPx, family); 
-      const cols = fixedCols ?? Math.max(1, Math.floor(window.innerWidth / charW));
-      const rows = Math.max(1, Math.floor(window.innerHeight / fontPx));
+      const { width: vw, height: vh } = getViewportSize();
+      if (vw <= 0 || vh <= 0) return;
+      const charW = measureCharWidth(fontPx, family);
+      const cols = fixedCols ?? Math.max(1, Math.floor(vw / charW));
+      const rows = Math.max(1, Math.floor(vh / fontPx));
       setGrid({ cols, rows });
     };
     calc();
     if (typeof window !== 'undefined') {
       window.addEventListener("resize", calc);
+      window.visualViewport?.addEventListener("resize", calc);
 
-      // (optionnel) si les polices web se (re)chargent
-      if ((document as any).fonts?.ready) (document as any).fonts.ready.then(calc);
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(calc);
+      }
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener("resize", calc);
+        window.visualViewport?.removeEventListener("resize", calc);
       }
     };
-  }, [cover, fontPx, fixedCols]);
+  }, [cover, fontPx, fixedCols, pageKey]);
 
   useEffect(() => {
     if (!visible || grid.cols <= 0 || grid.rows <= 0) {
@@ -214,7 +227,7 @@ export default function AsciiOverlay({
       runningRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, pageKey, color, opacity]);
+  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, color, opacity]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;
@@ -227,7 +240,11 @@ export default function AsciiOverlay({
         top: 0, left: 0, right: 0, bottom: 0,
         width: "100vw",
         height: "100vh",
+        maxWidth: "100vw",
+        maxHeight: "100vh",
         margin: 0,
+        overflow: "hidden",
+        boxSizing: "border-box",
         zIndex: 2,
         pointerEvents: "none",
         opacity: visible ? opacity : 0,
