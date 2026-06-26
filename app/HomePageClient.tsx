@@ -17,6 +17,7 @@ import { useLanguage } from "./contexts/LanguageContext"
 import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useSmartPreload } from "@/hooks/useSmartPreload"
+import { useMobileViewport } from "@/hooks/useMobileViewport"
 import { resolveAsciiSettings } from "@/lib/performance"
 
 const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), { ssr: false })
@@ -100,10 +101,13 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { profile } = usePerformanceProfile()
-  const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile)
+  const isMobileViewport = useMobileViewport()
+  const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile, {
+    skipParticles: isMobileViewport,
+  })
   
   // Language context
-  const { t, language } = useLanguage()
+  const { t, language, isLanguageReady } = useLanguage()
   
   // SPA visibility states - initialiser selon la page de départ
   const [homeVisible, setHomeVisible] = useState(initialPage === "home")
@@ -117,7 +121,11 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   // Background canvas reference (spheres packing)
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
-  const isPreloaded = useSmartPreload(profile, stage, bgCanvas)
+  const isPreloaded = useSmartPreload(profile, stage, bgCanvas, {
+    skipParticles: isMobileViewport,
+  })
+
+  const showHomeHero = isMobileViewport ? showAscii : showParticles
 
   // Sync local page with global router
   useEffect(() => {
@@ -546,15 +554,34 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       {/* Main content - Elements with declarative transitions */}
       <div className="relative w-full h-screen z-20">
         
-        {/* Particle Text - visible only on home, chargé en dernier */}
+        {/* Home hero — particules desktop, shuffle mobile */}
         <motion.div 
           className="absolute inset-0 z-10"
           initial={{ opacity: 0 }}
-          animate={{ opacity: isPreloaded && homeVisible && showParticles ? 1 : 0 }}
+          animate={{ opacity: isPreloaded && homeVisible && showHomeHero ? 1 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{ pointerEvents: "none" }}
         >
-          {showParticles && homeVisible && <ParticleText />}
+          {showParticles && homeVisible && !isMobileViewport && <ParticleText />}
+          {homeVisible && isMobileViewport && isLanguageReady && (
+            <div className="absolute inset-0 flex items-center justify-center px-6 pt-16 pb-28">
+              <p
+                className={`font-kode text-center text-base uppercase tracking-[0.2em] leading-relaxed max-w-xs ${
+                  mode === "night" ? "text-white" : "text-black"
+                }`}
+              >
+                <ShuffleText
+                  triggerShuffle={isPreloaded && showAscii}
+                  enableHover={false}
+                  totalDuration={1200}
+                  shuffleDuration={150}
+                  letterDelay={12}
+                >
+                  {t("home.subtitle")}
+                </ShuffleText>
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Content Pages - visible on projects, specialist, contact */}

@@ -6,9 +6,11 @@ import type { LoadStage, PerformanceProfile } from "@/lib/performance"
 export function useSmartPreload(
   profile: PerformanceProfile | null,
   loadStage: LoadStage,
-  bgCanvas: HTMLCanvasElement | null
+  bgCanvas: HTMLCanvasElement | null,
+  options?: { skipParticles?: boolean }
 ) {
   const [isPreloaded, setIsPreloaded] = useState(false)
+  const readyStage: LoadStage = options?.skipParticles ? "ascii" : "particles"
 
   useEffect(() => {
     if (!profile || isPreloaded) return
@@ -23,7 +25,7 @@ export function useSmartPreload(
 
     const maxTimer = setTimeout(finish, profile.loading.maxPreloadMs)
 
-    if (loadStage === "particles" && bgCanvas) {
+    if (loadStage === readyStage && bgCanvas) {
       const earlyTimer = setTimeout(finish, 120)
       return () => {
         clearTimeout(maxTimer)
@@ -32,7 +34,7 @@ export function useSmartPreload(
     }
 
     return () => clearTimeout(maxTimer)
-  }, [profile, loadStage, bgCanvas, isPreloaded])
+  }, [profile, loadStage, bgCanvas, isPreloaded, readyStage])
 
   return isPreloaded
 }

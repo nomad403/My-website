@@ -7,8 +7,12 @@ import {
   type PerformanceProfile,
 } from "@/lib/performance"
 
-export function useProgressiveLoad(profile: PerformanceProfile | null) {
+export function useProgressiveLoad(
+  profile: PerformanceProfile | null,
+  options?: { skipParticles?: boolean }
+) {
   const [stage, setStage] = useState<LoadStage>("shell")
+  const skipParticles = options?.skipParticles ?? false
 
   useEffect(() => {
     if (!profile) return
@@ -20,11 +24,14 @@ export function useProgressiveLoad(profile: PerformanceProfile | null) {
     const timers = [
       setTimeout(() => setStage("spheres"), stageDelays.spheres),
       setTimeout(() => setStage("ascii"), asciiAt),
-      setTimeout(() => setStage("particles"), particlesAt),
     ]
 
+    if (!skipParticles) {
+      timers.push(setTimeout(() => setStage("particles"), particlesAt))
+    }
+
     return () => timers.forEach(clearTimeout)
-  }, [profile])
+  }, [profile, skipParticles])
 
   return { stage, ...getLoadStageFlags(stage) }
 }
