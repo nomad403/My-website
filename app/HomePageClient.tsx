@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
@@ -115,7 +115,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   const [contentVisible, setContentVisible] = useState(initialPage !== "home")
   
   // Global background context
-  const { mode, transitioning, isSphereDescending, setMode, setTransitioning, setIsSphereDescending,
+  const { mode, isSphereDescending, setMode, setTransitioning, setIsSphereDescending,
     setSphereScale } = useBackground()
   // Global internal router (Canvas reads this source of truth)
   const { setCurrentPage: setRoutedPage } = usePage()
@@ -127,6 +127,15 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   })
 
   const showHomeHero = isMobileViewport ? showAscii : showParticles
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current)
+      }
+    }
+  }, [])
 
   // Sync local page with global router
   useEffect(() => {
@@ -141,8 +150,12 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   }, [initialPage, setSphereScale, setMode])
 
   const handlePageChange = (newPage: string) => {
-    if (newPage === currentPage || transitioning) return
+    if (newPage === currentPage) return
     
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current)
+    }
+
     setTransitioning(true)
     setIsMobileMenuOpen(false)
     
@@ -209,9 +222,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
     }
     
     // Finish transition after sphere animations
-    setTimeout(() => {
+    transitionTimerRef.current = setTimeout(() => {
       setTransitioning(false)
-    }, 2500)
+      transitionTimerRef.current = null
+    }, 700)
   }
 
   // Mémoriser la configuration pour éviter les recalculs

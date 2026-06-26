@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { attachOrientationPermissionOnBackgroundGesture } from "@/lib/interaction";
 
 /**
  * Typage minimal du module ESM exposé par le CDN.
@@ -339,13 +340,7 @@ export default function SpheresPacking({
         requestPermission();
       };
 
-      window.addEventListener("touchend", handleFirstGesture, { once: true });
-      window.addEventListener("click", handleFirstGesture, { once: true });
-
-      permissionCleanup = () => {
-        window.removeEventListener("touchend", handleFirstGesture);
-        window.removeEventListener("click", handleFirstGesture);
-      };
+      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(handleFirstGesture);
     } else if (hasDeviceOrientation) {
       attachOrientation();
     }
@@ -486,13 +481,7 @@ export default function SpheresPacking({
         requestPermission();
       };
 
-      window.addEventListener("touchend", handleFirstGesture, { once: true });
-      window.addEventListener("click", handleFirstGesture, { once: true });
-
-      permissionCleanup = () => {
-        window.removeEventListener("touchend", handleFirstGesture);
-        window.removeEventListener("click", handleFirstGesture);
-      };
+      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(handleFirstGesture);
     } else {
       window.addEventListener("deviceorientation", handleOrientation, true);
     }
