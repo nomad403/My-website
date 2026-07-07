@@ -436,6 +436,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                   { id: 4, name: "AutomatIA", image: "/images/seine_saint_denis.webp", description: "Automatisation, IA, Identification de processus, RGPD" },
                   { id: 5, name: "Nomad403", image: "/images/portfolio.webp", description: "Site web intéractif" },
                   { id: 6, name: "Savage Block Party", image: "/images/savage_block_party.webp", url: "https://savage-block-party.glennrichard-dev.workers.dev/", description: "Site web vitrine, E-commerce" },
+                  { id: 7, name: "The Message", image: "/images/the_message.webp", url: "https://wearethemessage.fr", description: "Site web expérience" },
                 ]}
               />
             </div>
@@ -452,6 +453,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  Projets phares : Monday (application mobile de planification adaptative avec IA), 
                  TurnUpSphere (plateforme événementielle géolocalisée), AutomatIA (solution d'automatisation 
                  IA pour le secteur public), Refrig'Air Services (vitrine professionnelle responsive), 
+                 Savage Block Party (site vitrine e-commerce), The Message (wearethemessage.fr), 
                  et ce portfolio génératif interactif. Chaque projet démontre l'expertise technique 
                  et la créativité dans le développement d'expériences utilisateur exceptionnelles.
                </p>
