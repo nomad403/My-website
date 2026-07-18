@@ -1,22 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   detectPerformanceTier,
   getPerformanceProfile,
   type PerformanceProfile,
   type PerformanceTier,
 } from "@/lib/performance"
+import { useAdaptivePerformance } from "@/hooks/useAdaptivePerformance"
 
 export function usePerformanceProfile() {
-  const [profile, setProfile] = useState<PerformanceProfile | null>(null)
-  const [tier, setTier] = useState<PerformanceTier>("high")
+  const [baseTier, setBaseTier] = useState<PerformanceTier | null>(null)
+  const effectiveTier = useAdaptivePerformance(baseTier)
 
   useEffect(() => {
-    const detected = detectPerformanceTier()
-    setTier(detected)
-    setProfile(getPerformanceProfile(detected))
+    setBaseTier(detectPerformanceTier())
   }, [])
 
-  return { profile, tier, isReady: profile !== null }
+  const profile: PerformanceProfile | null = useMemo(() => {
+    if (!effectiveTier) return null
+    return getPerformanceProfile(effectiveTier)
+  }, [effectiveTier])
+
+  return {
+    profile,
+    tier: effectiveTier ?? "high",
+    baseTier: baseTier ?? "high",
+    isReady: profile !== null,
+  }
 }

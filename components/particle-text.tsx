@@ -56,6 +56,7 @@ export default function ParticleText() {
   const profileRef = useRef<ReturnType<typeof usePerformanceProfile>["profile"]>(null)
   const isCoarsePointerRef = useRef(false)
   const touchBurstTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const imageDataRef = useRef<ImageData | null>(null)
 
   const { t, isLanguageReady } = useLanguage()
   const { profile } = usePerformanceProfile()
@@ -121,6 +122,7 @@ export default function ParticleText() {
 
     bufferCanvas.width = width
     bufferCanvas.height = height
+    imageDataRef.current = null
 
     const mapWidth = Math.floor(width * currentProfile.particles.mapRegionWidthRatio)
     const mapHeight = Math.floor(height * currentProfile.particles.mapRegionHeightRatio)
@@ -265,7 +267,13 @@ export default function ParticleText() {
       ctx.clearRect(0, 0, width, height)
       bufferCtx.clearRect(0, 0, width, height)
 
-      const imageData = bufferCtx.createImageData(width, height)
+      let imageData = imageDataRef.current
+      if (!imageData || imageData.width !== width || imageData.height !== height) {
+        imageData = bufferCtx.createImageData(width, height)
+        imageDataRef.current = imageData
+      } else {
+        imageData.data.fill(0)
+      }
       const data = imageData.data
 
       particlesRef.current.forEach((particle) => {

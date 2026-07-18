@@ -27,7 +27,7 @@ function getViewportSize() {
 
 export default function AsciiOverlay({
   source,
-  fps = 50,
+  fps = 60,
   invert = false,
   mode = "plain",
   visible = true,

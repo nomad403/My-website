@@ -1,4 +1,4 @@
-export type PerformanceTier = "high" | "low"
+export type PerformanceTier = "high" | "mid" | "low"
 export type AsciiMode = "plain" | "dither" | "sobel"
 
 export interface PerformanceProfile {
@@ -39,7 +39,7 @@ const HIGH_PROFILE: PerformanceProfile = {
   tier: "high",
   spheres: { count: 200 },
   ascii: {
-    fps: 50,
+    fps: 60,
     fontPxOverride: null,
     forceMode: null,
     domUpdateEvery: 2,
@@ -52,8 +52,30 @@ const HIGH_PROFILE: PerformanceProfile = {
     mapRegionHeightRatio: 0.35,
   },
   loading: {
-    maxPreloadMs: 700,
-    stageDelays: { spheres: 0, ascii: 150, particles: 350 },
+    maxPreloadMs: 900,
+    stageDelays: { spheres: 0, ascii: 200, particles: 700 },
+  },
+}
+
+const MID_PROFILE: PerformanceProfile = {
+  tier: "mid",
+  spheres: { count: 120 },
+  ascii: {
+    fps: 60,
+    fontPxOverride: 9,
+    forceMode: null,
+    domUpdateEvery: 3,
+  },
+  particles: {
+    pixelDensity: 7,
+    enableBlur: false,
+    targetFps: 40,
+    mapRegionWidthRatio: 0.88,
+    mapRegionHeightRatio: 0.3,
+  },
+  loading: {
+    maxPreloadMs: 1400,
+    stageDelays: { spheres: 0, ascii: 400, particles: 1000 },
   },
 }
 
@@ -61,10 +83,10 @@ const LOW_PROFILE: PerformanceProfile = {
   tier: "low",
   spheres: { count: 80 },
   ascii: {
-    fps: 24,
-    fontPxOverride: null,
+    fps: 60,
+    fontPxOverride: 10,
     forceMode: null,
-    domUpdateEvery: 3,
+    domUpdateEvery: 4,
   },
   particles: {
     pixelDensity: 10,
@@ -74,10 +96,18 @@ const LOW_PROFILE: PerformanceProfile = {
     mapRegionHeightRatio: 0.25,
   },
   loading: {
-    maxPreloadMs: 500,
-    stageDelays: { spheres: 0, ascii: 250, particles: 550 },
+    maxPreloadMs: 1200,
+    stageDelays: { spheres: 0, ascii: 350, particles: 900 },
   },
 }
+
+const TIER_RANK: Record<PerformanceTier, number> = {
+  high: 2,
+  mid: 1,
+  low: 0,
+}
+
+const TIER_BY_RANK: PerformanceTier[] = ["low", "mid", "high"]
 
 export function detectPerformanceTier(): PerformanceTier {
   if (typeof window === "undefined") return "high"
@@ -92,26 +122,44 @@ export function detectPerformanceTier(): PerformanceTier {
   if (memory !== undefined && memory <= 4) return "low"
   if (cores !== undefined && cores <= 4) return "low"
 
+  if (memory !== undefined && memory <= 8) return "mid"
+  if (cores !== undefined && cores <= 8) return "mid"
+
   return "high"
 }
 
+export function downgradePerformanceTier(tier: PerformanceTier): PerformanceTier {
+  const next = TIER_RANK[tier] - 1
+  return TIER_BY_RANK[Math.max(0, next)]
+}
+
 export function getPerformanceProfile(tier: PerformanceTier = "high"): PerformanceProfile {
-  return tier === "low" ? LOW_PROFILE : HIGH_PROFILE
+  if (tier === "low") return LOW_PROFILE
+  if (tier === "mid") return MID_PROFILE
+  return HIGH_PROFILE
 }
 
 export function resolveAsciiSettings(
   pageAscii: { mode: AsciiMode; fontPx: number },
-  profile: PerformanceProfile
+  profile: PerformanceProfile,
+  options?: { particlesActiveOnHome?: boolean }
 ) {
+  const particlesActiveOnHome = options?.particlesActiveOnHome ?? false
+  const throttleHome = particlesActiveOnHome && profile.tier !== "high"
+
   return {
     mode: profile.ascii.forceMode ?? pageAscii.mode,
-    fontPx: profile.ascii.fontPxOverride ?? pageAscii.fontPx,
+    fontPx: throttleHome
+      ? Math.max(profile.ascii.fontPxOverride ?? pageAscii.fontPx, 10)
+      : profile.ascii.fontPxOverride ?? pageAscii.fontPx,
     fps: profile.ascii.fps,
-    domUpdateEvery: profile.ascii.domUpdateEvery,
+    domUpdateEvery: throttleHome
+      ? Math.max(profile.ascii.domUpdateEvery, 4)
+      : profile.ascii.domUpdateEvery,
   }
 }
 
-/** Tailles responsive des particules — densité réduite sur petits écrans et profil low. */
+/** Tailles responsive des particules — densité réduite sur petits écrans et profil mid/low. */
 export function getParticleLayout(width: number, profile: PerformanceProfile): ParticleLayout {
   let fontSize: number
   let particleDensity: number
@@ -135,6 +183,8 @@ export function getParticleLayout(width: number, profile: PerformanceProfile): P
 
   if (profile.tier === "low") {
     particleDensity = Math.max(1, particleDensity - 1)
+  } else if (profile.tier === "mid") {
+    particleDensity = Math.max(1, particleDensity)
   }
 
   return {

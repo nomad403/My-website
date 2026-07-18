@@ -61,7 +61,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         
         // Home page
         'home.title': 'NOMAD403',
-        'home.subtitle': 'Créer. Sécuriser. Explorer.',
+        'home.subtitle': "Créateur d'expérience",
         'home.rotateHint': 'Inclinez votre téléphone',
         'home.description': 'Développeur freelance créant des applications web personnalisées, des applications mobiles et des outils alimentés par l\'IA. Explorez mon portfolio 3D interactif.',
         
@@ -109,7 +109,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         
         // Home page
         'home.title': 'NOMAD403',
-        'home.subtitle': 'Create. Secure. Explore.',
+        'home.subtitle': 'Creator of Experiences',
         'home.rotateHint': 'Rotate your phone',
         'home.description': 'Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.',
         

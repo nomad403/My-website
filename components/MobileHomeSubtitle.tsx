@@ -13,10 +13,12 @@ interface MobileHomeSubtitleProps {
   triggerShuffle: boolean
   gyroAccessible: boolean
   mode: "day" | "night"
+  maxFontPx?: number
+  enableHover?: boolean
 }
 
 const MIN_FONT_PX = 9
-const MAX_FONT_PX = 24
+const DEFAULT_MAX_FONT_PX = 24
 const LETTER_SPACING_EM = 0.08
 const SHUFFLE_MS = 1200
 const SUBTITLE_HOLD_MS = 2200
@@ -30,8 +32,8 @@ function measureTextWidth(text: string, fontSize: number) {
     position: absolute;
     visibility: hidden;
     white-space: nowrap;
-    font-family: var(--font-jetbrains), ui-monospace, monospace;
-    font-weight: 700;
+    font-family: var(--font-enigma), ui-monospace, monospace;
+    font-weight: 300;
     text-transform: uppercase;
     letter-spacing: ${LETTER_SPACING_EM}em;
     font-size: ${fontSize}px;
@@ -43,11 +45,11 @@ function measureTextWidth(text: string, fontSize: number) {
   return width
 }
 
-function fitFontSize(texts: string[], availableWidth: number) {
+function fitFontSize(texts: string[], availableWidth: number, maxFontPx: number) {
   if (availableWidth <= 0 || texts.length === 0) return MIN_FONT_PX
 
   let min = MIN_FONT_PX
-  let max = MAX_FONT_PX
+  let max = maxFontPx
   let best = min
 
   while (min <= max) {
@@ -70,9 +72,12 @@ export default function MobileHomeSubtitle({
   triggerShuffle,
   gyroAccessible,
   mode,
+  maxFontPx = DEFAULT_MAX_FONT_PX,
+  enableHover = false,
 }: MobileHomeSubtitleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sequenceStartedRef = useRef(false)
+  const prevSubtitleRef = useRef(subtitle)
   const [fontSize, setFontSize] = useState(16)
   const [phase, setPhase] = useState<DisplayPhase>("subtitle")
   const [shuffleKey, setShuffleKey] = useState(0)
@@ -85,14 +90,14 @@ export default function MobileHomeSubtitle({
     if (!container) return
 
     const update = () => {
-      setFontSize(fitFontSize(fitTexts, container.clientWidth))
+      setFontSize(fitFontSize(fitTexts, container.clientWidth, maxFontPx))
     }
 
     update()
     const ro = new ResizeObserver(update)
     ro.observe(container)
     return () => ro.disconnect()
-  }, [subtitle, rotateHint])
+  }, [subtitle, rotateHint, maxFontPx])
 
   useEffect(() => {
     if (!triggerShuffle || !gyroAccessible || sequenceStartedRef.current || wasGyroHintShown()) {
@@ -118,16 +123,18 @@ export default function MobileHomeSubtitle({
     }
   }, [triggerShuffle, gyroAccessible])
 
+  // Relancer le shuffle à chaque changement de langue
   useEffect(() => {
-    if (!gyroAccessible) {
-      setPhase("subtitle")
-    }
-  }, [subtitle, rotateHint])
+    if (prevSubtitleRef.current === subtitle) return
+    prevSubtitleRef.current = subtitle
+    setPhase("subtitle")
+    setShuffleKey((key) => key + 1)
+  }, [subtitle])
 
   return (
     <div ref={containerRef} className="w-full min-w-0">
       <p
-        className={`font-jetbrains font-bold text-center uppercase whitespace-nowrap ${
+        className={`font-enigma font-light text-center uppercase whitespace-nowrap ${
           mode === "night" ? "text-white" : "text-black"
         }`}
         style={{
@@ -139,7 +146,7 @@ export default function MobileHomeSubtitle({
         <ShuffleText
           triggerShuffle={triggerShuffle && shuffleKey === 0}
           shuffleKey={shuffleKey}
-          enableHover={false}
+          enableHover={enableHover}
           totalDuration={SHUFFLE_MS}
           shuffleDuration={150}
           letterDelay={12}

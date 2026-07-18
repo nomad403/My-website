@@ -104,9 +104,11 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
+  // Particules réservées au tier high confirmé ; mid/low/inconnu → shuffle
+  const useShuffleHero = isMobileViewport || !profile || profile.tier !== "high"
   const gyroAccessible = useGyroscopeAccessible(isMobileViewport)
   const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile, {
-    skipParticles: isMobileViewport,
+    skipParticles: useShuffleHero,
   })
   
   // Language context
@@ -125,10 +127,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   // Background canvas reference (spheres packing)
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
   const isPreloaded = useSmartPreload(profile, stage, bgCanvas, {
-    skipParticles: isMobileViewport,
+    skipParticles: useShuffleHero,
   })
 
-  const showHomeHero = isMobileViewport ? showAscii : showParticles
+  const showHomeHero = useShuffleHero ? showAscii : showParticles
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -237,8 +239,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   const asciiSettings = useMemo(() => {
     if (!profile) return null
-    return resolveAsciiSettings(currentConfig.ascii, profile)
-  }, [currentConfig, profile])
+    const particlesActiveOnHome =
+      showParticles && currentPage === "home" && !isMobileViewport
+    return resolveAsciiSettings(currentConfig.ascii, profile, { particlesActiveOnHome })
+  }, [currentConfig, profile, showParticles, currentPage, isMobileViewport])
 
   // Gérer le scroll du body selon la page
   useEffect(() => {
@@ -572,7 +576,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       {/* Main content - Elements with declarative transitions */}
       <div className="relative w-full h-screen z-20">
         
-        {/* Home hero — particules desktop, shuffle mobile */}
+        {/* Home hero — particules high-end ; shuffle mobile / mid / low */}
         <motion.div 
           className="absolute inset-0 z-10"
           initial={{ opacity: 0 }}
@@ -580,15 +584,17 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{ pointerEvents: "none" }}
         >
-          {showParticles && homeVisible && !isMobileViewport && <ParticleText />}
-          {homeVisible && isMobileViewport && isLanguageReady && (
-            <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28">
+          {showParticles && homeVisible && !useShuffleHero && <ParticleText />}
+          {homeVisible && useShuffleHero && isLanguageReady && (
+            <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28 md:px-8">
               <MobileHomeSubtitle
                 subtitle={t("home.subtitle")}
                 rotateHint={t("home.rotateHint")}
                 triggerShuffle={isPreloaded && showAscii}
                 gyroAccessible={gyroAccessible}
                 mode={mode}
+                maxFontPx={isMobileViewport ? 24 : 56}
+                enableHover={!isMobileViewport}
               />
             </div>
           )}

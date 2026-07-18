@@ -10,7 +10,8 @@ export function useSmartPreload(
   options?: { skipParticles?: boolean }
 ) {
   const [isPreloaded, setIsPreloaded] = useState(false)
-  const readyStage: LoadStage = options?.skipParticles ? "ascii" : "particles"
+  const skipParticles = options?.skipParticles ?? false
+  const readyStage: LoadStage = skipParticles ? "ascii" : "particles"
 
   useEffect(() => {
     if (!profile || isPreloaded) return
@@ -23,10 +24,14 @@ export function useSmartPreload(
       }
     }
 
+    // Mid/low: prefer waiting for the ready stage so the loader
+    // doesn't hide before the heavy particle burst starts.
+    const allowEarlyFinish = profile.tier === "high"
     const maxTimer = setTimeout(finish, profile.loading.maxPreloadMs)
 
     if (loadStage === readyStage && bgCanvas) {
-      const earlyTimer = setTimeout(finish, 120)
+      const earlyDelay = allowEarlyFinish ? 120 : profile.tier === "mid" ? 280 : 200
+      const earlyTimer = setTimeout(finish, earlyDelay)
       return () => {
         clearTimeout(maxTimer)
         clearTimeout(earlyTimer)

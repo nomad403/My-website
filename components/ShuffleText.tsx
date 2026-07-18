@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface ShuffleTextProps {
   children: string
@@ -27,16 +27,76 @@ export default function ShuffleText({
 }: ShuffleTextProps) {
   const [isShuffling, setIsShuffling] = useState(false)
   const [displayText, setDisplayText] = useState(children)
+  const rafRef = useRef(0)
+  const isShufflingRef = useRef(false)
+  const childrenRef = useRef(children)
+  childrenRef.current = children
+
   const shuffleChar = () => shuffleChars[Math.floor(Math.random() * shuffleChars.length)]
 
+  const stopShuffle = () => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
+    }
+    isShufflingRef.current = false
+    setIsShuffling(false)
+  }
+
+  const startShuffleAnimation = () => {
+    stopShuffle()
+    isShufflingRef.current = true
+    setIsShuffling(true)
+
+    const original = childrenRef.current
+    const arr = original.split("")
+    const len = arr.length
+    const start = performance.now()
+
+    // 2 phases sur une durée fixe :
+    // - phase A: 0 → tA : plein shuffle (ex: 40% du temps)
+    // - phase B: tA → 100% : restauration progressive de gauche à droite
+    const ratioA = 0.4 // 40% shuffle, 60% restore
+
+    const tick = (t: number) => {
+      if (!isShufflingRef.current) return
+
+      const elapsed = t - start
+      const p = Math.min(1, elapsed / totalDuration)
+
+      if (p < ratioA) {
+        const out = arr.map((ch) => (ch === " " ? " " : shuffleChar()))
+        setDisplayText(out.join(""))
+      } else {
+        const q = (p - ratioA) / (1 - ratioA)
+        const cutoff = Math.floor(q * len)
+        const out = arr.map((ch, i) => {
+          if (ch === " ") return " "
+          if (i < cutoff) return ch
+          return shuffleChar()
+        })
+        setDisplayText(out.join(""))
+      }
+
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        setDisplayText(original)
+        stopShuffle()
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+  }
+
   useEffect(() => {
-    if (triggerShuffle && !isShuffling) {
+    if (triggerShuffle && !isShufflingRef.current) {
       startShuffleAnimation()
     }
   }, [triggerShuffle])
 
   useEffect(() => {
-    if (shuffleKey > 0 && !isShuffling) {
+    if (shuffleKey > 0) {
       startShuffleAnimation()
     }
   }, [shuffleKey, children])
@@ -45,54 +105,7 @@ export default function ShuffleText({
     if (!isShuffling) setDisplayText(children)
   }, [children, isShuffling])
 
-  const startShuffleAnimation = () => {
-    if (isShuffling) return
-    setIsShuffling(true)
-
-    const original = children
-    const arr = original.split("")
-    const len = arr.length
-    const start = performance.now()
-    let raf = 0
-
-    // 2 phases sur une durée fixe :
-    // - phase A: 0 → tA : plein shuffle (ex: 40% du temps)
-    // - phase B: tA → 100% : restauration progressive de gauche à droite
-    const ratioA = 0.4 // 40% shuffle, 60% restore
-
-    const tick = (t: number) => {
-      const elapsed = t - start
-      const p = Math.min(1, elapsed / totalDuration)
-
-      if (p < ratioA) {
-        // Phase A: toutes les lettres en version aléatoire
-        const out = arr.map((ch) => (ch === " " ? " " : shuffleChar()))
-        setDisplayText(out.join(""))
-      } else {
-        // Phase B: on restaure progressivement en fonction du progrès
-        const q = (p - ratioA) / (1 - ratioA) // 0..1
-        const cutoff = Math.floor(q * len)
-        const out = arr.map((ch, i) => {
-          if (ch === " ") return " "
-          // lettres déjà "restaurées"
-          if (i < cutoff) return ch
-          // lettres pas encore restaurées -> bruit
-          return shuffleChar()
-        })
-        setDisplayText(out.join(""))
-      }
-
-      if (p < 1) {
-        raf = requestAnimationFrame(tick)
-      } else {
-        setDisplayText(original)
-        setIsShuffling(false)
-        cancelAnimationFrame(raf)
-      }
-    }
-
-    raf = requestAnimationFrame(tick)
-  }
+  useEffect(() => () => stopShuffle(), [])
 
   const canHover = enableHover && !isShuffling && !triggerShuffle
   const handleMouseEnter = () => {
