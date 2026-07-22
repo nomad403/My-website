@@ -291,8 +291,10 @@ export default function SpheresPacking({
       state.targetX = state.gyroX + state.pointerX * POINTER_WEIGHT;
       state.targetY = state.gyroY + state.pointerY * POINTER_WEIGHT;
 
-      state.currentX += (state.targetX - state.currentX) * 0.08;
-      state.currentY += (state.targetY - state.currentY) * 0.08;
+      // Suivi plus réactif (surtout quand le thread main est chargé mid/low)
+      const follow = 0.14;
+      state.currentX += (state.targetX - state.currentX) * follow;
+      state.currentY += (state.targetY - state.currentY) * follow;
 
       canvas.style.transform = `translate3d(${state.currentX}px, ${state.currentY}px, 0) scale(1.05)`;
       raf = window.requestAnimationFrame(updateTransform);
@@ -346,15 +348,18 @@ export default function SpheresPacking({
     }
 
     const updatePointerFromEvent = (event: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const xNorm = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const yNorm = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      state.pointerTargetX = xNorm * MAX_OFFSET;
-      state.pointerTargetY = yNorm * MAX_OFFSET;
+      // Viewport fixe — pas getBoundingClientRect du canvas (déjà translate3d),
+      // sinon le suivi dérive et empire quand le framerate chute.
+      const width = window.innerWidth || 1
+      const height = window.innerHeight || 1
+      const xNorm = (event.clientX / width) * 2 - 1
+      const yNorm = (event.clientY / height) * 2 - 1
+      state.pointerTargetX = xNorm * MAX_OFFSET
+      state.pointerTargetY = yNorm * MAX_OFFSET
       if (event.pointerType === "mouse" || event.pointerType === "pen") {
-        state.pointerHover = true;
+        state.pointerHover = true
       }
-      startAnimation();
+      startAnimation()
     };
 
     const handlePointerMove = (event: PointerEvent) => {

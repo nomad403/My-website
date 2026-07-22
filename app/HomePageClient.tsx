@@ -126,6 +126,13 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   // Background canvas reference (spheres packing)
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
+  const sphereCountRef = useRef<number | null>(null)
+  // Figé au premier profil : un changement de count (downgrade adaptatif)
+  // recréait le WebGL et cassait le suivi curseur.
+  if (profile && sphereCountRef.current === null) {
+    sphereCountRef.current = profile.spheres.count
+  }
+  const sphereCount = sphereCountRef.current ?? profile?.spheres.count ?? 200
   const isPreloaded = useSmartPreload(profile, stage, bgCanvas, {
     skipParticles: useShuffleHero,
   })
@@ -307,7 +314,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       {/* Background: chargement progressif selon le profil performance */}
       {showSpheres && profile && (
         <SpheresPacking
-          count={profile.spheres.count}
+          count={sphereCount}
           minSize={0.5}
           maxSize={1.0}
           currentPage={currentPage}
