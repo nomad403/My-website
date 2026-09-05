@@ -168,20 +168,50 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
     }
   }, [items]);
 
-  // Gestion du scroll avec la molette (convertit le scroll vertical en horizontal)
+  // Molette → scroll horizontal avec inertie (impulsion + décélération)
   useEffect(() => {
     const el = carouselRef.current;
     if (!el) return;
 
+    let velocity = 0;
+    let rafId = 0;
+
+    const IMPULSE = 0.18;
+    const IMMEDIATE = 0.42;
+    const FRICTION = 0.94;
+    const MIN_VELOCITY = 0.25;
+    const MAX_VELOCITY = 64;
+
+    const normalizeWheelDelta = (e: WheelEvent) => {
+      if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) return e.deltaY * 16;
+      if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) return e.deltaY * el.clientWidth;
+      return e.deltaY;
+    };
+
+    const tick = () => {
+      el.scrollLeft += velocity;
+      velocity *= FRICTION;
+
+      if (Math.abs(velocity) > MIN_VELOCITY) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        velocity = 0;
+        rafId = 0;
+      }
+    };
+
     const handleWheel = (e: WheelEvent) => {
-      // Si le scroll est principalement vertical, convertir en horizontal
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        // Multiplier par 2.5 pour augmenter la sensibilité du scroll
-        el.scrollBy({
-          left: e.deltaY * 2.5,
-          behavior: 'smooth',
-        });
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+
+      e.preventDefault();
+      const delta = normalizeWheelDelta(e);
+
+      el.scrollLeft += delta * IMMEDIATE;
+      velocity += delta * IMPULSE;
+      velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocity));
+
+      if (!rafId) {
+        rafId = requestAnimationFrame(tick);
       }
     };
 
@@ -189,6 +219,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
 
     return () => {
       el.removeEventListener('wheel', handleWheel);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -320,7 +351,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
             return (
             <div
               key={itemKey}
-              className="carousel-item flex-shrink-0 flex flex-col"
+              className="carousel-item group flex-shrink-0 flex flex-col"
               style={{
                 width: 'clamp(280px, 70vw, 500px)',
                 height: '100%',
@@ -336,7 +367,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                 <div className="w-full flex flex-col" style={{ gap: '8px' }}>
                   {/* Titre sticky horizontal - se bloque au bord gauche */}
                   <div className="carousel-title-wrapper flex-shrink-0">
-                    <h3 className="carousel-title font-kode text-sm md:text-base lg:text-lg xl:text-xl text-black uppercase tracking-wider font-medium">
+                    <h3 className="carousel-title font-kode text-sm md:text-base lg:text-lg xl:text-xl text-black uppercase tracking-[0.2em] font-light">
                       {item.name}
                     </h3>
                   </div>
@@ -349,7 +380,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="absolute inset-0 w-full h-full object-cover shadow-lg"
+                      className="absolute inset-0 w-full h-full object-cover shadow-lg grayscale transition-[filter] duration-500 ease-out group-hover:grayscale-0"
                     />
                     {/* Description avec effet shuffle text au hover */}
                     {item.description && (
@@ -365,7 +396,7 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
                             triggerShuffle={isHovered}
                             enableHover={false}
                             totalDuration={600}
-                            className="text-white text-xs md:text-sm font-jetbrains leading-relaxed"
+                            className="text-white text-xs md:text-sm font-home-title leading-relaxed"
                           >
                             {item.description}
                           </ShuffleText>
@@ -396,10 +427,10 @@ const ProjectsCarousel: React.FC<ProjectsCarouselProps> = ({ items }) => {
           width: 100%;
         }
 
-        /* Titre sticky horizontal - se bloque au bord gauche du viewport */
+        /* Titre sticky horizontal — léger retrait du bord gauche */
         .carousel-title {
           position: sticky;
-          left: 0; /* Bord gauche du viewport */
+          left: 5px;
           display: inline-block;
           margin: 0;
           padding: 0;

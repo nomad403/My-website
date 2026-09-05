@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { attachOrientationPermissionOnBackgroundGesture } from "@/lib/interaction";
+import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/viewport-bleed";
 
 /**
  * Typage minimal du module ESM exposé par le CDN.
@@ -37,7 +38,6 @@ const PAGE_COLORS = {
   home: [0xff0000, 0x0, 0xffffff], // Rouge, noir, blanc (couleurs actuelles)
   projects: [0x00e5ff, 0xff00aa, 0x00ff88], // Cyan, magenta, vert cyberpunk
   specialist: [0xff6b00, 0x00e5ff, 0xffffff], // Palette dédiée pour specialist
-  decision: [0x00e5ff, 0x0a0a0f, 0x1a1a2e], // Cyan foncé, noir profond, bleu nuit (interface décision)
   contact: [0xffffff, 0x00e5ff, 0xff6b00], // Palette dédiée pour contact (blanc, cyan, orange)
 };
 
@@ -89,8 +89,9 @@ export default function SpheresPacking({
         onCanvasReady?.(canvas);
         const resize = () => {
           if (typeof window !== 'undefined') {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const bleed = VIEWPORT_BLEED_PX * 2
+            canvas.width = window.innerWidth + bleed
+            canvas.height = window.innerHeight + bleed
           }
         };
         resize();
@@ -511,9 +512,11 @@ export default function SpheresPacking({
 
   // Déterminer si les spheres doivent être visibles visuellement
   // Sur les pages avec ASCII, le canvas est actif mais caché visuellement pour l'ASCII
-  const pagesWithAscii = ["home", "projects", "specialist", "decision", "contact"];
+  const pagesWithAscii = ["home", "projects", "specialist", "contact"];
   const visuallyHidden = pagesWithAscii.includes(currentPage);
   const shouldShowVisually = visible && !visuallyHidden;
+
+  const bleedStyle = viewportBleedInsets()
 
   return (
     <canvas
@@ -522,12 +525,10 @@ export default function SpheresPacking({
       className={className}
       style={{
         position: "fixed",
-        inset: 0,
-        zIndex: 1,           // au-dessus du fond, en-dessous du contenu
+        ...bleedStyle,
+        zIndex: 1,
         pointerEvents: "none",
         display: "block",
-        width: "100vw",
-        height: "100vh",
         opacity: shouldShowVisually ? 1 : 0,   // Caché visuellement si ASCII actif, mais canvas reste actif
         transition: "opacity 0.5s ease-in-out",
         visibility: visible ? "visible" : "hidden", // Toujours visible si visible=true pour que le canvas soit rendu

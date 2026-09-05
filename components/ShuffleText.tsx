@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type CSSProperties } from 'react'
 
 interface ShuffleTextProps {
   children: string
   className?: string
+  style?: CSSProperties
   shuffleDuration?: number
   shuffleChars?: string
   letterDelay?: number
@@ -12,11 +13,13 @@ interface ShuffleTextProps {
   enableHover?: boolean
   totalDuration?: number       // NEW: durée fixe globale
   shuffleKey?: number
+  onDisplayChange?: (displayText: string, isShuffling: boolean) => void
 }
 
 export default function ShuffleText({ 
   children, 
   className = "", 
+  style,
   shuffleDuration = 200,
   shuffleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()",
   letterDelay = 15,
@@ -24,13 +27,20 @@ export default function ShuffleText({
   enableHover = true,
   totalDuration = 900,         // NEW
   shuffleKey = 0,
+  onDisplayChange,
 }: ShuffleTextProps) {
   const [isShuffling, setIsShuffling] = useState(false)
   const [displayText, setDisplayText] = useState(children)
   const rafRef = useRef(0)
   const isShufflingRef = useRef(false)
   const childrenRef = useRef(children)
+  const onDisplayChangeRef = useRef(onDisplayChange)
   childrenRef.current = children
+  onDisplayChangeRef.current = onDisplayChange
+
+  const emitDisplay = (value: string, isShuffling: boolean) => {
+    onDisplayChangeRef.current?.(value, isShuffling)
+  }
 
   const shuffleChar = () => shuffleChars[Math.floor(Math.random() * shuffleChars.length)]
 
@@ -66,7 +76,9 @@ export default function ShuffleText({
 
       if (p < ratioA) {
         const out = arr.map((ch) => (ch === " " ? " " : shuffleChar()))
-        setDisplayText(out.join(""))
+        const next = out.join("")
+        setDisplayText(next)
+        emitDisplay(next, true)
       } else {
         const q = (p - ratioA) / (1 - ratioA)
         const cutoff = Math.floor(q * len)
@@ -75,13 +87,16 @@ export default function ShuffleText({
           if (i < cutoff) return ch
           return shuffleChar()
         })
-        setDisplayText(out.join(""))
+        const next = out.join("")
+        setDisplayText(next)
+        emitDisplay(next, true)
       }
 
       if (p < 1) {
         rafRef.current = requestAnimationFrame(tick)
       } else {
         setDisplayText(original)
+        emitDisplay(original, false)
         stopShuffle()
       }
     }
@@ -113,7 +128,7 @@ export default function ShuffleText({
   }
 
   return (
-    <span className={className} onMouseEnter={handleMouseEnter}>
+    <span className={className} style={style} onMouseEnter={handleMouseEnter}>
       {displayText}
     </span>
   )

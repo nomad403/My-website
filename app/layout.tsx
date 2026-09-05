@@ -1,23 +1,16 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "../styles/globals.css"
-import { JetBrains_Mono } from "next/font/google"
 import localFont from "next/font/local"
 import ClientLayout from "@/components/ClientLayout"
 
-const enigma = localFont({
-  src: "../fonts/EnigmaRegular.woff2",
+const displayFont = localFont({
+  src: "../public/fonts/ProFont.woff2",
   variable: "--font-enigma",
   display: "swap",
   preload: true,
   weight: "400",
   style: "normal",
-})
-
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-jetbrains",
 })
 
 export const metadata: Metadata = {
@@ -69,13 +62,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="robots" content="index, follow" />
         <meta name="author" content="NOMAD403" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="canonical" href="https://www.nomad403.com" />
+        <link rel="preload" href="/fonts/Geist/GeistMono-ExtraLight.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/Electric_blue/ElectricBlueTrial-STAT-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         
         {/* Prevent duplicate content issues */}
         <meta name="googlebot" content="index, follow" />
         <meta name="bingbot" content="index, follow" />
       </head>
-      <body className={`${enigma.variable} ${jetBrainsMono.variable} antialiased`}>
+      <body className={`${displayFont.variable} antialiased`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

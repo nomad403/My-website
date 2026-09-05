@@ -30,10 +30,15 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
             .
           </span>
+          <span aria-hidden className="invisible absolute -z-50 font-home-title">
+            .
+          </span>
+          <span aria-hidden className="invisible absolute -z-50 font-electric-blue">
+            .
+          </span>
           {children}
         </PageProvider>
       </BackgroundProvider>
     </LanguageProvider>
   )
 }
-

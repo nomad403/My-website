@@ -8,7 +8,8 @@ import { useBackground } from "./contexts/BackgroundContext"
 import { usePage } from "./contexts/PageContext"
 import ShuffleText from "@/components/ShuffleText"
 import ContentPages from "@/components/content-pages"
-import MobileHomeSubtitle from "@/components/MobileHomeSubtitle"
+import HomeTitle from "@/components/HomeTitle"
+import HeaderLogo from "@/components/HeaderLogo"
 import DynamicHead from "@/components/DynamicHead"
 import DynamicFavicon from "@/components/DynamicFavicon"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
@@ -19,18 +20,16 @@ import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useSmartPreload } from "@/hooks/useSmartPreload"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
-import { useGyroscopeAccessible } from "@/hooks/useGyroscopeAccessible"
 import { resolveAsciiSettings } from "@/lib/performance"
 
 const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), { ssr: false })
 const AsciiOverlay = dynamic(() => import("@/components/AsciiOverlay"), { ssr: false })
-const ParticleText = dynamic(() => import("@/components/particle-text"), { ssr: false })
 
 const pageConfig = {
   home: {
     sphere: { scale: 1 },
     background: 'day' as const,
-    elements: ['particleText', 'homeContent'],
+    elements: ['homeContent'],
     ascii: {
       visible: true,
       mode: 'sobel' as const,
@@ -66,19 +65,6 @@ const pageConfig = {
       fontPx: 7
     }
   },
-  decision: {
-    sphere: { scale: 1 },
-    background: 'day' as const,
-    elements: ['contentPages'],
-    ascii: {
-      visible: true,
-      mode: 'sobel' as const,
-      invert: false,
-      opacity: 0.65,
-      color: '#5DD3F0',
-      fontPx: 7
-    }
-  },
   contact: {
     sphere: { scale: 0 },
     background: 'day' as const,
@@ -104,11 +90,8 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
-  // Particules réservées au tier high confirmé ; mid/low/inconnu → shuffle
-  const useShuffleHero = isMobileViewport || !profile || profile.tier !== "high"
-  const gyroAccessible = useGyroscopeAccessible(isMobileViewport)
-  const { stage, showSpheres, showAscii, showParticles } = useProgressiveLoad(profile, {
-    skipParticles: useShuffleHero,
+  const { stage, showSpheres, showAscii } = useProgressiveLoad(profile, {
+    skipParticles: true,
   })
   
   // Language context
@@ -132,12 +115,21 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
   if (profile && sphereCountRef.current === null) {
     sphereCountRef.current = profile.spheres.count
   }
-  const sphereCount = sphereCountRef.current ?? profile?.spheres.count ?? 200
+  const sphereCount = sphereCountRef.current ?? profile?.spheres.count ?? 80
   const isPreloaded = useSmartPreload(profile, stage, bgCanvas, {
-    skipParticles: useShuffleHero,
+    skipParticles: true,
   })
 
-  const showHomeHero = useShuffleHero ? showAscii : showParticles
+  const showHomeTitle = isPreloaded && homeVisible && showAscii && isLanguageReady
+  const homeTitleLines = useMemo(
+    () => [t("home.titleLine1"), t("home.titleLine2")],
+    [t, language],
+  )
+  const homeTitleAltLines = useMemo(
+    () => [t("home.titleAltLine1"), t("home.titleAltLine2")],
+    [t, language],
+  )
+  const homeBrandAlt = useMemo(() => t("home.brandAlt"), [t, language])
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -147,6 +139,13 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       }
     }
   }, [])
+
+  // Ferme le menu mobile si on repasse en layout desktop.
+  useEffect(() => {
+    if (!isMobileViewport && isMobileMenuOpen) {
+      setIsMobileMenuOpen(false)
+    }
+  }, [isMobileViewport, isMobileMenuOpen])
 
   // Sync local page with global router
   useEffect(() => {
@@ -246,19 +245,12 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
   const asciiSettings = useMemo(() => {
     if (!profile) return null
-    const particlesActiveOnHome =
-      showParticles && currentPage === "home" && !isMobileViewport
-    return resolveAsciiSettings(currentConfig.ascii, profile, { particlesActiveOnHome })
-  }, [currentConfig, profile, showParticles, currentPage, isMobileViewport])
+    return resolveAsciiSettings(currentConfig.ascii, profile)
+  }, [currentConfig, profile])
 
-  // Gérer le scroll du body selon la page
   useEffect(() => {
-    if (currentPage === "specialist" || currentPage === "decision") {
-      document.body.classList.remove("no-scroll")
-    } else {
-      document.body.classList.add("no-scroll")
-    }
-  }, [currentPage])
+    document.body.classList.add("no-scroll")
+  }, [])
 
   // Gérer la navigation avec les boutons précédent/suivant du navigateur
   useEffect(() => {
@@ -270,7 +262,6 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       
       if (path === "/projects") pageName = "projects"
       else if (path === "/specialist") pageName = "specialist"
-      else if (path === "/decision") pageName = "decision"
       else if (path === "/contact") pageName = "contact"
       
       // Éviter les boucles infinies
@@ -340,29 +331,30 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       )}
       
       <div className="relative w-full h-screen overflow-hidden">
-        {/* Loading screen */}
-      {!isPreloaded && (
-        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
-          <div className="text-center">
-            <div className="font-kode text-black text-2xl mb-4 font-semibold">NOMAD403</div>
-            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto"></div>
+        {!isPreloaded && (
+          <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
+            <div className="text-center">
+              <HeaderLogo mode="day" variant="loader" className="mb-4" />
+              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <button 
-          onClick={() => handlePageChange("home")}
-          className={`font-kode text-sm md:text-base font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
-            mode === 'night' ? 'text-white' : 'text-black'
-          }`}>
-            NOMAD403
+      <nav className="site-chrome absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
+        <div className="flex justify-between items-start max-w-7xl mx-auto">
+          <button
+            type="button"
+            onClick={() => handlePageChange("home")}
+            aria-label="Accueil — Glenn Richard"
+            data-header-align="logo"
+            className="text-left transition-colors duration-300 py-2"
+          >
+            <HeaderLogo mode={mode} />
           </button>
           
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8 font-jetbrains text-sm font-light">
+          <div className="hidden md:flex items-center space-x-8 font-kode text-[0.95rem] font-light tracking-[0.04em] uppercase">
             <Link
               href="/"
               onClick={(e) => {
@@ -403,24 +395,12 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
               <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
             </Link>
             <Link
-              href="/decision"
-              onClick={(e) => {
-                e.preventDefault()
-                handlePageChange("decision")
-              }}
-              aria-label="Couche de décision - Interface de réflexion structurée"
-              className={`nav-link transition-all duration-300 ${currentPage === "decision" ? "active" : ""} ${
-                mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
-              }`}
-            >
-              <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.decision')}</ShuffleText>
-            </Link>
-            <Link
               href="/contact"
               onClick={(e) => {
                 e.preventDefault()
                 handlePageChange("contact")
               }}
+              data-header-align="nav-end"
               aria-label="Contact développeur freelance - Devis gratuit projet web mobile"
               className={`nav-link transition-all duration-300 ${currentPage === "contact" ? "active" : ""} ${
                 mode === 'night' ? 'text-white hover:text-cyan-400 night-mode' : 'text-black hover:text-cyan-400 day-mode'
@@ -433,7 +413,8 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 transition-colors duration-300 ${
+            data-header-align="nav-end-mobile"
+            className={`md:hidden self-start p-2 transition-colors duration-300 ${
               mode === 'night'
                 ? isMobileMenuOpen ? 'text-cyan-400' : 'text-white'
                 : isMobileMenuOpen ? 'text-cyan-500' : 'text-black'
@@ -464,108 +445,6 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
             </div>
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className={`md:hidden mt-4 overflow-visible ${
-                mode === 'night' ? 'bg-black/90 backdrop-blur-sm' : 'bg-white/90 backdrop-blur-sm'
-              } rounded-lg border ${
-                mode === 'night' ? 'border-white/20' : 'border-black/20'
-              }`}
-            >
-              <div className="p-4 space-y-3 font-jetbrains text-sm font-light flex flex-col pb-6">
-                <Link
-                  href="/"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handlePageChange("home")
-                  }}
-                  aria-label="Accueil - Développeur web mobile freelance Paris NOMAD403"
-                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "home" 
-                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
-                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
-                  }`}
-                >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.home')}</ShuffleText>
-                </Link>
-                <Link
-                  href="/projects"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handlePageChange("projects")
-                  }}
-                  aria-label="Portfolio projets - Développement web React Next.js mobile Kotlin Swift"
-                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "projects" 
-                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
-                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
-                  }`}
-                >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.projects')}</ShuffleText>
-                </Link>
-                <Link
-                  href="/specialist"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handlePageChange("specialist")
-                  }}
-                  aria-label="Compétences techniques - Expert React Next.js Kotlin Swift IA"
-                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "specialist" 
-                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
-                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
-                  }`}
-                >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.specialist')}</ShuffleText>
-                </Link>
-                <Link
-                  href="/decision"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handlePageChange("decision")
-                  }}
-                  aria-label="Couche de décision - Interface de réflexion structurée"
-                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "decision" 
-                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
-                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
-                  }`}
-                >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.decision')}</ShuffleText>
-                </Link>
-                <Link
-                  href="/contact"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handlePageChange("contact")
-                  }}
-                  aria-label="Contact développeur freelance - Devis gratuit projet web mobile"
-                  className={`block w-full text-left py-2 px-3 rounded transition-all duration-300 ${
-                    currentPage === "contact" 
-                      ? (mode === 'night' ? 'text-cyan-400 bg-white/10' : 'text-cyan-400 bg-black/10')
-                      : (mode === 'night' ? 'text-white hover:text-cyan-400 hover:bg-white/5' : 'text-black hover:text-cyan-400 hover:bg-black/5')
-                  }`}
-                >
-                  <ShuffleText shuffleDuration={150} letterDelay={12}>{t('nav.contact')}</ShuffleText>
-                </Link>
-                
-                {/* Language Switcher for mobile */}
-                <div className="pt-2 pb-2 border-t border-gray-300/20">
-                  <div className="w-full relative">
-                    <LanguageSwitcher isMobile={true} />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
 
       {/* Language Switcher - Position fixe en bas à droite (masqué sur mobile) */}
@@ -582,27 +461,146 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
 
       {/* Main content - Elements with declarative transitions */}
       <div className="relative w-full h-screen z-20">
-        
-        {/* Home hero — particules high-end ; shuffle mobile / mid / low */}
+        {/* Menu mobile : remplace le corps de page (pas de petite fenêtre). */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.nav
+              key="mobile-body-menu"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+              aria-label="Navigation mobile"
+              className={`md:hidden absolute inset-0 z-30 flex flex-col justify-center px-6 pb-24 pt-24 ${
+                mode === "night" ? "text-white" : "text-black"
+              }`}
+            >
+              <div className="flex flex-col gap-5 font-kode text-2xl font-light uppercase tracking-[0.05em]">
+                <Link
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("home")
+                  }}
+                  aria-label="Accueil - Développeur web mobile freelance Paris NOMAD403"
+                  className={`w-fit text-left transition-colors duration-300 ${
+                    currentPage === "home"
+                      ? mode === "night"
+                        ? "text-cyan-400"
+                        : "text-cyan-500"
+                      : mode === "night"
+                        ? "text-white/80 hover:text-cyan-400"
+                        : "text-black/75 hover:text-cyan-500"
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>
+                    {t("nav.home")}
+                  </ShuffleText>
+                </Link>
+                <Link
+                  href="/projects"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("projects")
+                  }}
+                  aria-label="Portfolio projets - Développement web React Next.js mobile Kotlin Swift"
+                  className={`w-fit text-left transition-colors duration-300 ${
+                    currentPage === "projects"
+                      ? mode === "night"
+                        ? "text-cyan-400"
+                        : "text-cyan-500"
+                      : mode === "night"
+                        ? "text-white/80 hover:text-cyan-400"
+                        : "text-black/75 hover:text-cyan-500"
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>
+                    {t("nav.projects")}
+                  </ShuffleText>
+                </Link>
+                <Link
+                  href="/specialist"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("specialist")
+                  }}
+                  aria-label="Compétences techniques - Expert React Next.js Kotlin Swift IA"
+                  className={`w-fit text-left transition-colors duration-300 ${
+                    currentPage === "specialist"
+                      ? mode === "night"
+                        ? "text-cyan-400"
+                        : "text-cyan-500"
+                      : mode === "night"
+                        ? "text-white/80 hover:text-cyan-400"
+                        : "text-black/75 hover:text-cyan-500"
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>
+                    {t("nav.specialist")}
+                  </ShuffleText>
+                </Link>
+                <Link
+                  href="/contact"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handlePageChange("contact")
+                  }}
+                  aria-label="Contact développeur freelance - Devis gratuit projet web mobile"
+                  className={`w-fit text-left transition-colors duration-300 ${
+                    currentPage === "contact"
+                      ? mode === "night"
+                        ? "text-cyan-400"
+                        : "text-cyan-500"
+                      : mode === "night"
+                        ? "text-white/80 hover:text-cyan-400"
+                        : "text-black/75 hover:text-cyan-500"
+                  }`}
+                >
+                  <ShuffleText shuffleDuration={150} letterDelay={12}>
+                    {t("nav.contact")}
+                  </ShuffleText>
+                </Link>
+              </div>
+              <div className="mt-10">
+                <LanguageSwitcher isMobile={true} />
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
+
+        {/* Corps de page — masqué sur mobile tant que le menu est ouvert */}
+        <div
+          className={`absolute inset-0 ${
+            isMobileMenuOpen && isMobileViewport
+              ? "pointer-events-none"
+              : ""
+          }`}
+          aria-hidden={
+            isMobileMenuOpen && isMobileViewport ? true : undefined
+          }
+          style={{
+            opacity: isMobileMenuOpen && isMobileViewport ? 0 : 1,
+            transition: "opacity 0.28s ease",
+          }}
+        >
+        {/* Home hero — titre shuffle unique sur tous les profils */}
         <motion.div 
           className="absolute inset-0 z-10"
           initial={{ opacity: 0 }}
-          animate={{ opacity: isPreloaded && homeVisible && showHomeHero ? 1 : 0 }}
+          animate={{ opacity: showHomeTitle ? 1 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{ pointerEvents: "none" }}
         >
-          {showParticles && homeVisible && !useShuffleHero && <ParticleText />}
-          {homeVisible && useShuffleHero && isLanguageReady && (
-            <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28 md:px-8">
-              <MobileHomeSubtitle
-                subtitle={t("home.subtitle")}
-                rotateHint={t("home.rotateHint")}
-                triggerShuffle={isPreloaded && showAscii}
-                gyroAccessible={gyroAccessible}
-                mode={mode}
-                maxFontPx={isMobileViewport ? 24 : 56}
-                enableHover={!isMobileViewport}
-              />
+          {showHomeTitle && (
+            <div className="absolute inset-0 flex w-full items-end pb-[calc(9rem+env(safe-area-inset-bottom,0px))] sm:pb-32 md:pb-32">
+                <HomeTitle
+                  lines={homeTitleLines}
+                  alternateLines={homeTitleAltLines}
+                  alternateBrandText={homeBrandAlt}
+                  ready={showHomeTitle}
+                  mode={mode}
+                  isMobile={isMobileViewport}
+                />
             </div>
           )}
         </motion.div>
@@ -631,6 +629,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
 
       
@@ -660,10 +659,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       </div>
 
       {/* Social media links */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 p-6 sm:p-8">
+      <div className="site-chrome absolute bottom-0 left-0 right-0 z-50 p-6 sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center sm:items-center max-w-7xl mx-auto">
           {/* Social media links */}
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-jetbrains text-xs sm:text-sm font-light uppercase tracking-wider">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-kode text-xs sm:text-sm font-light uppercase tracking-wider">
             <a 
               href="https://x.com/_nomad_403" 
               target="_blank" 

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/viewport-bleed";
 
 type Mode = "plain" | "dither" | "sobel";
 
@@ -81,9 +82,10 @@ export default function AsciiOverlay({
       if (typeof window === 'undefined') return;
       const { width: vw, height: vh } = getViewportSize();
       if (vw <= 0 || vh <= 0) return;
-      const charW = measureCharWidth(fontPx, family);
-      const cols = fixedCols ?? Math.max(1, Math.floor(vw / charW));
-      const rows = Math.max(1, Math.floor(vh / fontPx));
+      const bleed = VIEWPORT_BLEED_PX * 2
+      const charW = measureCharWidth(fontPx, family)
+      const cols = fixedCols ?? Math.max(1, Math.ceil((vw + bleed) / charW))
+      const rows = Math.max(1, Math.ceil((vh + bleed) / fontPx))
       setGrid({ cols, rows });
     };
     calc();
@@ -232,16 +234,14 @@ export default function AsciiOverlay({
   // Ne rien rendre côté serveur
   if (!mounted) return null;
 
+  const bleedStyle = viewportBleedInsets()
+
   const pre = (
     <pre
       ref={preRef}
       style={{
         position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        width: "100vw",
-        height: "100vh",
-        maxWidth: "100vw",
-        maxHeight: "100vh",
+        ...bleedStyle,
         margin: 0,
         overflow: "hidden",
         boxSizing: "border-box",

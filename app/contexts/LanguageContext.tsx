@@ -56,12 +56,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.home': 'ACCUEIL',
         'nav.projects': 'PROJETS',
         'nav.specialist': 'EXPERTISE',
-        'nav.decision': 'DÉCISION',
         'nav.contact': 'CONTACT',
         
         // Home page
         'home.title': 'NOMAD403',
-        'home.subtitle': "Créateur d'expérience",
+        'home.subtitle': "Bienvenue dans mon espace de création d'expérience, je suis Glenn, développeur et créateur d'expérience",
+        'home.titleLine1': 'Développeur,',
+        'home.titleLine2': " créateur d'expérience.",
+        'home.titleAltLine1': 'Des idées,',
+        'home.titleAltLine2': 'sans limites.',
+        'home.brandAlt': 'bienvenu',
         'home.rotateHint': 'Inclinez votre téléphone',
         'home.description': 'Développeur freelance créant des applications web personnalisées, des applications mobiles et des outils alimentés par l\'IA. Explorez mon portfolio 3D interactif.',
         
@@ -69,11 +73,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'projects.title': 'Projets Portfolio',
         'projects.subtitle': 'Web, Mobile & IA',
         'projects.description': 'Parcourez les projets sélectionnés en développement web, applications mobiles et solutions IA. De qualité, évolutifs et conçus pour l\'impact.',
+        'projects.view': 'Voir le projet',
         
         // Specialist page
-        'specialist.title': 'Compétences & Expertise',
-        'specialist.subtitle': 'Web, Mobile & IA',
-        'specialist.description': 'Expertise en développement frontend, mobile (iOS & Android) et intégration IA. Solutions modernes et évolutives adaptées à vos besoins.',
+        'specialist.title': 'Offres & Expertise',
+        'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting',
+        'specialist.description': 'Catalogue des prestations Nomad403 : web, mobile, automatisation, intelligence artificielle et consulting technique.',
         'specialist.intro': 'Chaque projet est pour moi une exploration. L’esprit Nomad403 repose sur la curiosité, l’expérimentation et l’adaptation continue, avec une mission claire : créer des outils numériques modernes, rapides et alignés sur vos enjeux.',
         'specialist.text1': 'Je conçois des sites web sur mesure optimisés pour la performance et le SEO, des applications mobiles fiables et évolutives, ainsi que des solutions d’automatisation et d’IA capables de réduire les tâches répétitives.',
         'specialist.text2': 'Comprendre votre métier me permet de simplifier votre quotidien, d’améliorer vos processus et de transformer chaque défi en solution tangible et durable.',
@@ -104,12 +109,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.home': 'HOME',
         'nav.projects': 'PROJECTS',
         'nav.specialist': 'SPECIALIST',
-        'nav.decision': 'DECISION',
         'nav.contact': 'CONTACT',
         
         // Home page
         'home.title': 'NOMAD403',
-        'home.subtitle': 'Creator of Experiences',
+        'home.subtitle': "Welcome to my experience creation space, I'm Glenn, developer and experience creator",
+        'home.titleLine1': 'Developer,',
+        'home.titleLine2': ' experience creator.',
+        'home.titleAltLine1': 'Ideas,',
+        'home.titleAltLine2': 'without limits.',
+        'home.brandAlt': 'welcome',
         'home.rotateHint': 'Rotate your phone',
         'home.description': 'Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.',
         
@@ -117,11 +126,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'projects.title': 'Portfolio Projects',
         'projects.subtitle': 'Web, Mobile & AI',
         'projects.description': 'Browse selected projects in web development, mobile apps, and AI solutions. High-quality, scalable, and designed for impact.',
+        'projects.view': 'View project',
         
         // Specialist page
-        'specialist.title': 'Skills & Expertise',
-        'specialist.subtitle': 'Web, Mobile & AI',
-        'specialist.description': 'Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.',
+        'specialist.title': 'Services & Expertise',
+        'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting',
+        'specialist.description': 'Nomad403 service catalog: web, mobile, automation, artificial intelligence, and technical consulting.',
         'specialist.intro': 'Every project is an exploration. The Nomad403 mindset blends curiosity, experimentation, and constant adaptation to build fast, modern tools that genuinely match your needs.',
         'specialist.text1': 'I craft custom websites optimized for performance and SEO, reliable and scalable mobile apps, plus automation and AI workflows that eliminate repetitive tasks.',
         'specialist.text2': 'By understanding your business, I simplify day-to-day operations, smooth out processes, and turn each challenge into something practical and lasting.',

@@ -32,7 +32,7 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
         }`}
         title={t('lang.switch')}
       >
-        <span className="text-sm font-jetbrains uppercase tracking-wider">
+        <span className="text-sm font-kode uppercase tracking-wider">
           {currentLang?.code}
         </span>
         <motion.svg
@@ -74,7 +74,7 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
                 }`}
               >
                 <span className="text-lg">{lang.flag}</span>
-                <span className="text-sm font-jetbrains">{lang.name}</span>
+                <span className="text-sm font-kode">{lang.name}</span>
               </button>
             ))}
           </motion.div>

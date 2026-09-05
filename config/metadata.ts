@@ -26,8 +26,8 @@ export const pageMetadata: Record<string, Record<string, Metadata>> = {
       keywords: BRAND_KEYWORDS,
     },
     specialist: {
-      title: "Expert Développeur Web Mobile Freelance - React Next.js Kotlin Swift IA | NOMAD403",
-      description: "Nomad403 explique ses expertises : React Next.js, Kotlin, Swift et intégration Azure OpenAI pour des expériences web/mobile haute performance.",
+      title: "Offres Web, Mobile, IA & Consulting — Développeur Freelance | NOMAD403",
+      description: "Catalogue Nomad403 : sites web, applications mobiles, automatisation, intelligence artificielle et consulting technique pour projets ambitieux.",
       keywords: BRAND_KEYWORDS,
     },
     contact: {
@@ -48,8 +48,8 @@ export const pageMetadata: Record<string, Record<string, Metadata>> = {
       keywords: BRAND_KEYWORDS,
     },
     specialist: {
-      title: "Expert Freelance Web Mobile Developer - React Next.js Kotlin Swift AI | NOMAD403",
-      description: "Nomad403 details expertise across React Next.js, Kotlin, Swift, and Azure OpenAI to deliver modern, resilient experiences.",
+      title: "Web, Mobile, AI & Consulting Services — Freelance Developer | NOMAD403",
+      description: "Nomad403 service catalog: websites, mobile apps, automation, artificial intelligence, and technical consulting for ambitious projects.",
       keywords: BRAND_KEYWORDS,
     },
     contact: {

@@ -29,12 +29,6 @@ export interface PerformanceProfile {
   }
 }
 
-export interface ParticleLayout {
-  fontSize: number
-  particleDensity: number
-  pixelDensity: number
-}
-
 const HIGH_PROFILE: PerformanceProfile = {
   tier: "high",
   spheres: { count: 200 },
@@ -133,6 +127,133 @@ export function downgradePerformanceTier(tier: PerformanceTier): PerformanceTier
   return TIER_BY_RANK[Math.max(0, next)]
 }
 
+export function minPerformanceTier(a: PerformanceTier, b: PerformanceTier): PerformanceTier {
+  return TIER_RANK[a] <= TIER_RANK[b] ? a : b
+}
+
+const SOFT_GPU_RE =
+  /swiftshader|llvmpipe|softpipe|microsoft basic render|google swiftshader|mesa offscreen/i
+
+function detectSoftwareGpu(): boolean {
+  if (typeof document === "undefined") return false
+  try {
+    const canvas = document.createElement("canvas")
+    const gl =
+      (canvas.getContext("webgl") as WebGLRenderingContext | null) ||
+      (canvas.getContext("experimental-webgl") as WebGLRenderingContext | null)
+    if (!gl) return true
+
+    const ext = gl.getExtension("WEBGL_debug_renderer_info")
+    if (ext) {
+      const renderer = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) ?? "")
+      if (SOFT_GPU_RE.test(renderer)) return true
+    }
+    return false
+  } catch {
+    return true
+  }
+}
+
+function measureRafFps(sampleMs: number): Promise<number> {
+  return new Promise((resolve) => {
+    let frames = 0
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      frames += 1
+      if (now - start >= sampleMs) {
+        resolve((frames * 1000) / Math.max(1, now - start))
+        return
+      }
+      requestAnimationFrame(tick)
+    }
+
+    requestAnimationFrame(tick)
+  })
+}
+
+/** Charge légère GPU pendant le splash pour affiner le tier. */
+function stressGpuWhileMeasuring(sampleMs: number): Promise<number> {
+  if (typeof document === "undefined") return measureRafFps(sampleMs)
+
+  const canvas = document.createElement("canvas")
+  canvas.width = 256
+  canvas.height = 256
+  const gl = canvas.getContext("webgl", {
+    antialias: false,
+    depth: false,
+    stencil: false,
+    powerPreference: "high-performance",
+  }) as WebGLRenderingContext | null
+
+  if (!gl) return measureRafFps(sampleMs)
+
+  return new Promise((resolve) => {
+    let frames = 0
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      frames += 1
+      const t = (now - start) / sampleMs
+      gl.viewport(0, 0, 256, 256)
+      gl.clearColor(t % 1, 0.2, 1 - (t % 1), 1)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      // Quelques draw clear supplémentaires pour stresser sans bloquer le main thread trop fort
+      for (let i = 0; i < 8; i++) {
+        gl.clear(gl.COLOR_BUFFER_BIT)
+      }
+
+      if (now - start >= sampleMs) {
+        resolve((frames * 1000) / Math.max(1, now - start))
+        return
+      }
+      requestAnimationFrame(tick)
+    }
+
+    requestAnimationFrame(tick)
+  })
+}
+
+/**
+ * Sonde hardware + FPS réel avant le montage des effets lourds.
+ * Retourne le tier final avant de monter les effets lourds.
+ */
+export async function probePerformanceTier(): Promise<PerformanceTier> {
+  const staticTier = detectPerformanceTier()
+  if (typeof window === "undefined") return staticTier
+
+  if (detectSoftwareGpu()) return "low"
+
+  // Connection lente / save-data → rester conservateur
+  const connection = (navigator as Navigator & {
+    connection?: { saveData?: boolean; effectiveType?: string }
+  }).connection
+  if (connection?.saveData) {
+    return minPerformanceTier(staticTier, "mid")
+  }
+  if (connection?.effectiveType === "2g" || connection?.effectiveType === "slow-2g") {
+    return "low"
+  }
+
+  const fps = await stressGpuWhileMeasuring(750)
+
+  let fpsTier: PerformanceTier = "high"
+  if (fps < 32) fpsTier = "low"
+  else if (fps < 50) fpsTier = "mid"
+
+  return minPerformanceTier(staticTier, fpsTier)
+}
+
+let sharedProbePromise: Promise<PerformanceTier> | null = null
+
+/** Une seule sonde partagée pour tous les hooks de chargement. */
+export function probePerformanceTierOnce(): Promise<PerformanceTier> {
+  if (!sharedProbePromise) {
+    sharedProbePromise = probePerformanceTier()
+  }
+  return sharedProbePromise
+}
+
 export function getPerformanceProfile(tier: PerformanceTier = "high"): PerformanceProfile {
   if (tier === "low") return LOW_PROFILE
   if (tier === "mid") return MID_PROFILE
@@ -142,55 +263,12 @@ export function getPerformanceProfile(tier: PerformanceTier = "high"): Performan
 export function resolveAsciiSettings(
   pageAscii: { mode: AsciiMode; fontPx: number },
   profile: PerformanceProfile,
-  options?: { particlesActiveOnHome?: boolean }
 ) {
-  const particlesActiveOnHome = options?.particlesActiveOnHome ?? false
-  const throttleHome = particlesActiveOnHome && profile.tier !== "high"
-
   return {
     mode: profile.ascii.forceMode ?? pageAscii.mode,
-    fontPx: throttleHome
-      ? Math.max(profile.ascii.fontPxOverride ?? pageAscii.fontPx, 10)
-      : profile.ascii.fontPxOverride ?? pageAscii.fontPx,
+    fontPx: profile.ascii.fontPxOverride ?? pageAscii.fontPx,
     fps: profile.ascii.fps,
-    domUpdateEvery: throttleHome
-      ? Math.max(profile.ascii.domUpdateEvery, 4)
-      : profile.ascii.domUpdateEvery,
-  }
-}
-
-/** Tailles responsive des particules — densité réduite sur petits écrans et profil mid/low. */
-export function getParticleLayout(width: number, profile: PerformanceProfile): ParticleLayout {
-  let fontSize: number
-  let particleDensity: number
-
-  if (width < 480) {
-    fontSize = 24
-    particleDensity = 3
-  } else if (width < 768) {
-    fontSize = 32
-    particleDensity = 2
-  } else if (width < 1024) {
-    fontSize = 50
-    particleDensity = 2
-  } else if (width < 1440) {
-    fontSize = 90
-    particleDensity = 2
-  } else {
-    fontSize = 100
-    particleDensity = 1
-  }
-
-  if (profile.tier === "low") {
-    particleDensity = Math.max(1, particleDensity - 1)
-  } else if (profile.tier === "mid") {
-    particleDensity = Math.max(1, particleDensity)
-  }
-
-  return {
-    fontSize,
-    particleDensity,
-    pixelDensity: profile.particles.pixelDensity,
+    domUpdateEvery: profile.ascii.domUpdateEvery,
   }
 }
 

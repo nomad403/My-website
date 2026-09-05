@@ -2,6 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist/GeistMono-ExtraLight.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Electric Blue";
+  src: url("/fonts/Electric_blue/ElectricBlueTrial-STAT-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Electric Blue";
+  src: url("/fonts/Electric_blue/ElectricBlueTrial-STAT-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Electric Blue";
+  src: url("/fonts/Electric_blue/ElectricBlueTrial-STAT-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Electric Blue";
+  src: url("/fonts/Electric_blue/ElectricBlueTrial-STAT-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Animation pour transitions pages sans démarcation */
 @keyframes fadeInDelayed {
   from { opacity: 0; }
@@ -53,7 +93,7 @@ body, #__next, #root {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-home-title);
   overflow-x: hidden;
   cursor: none; /* Cache le curseur natif */
 }
@@ -225,6 +265,9 @@ body {
 }
 
 :root {
+  --font-home-title: "Geist Mono", ui-monospace, monospace;
+  --font-electric-blue: "Electric Blue", ui-sans-serif, system-ui, sans-serif;
+  --viewport-bleed: 8px;
   --lg-bg-color: #ffffff12;
   --lg-highlight: rgba(255, 255, 255, 0.75);
   --lg-text: #292929;
@@ -237,17 +280,26 @@ body {
   .font-enigma { 
     font-family: var(--font-enigma), ui-monospace, monospace; 
   }
-  .font-kode { 
+  .font-home-title {
+    font-family: var(--font-home-title);
+    font-weight: 400;
+    font-synthesis: none;
+  }
+  .font-kode {
     font-family: var(--font-enigma), ui-monospace, monospace; 
   }
-  .font-jetbrains { 
-    font-family: var(--font-jetbrains), ui-monospace, monospace; 
+  .font-electric-blue {
+    font-family: var(--font-electric-blue);
+    font-synthesis: none;
   }
 }
 
 .nav-link {
   position: relative;
-  padding: 8px 0;
+  padding: 2px 0 3px;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
   transition: all 0.3s ease;
 }
 
@@ -284,7 +336,7 @@ body {
   backdrop-filter: blur(8px);
   border: 1px solid;
   transition: all 0.2s ease;
-  font-family: var(--font-jetbrains-mono);
+  font-family: var(--font-enigma), ui-monospace, monospace;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -356,7 +408,7 @@ body {
 }
 
 .hud-minimal {
-  font-family: var(--font-kode-mono);
+  font-family: var(--font-enigma), ui-monospace, monospace;
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -569,7 +621,7 @@ body {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  font-family: var(--font-kode-mono);
+  font-family: var(--font-enigma), ui-monospace, monospace;
 }
 
 /* Effet négatif dynamique pour les textes */
@@ -632,7 +684,408 @@ body {
   }
 }
 
+/* Header / footer transparents — contenu visible sur toute la hauteur */
+.site-chrome {
+  background: transparent;
+  pointer-events: none;
+}
+
+.site-chrome :is(a, button, [role="button"]) {
+  pointer-events: auto;
+}
+
+.site-chrome__panel {
+  pointer-events: auto;
+}
+
+/*
+ * Courbe du décalage horizontal, échantillonnée à l'avance sur sin(πt) entre
+ * 28 % et 72 % de la traversée du scrollport. Tous les items suivent la même
+ * courbe : rien à recalculer par frame. Sur une view-timeline, `transform`
+ * est composé par le GPU.
+ */
+@keyframes project-li-jump {
+  0%,
+  28% {
+    transform: translateX(0);
+  }
+  32.4% {
+    transform: translateX(calc(var(--jump-max) * 0.309));
+  }
+  36.8% {
+    transform: translateX(calc(var(--jump-max) * 0.588));
+  }
+  41.2% {
+    transform: translateX(calc(var(--jump-max) * 0.809));
+  }
+  45.6% {
+    transform: translateX(calc(var(--jump-max) * 0.951));
+  }
+  50% {
+    transform: translateX(var(--jump-max));
+  }
+  54.4% {
+    transform: translateX(calc(var(--jump-max) * 0.951));
+  }
+  58.8% {
+    transform: translateX(calc(var(--jump-max) * 0.809));
+  }
+  63.2% {
+    transform: translateX(calc(var(--jump-max) * 0.588));
+  }
+  67.6% {
+    transform: translateX(calc(var(--jump-max) * 0.309));
+  }
+  72%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.projects-scroll-list-shell {
+  --project-list-marker-size: clamp(0.45rem, 1.4vmin, 0.85rem);
+  --jump-max: clamp(1.25rem, 6.5vmin, 4rem);
+  --list-inline-start: clamp(2rem, 6vw, 4.5rem);
+  --list-inline-end: clamp(1.5rem, 5vw, 3.5rem);
+  color: #0a0a0a;
+  padding-inline: var(--list-inline-start) var(--list-inline-end);
+  box-sizing: border-box;
+}
+
+.projects-scroll-list-shell::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--list-inline-start) - var(--project-list-marker-size) * 2);
+  z-index: 2;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: var(--project-list-marker-size) solid transparent;
+  border-bottom: var(--project-list-marker-size) solid transparent;
+  border-left: calc(var(--project-list-marker-size) * 1.35) solid currentColor;
+  pointer-events: none;
+}
+
+.projects-scroll-list {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.projects-scroll-list__track {
+  width: 100%;
+}
+
+.projects-scroll-list__scroller {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  /* `visible` calculerait en `auto` face à overflow-y : les titres en nowrap
+     rendraient alors le conteneur scrollable horizontalement. */
+  overflow-x: clip;
+  /* Le snap est délégué au navigateur : il reste correct à toute vélocité,
+     inertie comprise. */
+  scroll-snap-type: y mandatory;
+  /* Fondu progressif des items en haut / bas du scrollport. */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.35) 8%,
+    #000 22%,
+    #000 78%,
+    rgb(0 0 0 / 0.35) 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.35) 8%,
+    #000 22%,
+    #000 78%,
+    rgb(0 0 0 / 0.35) 92%,
+    transparent 100%
+  );
+}
+
+.projects-scroll-list__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.projects-scroll-list__item {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  padding-right: var(--jump-max);
+  box-sizing: border-box;
+  font-size: clamp(1.75rem, 7.5vmin, 4.25rem);
+  font-weight: 300;
+  line-height: 0.92;
+  color: inherit;
+  opacity: 0.38;
+  transition: opacity 0.35s ease;
+  display: flex;
+  align-items: center;
+  contain: layout style;
+}
+
+.projects-scroll-list__item[data-virtual-index] {
+  scroll-snap-align: center;
+}
+
+.projects-scroll-list__item--measure {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+.projects-scroll-list__item--snapped {
+  opacity: 1;
+}
+
+.projects-scroll-list__item-label {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  transform: translateX(0);
+  transform-origin: left center;
+}
+
+.projects-scroll-list__item button:disabled {
+  cursor: default;
+}
+
+.projects-scroll-list__item:has(button:not(:disabled)):hover {
+  opacity: 0.72;
+}
+
+@supports (animation-timeline: view()) {
+  .projects-scroll-list__item-label {
+    animation: project-li-jump linear both;
+    animation-timeline: view();
+    will-change: transform;
+  }
+}
+
+/* Panneau détail projet — droite desktop, bas mobile */
+.project-detail-panel {
+  position: absolute;
+  z-index: 3;
+  color: #0a0a0a;
+  box-sizing: border-box;
+  left: var(--list-inline-start, clamp(2rem, 6vw, 4.5rem));
+  right: var(--list-inline-end, clamp(1.5rem, 5vw, 3.5rem));
+  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  max-width: none;
+}
+
+.project-detail-panel__inner {
+  position: relative;
+  isolation: isolate;
+  max-width: 22rem;
+  /* Mobile : blur fort au centre, plus étendu et progressif sur les bords. */
+  padding: 1.15rem 1.2rem 1.25rem;
+  margin-inline: -1.2rem;
+  background: transparent;
+}
+
+.project-detail-panel__inner::before,
+.project-detail-panel__inner::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Halo étendu — blur moyen, fondus longs sur tous les bords. */
+.project-detail-panel__inner::before {
+  inset: -4.5rem -3.75rem -3.5rem;
+  background: linear-gradient(
+    to top,
+    rgb(255 255 255 / 0.72) 0%,
+    rgb(255 255 255 / 0.45) 55%,
+    rgb(255 255 255 / 0.14) 100%
+  );
+  backdrop-filter: blur(48px) saturate(1.1);
+  -webkit-backdrop-filter: blur(48px) saturate(1.1);
+  mask-image: radial-gradient(
+    ellipse 110% 105% at 50% 62%,
+    #000 0%,
+    #000 26%,
+    rgb(0 0 0 / 0.75) 52%,
+    rgb(0 0 0 / 0.35) 72%,
+    transparent 90%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 110% 105% at 50% 62%,
+    #000 0%,
+    #000 26%,
+    rgb(0 0 0 / 0.75) 52%,
+    rgb(0 0 0 / 0.35) 72%,
+    transparent 90%
+  );
+}
+
+/* Noyau — blur plus fort sous le texte. */
+.project-detail-panel__inner::after {
+  inset: -1.75rem -1.4rem -1.4rem;
+  background: rgb(255 255 255 / 0.68);
+  backdrop-filter: blur(72px) saturate(1.15);
+  -webkit-backdrop-filter: blur(72px) saturate(1.15);
+  mask-image: radial-gradient(
+    ellipse 95% 90% at 50% 55%,
+    #000 0%,
+    #000 45%,
+    rgb(0 0 0 / 0.55) 66%,
+    transparent 82%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 95% 90% at 50% 55%,
+    #000 0%,
+    #000 45%,
+    rgb(0 0 0 / 0.55) 66%,
+    transparent 82%
+  );
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .project-detail-panel__inner::before {
+    background: rgb(255 255 255 / 0.75);
+  }
+
+  .project-detail-panel__inner::after {
+    background: rgb(255 255 255 / 0.55);
+  }
+}
+
+.project-detail-panel__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 300;
+  line-height: 1.35;
+  opacity: 0.82;
+  color: #0a0a0a;
+}
+
+.project-detail-panel__title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.05rem, 3.8vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.1;
+  color: #000;
+}
+
+.project-detail-panel__summary {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.8rem, 2.8vw, 0.92rem);
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 1;
+  color: #0a0a0a;
+  max-width: 34ch;
+}
+
+.project-detail-panel__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  color: #0a0a0a;
+}
+
+.project-detail-panel__link {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: #000;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.1rem;
+  transition: opacity 0.2s ease;
+}
+
+.project-detail-panel__link:hover {
+  opacity: 0.55;
+}
+
+@media (min-width: 768px) {
+  .project-detail-panel {
+    left: auto;
+    right: clamp(1.75rem, 4.5vw, 3.5rem);
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    width: min(22rem, 30vw);
+  }
+
+  .project-detail-panel__inner {
+    max-width: none;
+    padding: 0;
+    margin-inline: 0;
+    background: none;
+  }
+
+  .project-detail-panel__inner::before,
+  .project-detail-panel__inner::after {
+    content: none;
+    display: none;
+  }
+
+  .project-detail-panel__title {
+    font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+    font-weight: 400;
+  }
+
+  .project-detail-panel__eyebrow {
+    opacity: 0.55;
+  }
+
+  .project-detail-panel__summary {
+    font-size: 0.9rem;
+    font-weight: 300;
+    opacity: 0.78;
+    max-width: 36ch;
+  }
+
+  .project-detail-panel__stack {
+    font-weight: 300;
+    opacity: 0.5;
+  }
+
+  .project-detail-panel__link {
+    font-weight: 400;
+    color: inherit;
+  }
+
+  /* Laisse de la place à droite pour le panneau (courbe + texte). */
+  .projects-scroll-list-shell {
+    --list-inline-end: max(22rem, 32vw);
+  }
+}
+
 /* Styles pour le carrousel horizontal */
+.projects-gallery-full-bleed {
+  width: calc(100% + 2 * var(--viewport-bleed));
+  max-width: 100vw;
+  margin-left: calc(-1 * var(--viewport-bleed));
+  margin-right: calc(-1 * var(--viewport-bleed));
+}
+
 .horizontal-carousel-container {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -640,6 +1093,77 @@ body {
 
 .horizontal-carousel-container::-webkit-scrollbar {
   display: none;
+}
+
+/* Liste expertise — mobile : flux page unique + fondu header/footer ; desktop : colonne + mask liste */
+.specialist-catalog {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.specialist-catalog::-webkit-scrollbar {
+  display: none;
+}
+
+.specialist-catalog__list-pane {
+  height: auto;
+  min-height: 0;
+}
+
+@media (max-width: 1023px) {
+  .specialist-catalog {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      rgb(0 0 0 / 0.2) 2.75rem,
+      #000 5.75rem,
+      #000 calc(100% - 5.25rem),
+      rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      rgb(0 0 0 / 0.2) 2.75rem,
+      #000 5.75rem,
+      #000 calc(100% - 5.25rem),
+      rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
+      transparent 100%
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .specialist-catalog__list-pane {
+    height: 100%;
+  }
+
+  .specialist-catalog__scroller {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(0 0 0 / 0.25) 6%,
+      #000 16%,
+      #000 84%,
+      rgb(0 0 0 / 0.25) 94%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(0 0 0 / 0.25) 6%,
+      #000 16%,
+      #000 84%,
+      rgb(0 0 0 / 0.25) 94%,
+      transparent 100%
+    );
+  }
+
+  .specialist-catalog__scroller::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Scrollbar personnalisée pour le textarea du formulaire de contact */
