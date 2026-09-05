@@ -24,6 +24,10 @@ import {
   HOME_TITLE_WIDTH_RATIO,
   HOME_HOVER_HOLD_MS,
 } from "@/lib/home-title-style"
+import {
+  readHeaderBandLayout,
+  type HeaderBandLayout,
+} from "@/lib/home-header-band"
 
 interface HomeTitleProps {
   lines: string[]
@@ -36,12 +40,6 @@ interface HomeTitleProps {
 
 const BRAND_FONT_FAMILY = '"Electric Blue", ui-sans-serif, system-ui, sans-serif'
 const TITLE_FONT_FAMILY = '"Geist Mono", ui-monospace, monospace'
-
-interface HeaderBandLayout {
-  left: number
-  width: number
-  welcomeWidth: number
-}
 
 function measureTextWidth(
   text: string,
@@ -97,32 +95,6 @@ function fitFontSize(
   }
 
   return best
-}
-
-function readHeaderBandLayout(
-  container: HTMLElement,
-  isMobile: boolean,
-): HeaderBandLayout | null {
-  const logo = document.querySelector<HTMLElement>('[data-header-align="logo"]')
-  if (!logo) return null
-
-  const navEnd = document.querySelector<HTMLElement>('[data-header-align="nav-end"]')
-  const navEndMobile = document.querySelector<HTMLElement>('[data-header-align="nav-end-mobile"]')
-  const endElement = isMobile ? navEndMobile ?? navEnd : navEnd
-  if (!endElement) return null
-
-  const containerRect = container.getBoundingClientRect()
-  const logoRect = logo.getBoundingClientRect()
-  const endRect = endElement.getBoundingClientRect()
-  const width = endRect.right - logoRect.left
-
-  if (width <= 0) return null
-
-  return {
-    left: logoRect.left - containerRect.left,
-    width,
-    welcomeWidth: width * HOME_TITLE_WIDTH_RATIO,
-  }
 }
 
 export default function HomeTitle({
