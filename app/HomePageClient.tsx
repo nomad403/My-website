@@ -138,7 +138,10 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
     () => [t("home.titleAltLine1"), t("home.titleAltLine2")],
     [t, language],
   )
-  const homeBrandAlt = useMemo(() => t("home.brandAlt"), [t, language])
+  const homeBrandAltWords = useMemo(
+    () => [t("home.brandAlt")],
+    [t, language],
+  )
   const [rotateHintActive, setRotateHintActive] = useState(false)
   const currentPageRef = useRef(currentPage)
   currentPageRef.current = currentPage
@@ -366,7 +369,11 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           visible={currentConfig.ascii.visible}
           mode={asciiSettings.mode}
           invert={currentConfig.ascii.invert}
-          opacity={currentConfig.ascii.opacity}
+          opacity={
+            isMobileViewport
+              ? Math.max(0.28, currentConfig.ascii.opacity * 0.7)
+              : currentConfig.ascii.opacity
+          }
           color={currentConfig.ascii.color}
           fontPx={asciiSettings.fontPx}
           fps={asciiSettings.fps}
@@ -641,7 +648,7 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
                 <HomeTitle
                   lines={displayedHomeLines}
                   alternateLines={displayedHomeAltLines}
-                  alternateBrandText={homeBrandAlt}
+                  alternateBrandTexts={homeBrandAltWords}
                   ready={showHomeTitle}
                   mode={mode}
                   isMobile={isMobileViewport}

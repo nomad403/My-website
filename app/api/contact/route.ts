@@ -5,7 +5,7 @@ import { Resend } from "resend";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Body = { nom?: string; prenom?: string; contact?: string; message?: string };
+type Body = { nom?: string; contact?: string; message?: string };
 
 export async function POST(req: Request) {
   try {
@@ -18,11 +18,10 @@ export async function POST(req: Request) {
     }
 
     const nom = (data?.nom || "").trim();
-    const prenom = (data?.prenom || "").trim();
     const contact = (data?.contact || "").trim();
     const message = (data?.message || "").trim();
 
-    if (!nom || !prenom || !contact || !message) {
+    if (!nom || !contact || !message) {
       return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
     }
 
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
 
     const resend = new Resend(apiKey);
 
-    const subject = `Contact — ${prenom} ${nom}`;
+    const subject = `Contact — ${nom}`;
     const isEmail = /\S+@\S+\.\S+/.test(contact);
 
     const result = await resend.emails.send({
@@ -44,11 +43,10 @@ export async function POST(req: Request) {
       to,
       reply_to: isEmail ? contact : undefined,
       subject,
-      text: `Nom: ${nom}\nPrénom: ${prenom}\nContact: ${contact}\n\n${message}`,
+      text: `Nom / Structure: ${nom}\nContact: ${contact}\n\n${message}`,
       html: `
         <h2>Nouveau message</h2>
-        <p><b>Nom:</b> ${nom}</p>
-        <p><b>Prénom:</b> ${prenom}</p>
+        <p><b>Nom / Structure:</b> ${nom}</p>
         <p><b>Contact:</b> ${contact}</p>
         <hr/>
         <pre style="white-space:pre-wrap">${message.replace(/</g, "&lt;")}</pre>

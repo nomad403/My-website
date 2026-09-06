@@ -5,7 +5,31 @@
 @font-face {
   font-family: "Geist Mono";
   src: url("/fonts/Geist/GeistMono-ExtraLight.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist/GeistMono-Light.woff2") format("woff2");
   font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist/GeistMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/Geist/GeistMono-Bold.woff2") format("woff2");
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -281,6 +305,11 @@ body {
     font-family: var(--font-enigma), ui-monospace, monospace; 
   }
   .font-home-title {
+    font-family: var(--font-home-title);
+    font-weight: 300;
+    font-synthesis: none;
+  }
+  .font-home-title-mobile {
     font-family: var(--font-home-title);
     font-weight: 400;
     font-synthesis: none;
@@ -790,23 +819,39 @@ body {
   /* Le snap est délégué au navigateur : il reste correct à toute vélocité,
      inertie comprise. */
   scroll-snap-type: y mandatory;
-  /* Fondu progressif des items en haut / bas du scrollport. */
+  /* Fondu progressif très marqué aux extrémités (haut / bas). */
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgb(0 0 0 / 0.35) 8%,
-    #000 22%,
-    #000 78%,
-    rgb(0 0 0 / 0.35) 92%,
+    rgb(0 0 0 / 0.02) 6%,
+    rgb(0 0 0 / 0.08) 12%,
+    rgb(0 0 0 / 0.2) 18%,
+    rgb(0 0 0 / 0.42) 26%,
+    rgb(0 0 0 / 0.72) 34%,
+    #000 42%,
+    #000 58%,
+    rgb(0 0 0 / 0.72) 66%,
+    rgb(0 0 0 / 0.42) 74%,
+    rgb(0 0 0 / 0.2) 82%,
+    rgb(0 0 0 / 0.08) 88%,
+    rgb(0 0 0 / 0.02) 94%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgb(0 0 0 / 0.35) 8%,
-    #000 22%,
-    #000 78%,
-    rgb(0 0 0 / 0.35) 92%,
+    rgb(0 0 0 / 0.02) 6%,
+    rgb(0 0 0 / 0.08) 12%,
+    rgb(0 0 0 / 0.2) 18%,
+    rgb(0 0 0 / 0.42) 26%,
+    rgb(0 0 0 / 0.72) 34%,
+    #000 42%,
+    #000 58%,
+    rgb(0 0 0 / 0.72) 66%,
+    rgb(0 0 0 / 0.42) 74%,
+    rgb(0 0 0 / 0.2) 82%,
+    rgb(0 0 0 / 0.08) 88%,
+    rgb(0 0 0 / 0.02) 94%,
     transparent 100%
   );
 }
@@ -883,7 +928,7 @@ body {
   box-sizing: border-box;
   left: var(--list-inline-start, clamp(2rem, 6vw, 4.5rem));
   right: var(--list-inline-end, clamp(1.5rem, 5vw, 3.5rem));
-  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
   max-width: none;
 }
 
@@ -891,9 +936,9 @@ body {
   position: relative;
   isolation: isolate;
   max-width: 22rem;
-  /* Mobile : blur fort au centre, plus étendu et progressif sur les bords. */
-  padding: 1.15rem 1.2rem 1.25rem;
-  margin-inline: -1.2rem;
+  /* Mobile : panneau bas, compact, blur réduit pour laisser voir la liste. */
+  padding: 0.55rem 0.9rem 0.65rem;
+  margin-inline: -0.9rem;
   background: transparent;
 }
 
@@ -905,117 +950,179 @@ body {
   pointer-events: none;
 }
 
-/* Halo étendu — blur moyen, fondus longs sur tous les bords. */
+/*
+ * Halo mobile : un seul voile très étendu, masqué par un radial ancré en bas
+ * avec beaucoup d’étapes — le début du fondu ne doit pas se lire comme une ligne.
+ */
 .project-detail-panel__inner::before {
-  inset: -4.5rem -3.75rem -3.5rem;
+  inset: -6.5rem -4rem -3.25rem;
   background: linear-gradient(
     to top,
-    rgb(255 255 255 / 0.72) 0%,
-    rgb(255 255 255 / 0.45) 55%,
-    rgb(255 255 255 / 0.14) 100%
+    rgb(255 255 255 / 0.82) 0%,
+    rgb(255 255 255 / 0.58) 22%,
+    rgb(255 255 255 / 0.32) 48%,
+    rgb(255 255 255 / 0.14) 72%,
+    rgb(255 255 255 / 0.04) 88%,
+    transparent 100%
   );
-  backdrop-filter: blur(48px) saturate(1.1);
-  -webkit-backdrop-filter: blur(48px) saturate(1.1);
-  mask-image: radial-gradient(
-    ellipse 110% 105% at 50% 62%,
-    #000 0%,
-    #000 26%,
-    rgb(0 0 0 / 0.75) 52%,
-    rgb(0 0 0 / 0.35) 72%,
-    transparent 90%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse 110% 105% at 50% 62%,
-    #000 0%,
-    #000 26%,
-    rgb(0 0 0 / 0.75) 52%,
-    rgb(0 0 0 / 0.35) 72%,
-    transparent 90%
-  );
+  backdrop-filter: blur(42px) saturate(1.08);
+  -webkit-backdrop-filter: blur(42px) saturate(1.08);
+  mask-image:
+    radial-gradient(
+      ellipse 155% 175% at 50% 100%,
+      #000 0%,
+      #000 8%,
+      rgb(0 0 0 / 0.92) 22%,
+      rgb(0 0 0 / 0.72) 38%,
+      rgb(0 0 0 / 0.48) 52%,
+      rgb(0 0 0 / 0.28) 66%,
+      rgb(0 0 0 / 0.14) 78%,
+      rgb(0 0 0 / 0.05) 90%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(0 0 0 / 0.35) 8%,
+      #000 18%,
+      #000 82%,
+      rgb(0 0 0 / 0.35) 92%,
+      transparent 100%
+    );
+  -webkit-mask-image:
+    radial-gradient(
+      ellipse 155% 175% at 50% 100%,
+      #000 0%,
+      #000 8%,
+      rgb(0 0 0 / 0.92) 22%,
+      rgb(0 0 0 / 0.72) 38%,
+      rgb(0 0 0 / 0.48) 52%,
+      rgb(0 0 0 / 0.28) 66%,
+      rgb(0 0 0 / 0.14) 78%,
+      rgb(0 0 0 / 0.05) 90%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(0 0 0 / 0.35) 8%,
+      #000 18%,
+      #000 82%,
+      rgb(0 0 0 / 0.35) 92%,
+      transparent 100%
+    );
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
 }
 
-/* Noyau — blur plus fort sous le texte. */
+/* Noyau très doux sous le texte — pas de plateau opaque net. */
 .project-detail-panel__inner::after {
-  inset: -1.75rem -1.4rem -1.4rem;
-  background: rgb(255 255 255 / 0.68);
-  backdrop-filter: blur(72px) saturate(1.15);
-  -webkit-backdrop-filter: blur(72px) saturate(1.15);
+  inset: -2.75rem -2rem -1.5rem;
+  background: rgb(255 255 255 / 0.42);
+  backdrop-filter: blur(64px) saturate(1.12);
+  -webkit-backdrop-filter: blur(64px) saturate(1.12);
   mask-image: radial-gradient(
-    ellipse 95% 90% at 50% 55%,
-    #000 0%,
-    #000 45%,
-    rgb(0 0 0 / 0.55) 66%,
-    transparent 82%
+    ellipse 120% 130% at 50% 70%,
+    rgb(0 0 0 / 0.85) 0%,
+    rgb(0 0 0 / 0.55) 35%,
+    rgb(0 0 0 / 0.22) 62%,
+    rgb(0 0 0 / 0.06) 82%,
+    transparent 100%
   );
   -webkit-mask-image: radial-gradient(
-    ellipse 95% 90% at 50% 55%,
-    #000 0%,
-    #000 45%,
-    rgb(0 0 0 / 0.55) 66%,
-    transparent 82%
+    ellipse 120% 130% at 50% 70%,
+    rgb(0 0 0 / 0.85) 0%,
+    rgb(0 0 0 / 0.55) 35%,
+    rgb(0 0 0 / 0.22) 62%,
+    rgb(0 0 0 / 0.06) 82%,
+    transparent 100%
   );
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .project-detail-panel__inner::before {
-    background: rgb(255 255 255 / 0.75);
+    background: linear-gradient(
+      to top,
+      rgb(255 255 255 / 0.88) 0%,
+      rgb(255 255 255 / 0.45) 50%,
+      transparent 100%
+    );
   }
 
   .project-detail-panel__inner::after {
-    background: rgb(255 255 255 / 0.55);
+    background: rgb(255 255 255 / 0.4);
   }
 }
 
+/* Hiérarchie de scan : type + stack en gras, pitch en light */
 .project-detail-panel__eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: 0.65rem;
-  font-weight: 300;
-  line-height: 1.35;
-  opacity: 0.82;
+  margin: 0 0 0.2rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  opacity: 0.9;
   color: #0a0a0a;
 }
 
+/* Redondant avec la liste mobile — visible desktop seulement. */
 .project-detail-panel__title {
-  margin: 0 0 0.65rem;
+  display: none;
+  margin: 0 0 0.55rem;
   font-size: clamp(1.05rem, 3.8vw, 1.35rem);
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.1;
   color: #000;
+  opacity: 1;
 }
 
 .project-detail-panel__summary {
-  margin: 0 0 0.85rem;
-  font-size: clamp(0.8rem, 2.8vw, 0.92rem);
-  font-weight: 400;
-  line-height: 1.45;
-  opacity: 1;
+  margin: 0 0 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.4;
+  opacity: 0.78;
   color: #0a0a0a;
-  max-width: 34ch;
+  max-width: none;
+  display: block;
+  overflow: visible;
+}
+
+.project-detail-panel__summary.font-home-title,
+.project-detail-panel__summary.font-home-title-mobile {
+  font-weight: 300;
 }
 
 .project-detail-panel__stack {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
-  margin: 0 0 0.9rem;
+  gap: 0.25rem 0.55rem;
+  margin: 0 0 0.45rem;
   padding: 0;
   list-style: none;
-  font-size: 0.68rem;
-  font-weight: 400;
+  font-size: 0.6rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.72;
+  opacity: 0.85;
   color: #0a0a0a;
+  overflow: visible;
+  max-width: 100%;
+}
+
+.project-detail-panel__stack li {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .project-detail-panel__link {
   display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.68rem;
+  font-weight: 700;
   text-decoration: none;
   color: #000;
   border-bottom: 1px solid currentColor;
-  padding-bottom: 0.1rem;
+  padding-bottom: 0.05rem;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 
@@ -1047,29 +1154,41 @@ body {
   }
 
   .project-detail-panel__title {
+    display: block;
     font-size: clamp(1.15rem, 1.6vw, 1.55rem);
-    font-weight: 400;
+    font-weight: 500;
   }
 
   .project-detail-panel__eyebrow {
-    opacity: 0.55;
+    margin: 0 0 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.85;
   }
 
   .project-detail-panel__summary {
+    margin: 0 0 0.85rem;
     font-size: 0.9rem;
     font-weight: 300;
-    opacity: 0.78;
+    line-height: 1.5;
+    opacity: 0.72;
     max-width: 36ch;
   }
 
   .project-detail-panel__stack {
-    font-weight: 300;
-    opacity: 0.5;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    margin: 0 0 0.9rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    opacity: 0.8;
   }
 
   .project-detail-panel__link {
-    font-weight: 400;
+    font-size: 0.7rem;
+    font-weight: 700;
     color: inherit;
+    padding-bottom: 0.1rem;
   }
 
   /* Laisse de la place à droite pour le panneau (courbe + texte). */
@@ -1137,6 +1256,11 @@ body {
   font-weight: 400;
 }
 
+.specialist-catalog__lead {
+  opacity: 1;
+  line-height: 1.5;
+}
+
 .specialist-catalog__service-body {
   font-size: 0.8125rem;
   line-height: 1.6;
@@ -1144,10 +1268,47 @@ body {
   font-weight: 400;
 }
 
+/* Liquid glass — lisible sur fond day + ASCII (contrairement à white/10) */
+.specialist-service-glass {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(14px) saturate(1.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45);
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.07);
+}
+
+.specialist-service-glass--idle {
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.specialist-service-glass--idle:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(14px) saturate(1.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45);
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.07);
+}
+
 @media (min-width: 768px) {
   .specialist-catalog__body {
     font-size: 0.9375rem;
     line-height: 1.7;
+  }
+
+  .specialist-catalog__lead {
+    font-size: 1rem;
+    line-height: 1.55;
   }
 
   .specialist-catalog__service-body {
@@ -1160,6 +1321,11 @@ body {
   .specialist-catalog__body {
     font-size: 1rem;
     line-height: 1.72;
+  }
+
+  .specialist-catalog__lead {
+    font-size: 1.0625rem;
+    line-height: 1.55;
   }
 
   .specialist-catalog__service-body {

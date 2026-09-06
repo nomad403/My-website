@@ -32,7 +32,7 @@ import {
 interface HomeTitleProps {
   lines: string[]
   alternateLines: string[]
-  alternateBrandText: string
+  alternateBrandTexts: string[]
   mode: "day" | "night"
   isMobile: boolean
   ready: boolean
@@ -101,7 +101,7 @@ function fitFontSize(
 export default function HomeTitle({
   lines,
   alternateLines,
-  alternateBrandText,
+  alternateBrandTexts,
   mode,
   isMobile,
   ready,
@@ -131,14 +131,18 @@ export default function HomeTitle({
     ? HOME_BRAND_MAX_FONT_PX_MOBILE
     : HOME_BRAND_MAX_FONT_PX_DESKTOP
 
+  const titleFontWeight = isMobile ? 400 : 300
+
   const lineStyle = {
     fontSize: `${fontSize}px`,
+    fontWeight: titleFontWeight,
     letterSpacing: `${HOME_TITLE_LETTER_SPACING_EM}em`,
     lineHeight: isMobile ? HOME_TITLE_LINE_HEIGHT_MOBILE : HOME_TITLE_LINE_HEIGHT,
     fontSynthesis: "none" as const,
   }
 
   const titleColorClass = mode === "night" ? "text-white" : "text-black"
+  const titleFontClass = isMobile ? "font-home-title-mobile" : "font-home-title"
 
   useEffect(() => {
     const container = containerRef.current
@@ -147,7 +151,11 @@ export default function HomeTitle({
     const update = () => {
       const containerWidth = container.clientWidth
       const layout = readHeaderBandLayout(container, isMobile)
-      const welcomeWidth = layout?.welcomeWidth ?? containerWidth * HOME_TITLE_WIDTH_RATIO
+      const logoLeft = layout?.left ?? 0
+      // Mobile : toute la largeur utile sous le logo, pour garder exactement 2 lignes nowrap.
+      const welcomeWidth = isMobile
+        ? Math.max(0, containerWidth - logoLeft)
+        : layout?.welcomeWidth ?? containerWidth * HOME_TITLE_WIDTH_RATIO
 
       const brandWidth = layout?.width ?? containerWidth
       const nextBrandFontSize = fitFontSize(
@@ -182,18 +190,16 @@ export default function HomeTitle({
           titleMaxPx,
           HOME_TITLE_MIN_FONT_PX,
           TITLE_FONT_FAMILY,
-          400,
+          titleFontWeight,
           HOME_TITLE_LETTER_SPACING_EM,
         ),
       )
 
-      setHeaderBand(
-        layout ?? {
-          left: 0,
-          width: containerWidth,
-          welcomeWidth,
-        },
-      )
+      setHeaderBand({
+        left: logoLeft,
+        width: layout?.width ?? containerWidth,
+        welcomeWidth,
+      })
       setBrandFontSize(nextBrandFontSize)
       setBrandScaleX(
         naturalBrandWidth > 0 && brandWidth > 0 ? brandWidth / naturalBrandWidth : 1,
@@ -210,13 +216,13 @@ export default function HomeTitle({
       ro.disconnect()
       window.removeEventListener("resize", update)
     }
-  }, [lines, alternateLines, maxFontPx, maxBrandFontPx, isMobile])
+  }, [lines, alternateLines, maxFontPx, maxBrandFontPx, isMobile, titleFontWeight])
 
   return (
     <div className="pointer-events-auto w-full min-w-0 px-4 md:px-8">
       <div ref={containerRef} className="mx-auto w-full max-w-7xl">
         <div
-          className="flex min-w-0 flex-col"
+          className="flex min-w-0 flex-col overflow-hidden"
           style={{
             marginLeft: `${headerBand.left}px`,
             width:
@@ -228,8 +234,8 @@ export default function HomeTitle({
           <ShuffleDualLines
             key={[...dualLines.map((line) => line.primary), ...dualLines.map((line) => line.alternate)].join("|")}
             lines={dualLines}
-            className="w-full cursor-default"
-            lineClassName={`font-home-title w-full text-left normal-case ${titleColorClass}`}
+            className="w-full max-w-full cursor-default"
+            lineClassName={`${titleFontClass} block w-full max-w-full overflow-hidden text-left normal-case whitespace-nowrap ${titleColorClass}`}
             lineStyle={lineStyle}
             lineGapClassName=""
             enableHover={enableHover}
@@ -241,7 +247,7 @@ export default function HomeTitle({
         </div>
         <BrandAsciiTitle
           text={HOME_BRAND_TEXT}
-          alternateText={alternateBrandText}
+          alternateTexts={alternateBrandTexts}
           mode={mode}
           enabled={ready && !isMobile}
           marginLeft={headerBand.left}

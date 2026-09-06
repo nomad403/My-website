@@ -30,19 +30,25 @@ export default function SpecialistServiceRow({
   return (
     <div className="border-t border-black/15 first:border-t-0">
       <div
-        className={`transition-colors duration-200 ${isOpen ? "bg-gray-100 px-2" : ""}`}
+        className={`px-2 transition-all duration-300 ${
+          isOpen
+            ? "specialist-service-glass"
+            : "specialist-service-glass specialist-service-glass--idle"
+        }`}
       >
         <button
           type="button"
           className={`group flex w-full items-center justify-between gap-4 py-3.5 md:py-4 text-left transition-colors duration-200 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
-            isOpen ? "" : "px-2 hover:bg-gray-100"
+            isOpen ? "text-cyan-600" : ""
           }`}
           aria-expanded={isOpen}
           aria-controls={panelId}
           onClick={() => onToggle(service.id)}
         >
         <ShuffleText
-          className="font-kode text-sm md:text-base font-normal text-black/90 group-hover:text-inherit"
+          className={`font-kode text-sm md:text-base font-normal group-hover:text-inherit ${
+            isOpen ? "text-cyan-600" : "text-black/90"
+          }`}
           shuffleDuration={150}
           letterDelay={12}
           enableHover={!reducedMotion}
@@ -50,7 +56,9 @@ export default function SpecialistServiceRow({
           {title}
         </ShuffleText>
         <span
-          className="font-kode shrink-0 text-base md:text-lg font-light leading-none text-black/70 transition-transform duration-200 group-hover:text-inherit"
+          className={`font-kode shrink-0 text-base md:text-lg font-light leading-none transition-colors duration-200 ${
+            isOpen ? "text-cyan-600" : "text-black/70 group-hover:text-cyan-600"
+          }`}
           aria-hidden="true"
         >
           {isOpen ? "×" : "+"}

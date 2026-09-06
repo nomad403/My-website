@@ -41,7 +41,7 @@ export const PROJECT_ITEMS: ProjectItem[] = [
   },
   {
     id: 3,
-    name: "ras-energies.com",
+    name: "ras-energies",
     url: "https://paris.ras-energies.com",
     description: L("Site web vitrine", "Showcase website"),
     summary: L(

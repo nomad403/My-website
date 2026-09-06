@@ -51,15 +51,17 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
               <p className="mt-2 font-kode text-xs uppercase text-black/45 md:text-sm">
                 {t("specialist.subtitle")}
               </p>
-              <p className="specialist-catalog__body mt-6 w-full max-w-[36rem] text-left font-home-title opacity-90 md:mt-8">
-                {t("specialist.intro")}
-                <br />
-                <br />
-                {t("specialist.text1")}
-                <br />
-                <br />
-                {t("specialist.text2")}
-              </p>
+              <div className="specialist-catalog__copy mt-6 flex w-full max-w-[34rem] flex-col gap-5 text-left md:mt-8 md:gap-6">
+                <p className="specialist-catalog__body specialist-catalog__lead font-home-title">
+                  {t("specialist.intro")}
+                </p>
+                <p className="specialist-catalog__body font-home-title opacity-90">
+                  {t("specialist.text1")}
+                </p>
+                <p className="specialist-catalog__body font-home-title opacity-90">
+                  {t("specialist.text2")}
+                </p>
+              </div>
             </div>
           </section>
 

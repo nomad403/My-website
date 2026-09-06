@@ -423,17 +423,95 @@ export default function SpheresPacking({
   useEffect(() => {
     if (typeof window === "undefined") return
 
+    const prefersCoarsePointer =
+      window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+
+    const clampToUnit = (value: number) => Math.max(-1, Math.min(1, value))
+    const state = tiltRef.current
+    const damping = prefersCoarsePointer ? 0.08 : 0.14
+    const strength = prefersCoarsePointer ? 0.55 : 0.5
+
+    const writePhysicsCenter = () => {
+      state.x += (state.targetX - state.x) * damping
+      state.y += (state.targetY - state.y) * damping
+
+      const spheres = instanceRef.current?.spheres
+      const center = spheres?.physics?.center
+      if (center) {
+        const maxX = spheres.config?.maxX ?? 15
+        const maxY = spheres.config?.maxY ?? 15
+        center.x = state.x * maxX * strength
+        center.y = state.y * maxY * strength
+      }
+    }
+
+    // Desktop : le suivi souris pilote physics.center (donc l’ASCII), pas l’idle.
+    if (!prefersCoarsePointer) {
+      let pointerTargetX = 0
+      let pointerTargetY = 0
+      let pointerHover = false
+      const POINTER_DECAY = 0.95
+      const POINTER_SMOOTH = 0.18
+
+      const applyPointerTilt = () => {
+        if (!pointerHover) {
+          pointerTargetX *= POINTER_DECAY
+          pointerTargetY *= POINTER_DECAY
+        }
+        state.targetX += (pointerTargetX - state.targetX) * POINTER_SMOOTH
+        state.targetY += (pointerTargetY - state.targetY) * POINTER_SMOOTH
+        writePhysicsCenter()
+        state.raf = requestAnimationFrame(applyPointerTilt)
+      }
+
+      const updatePointer = (event: PointerEvent) => {
+        const width = window.innerWidth || 1
+        const height = window.innerHeight || 1
+        pointerTargetX = clampToUnit((event.clientX / width) * 2 - 1)
+        // Inverser Y : le viewport croît vers le bas, le centre physique vers le haut
+        pointerTargetY = clampToUnit(-((event.clientY / height) * 2 - 1))
+        if (event.pointerType === "mouse" || event.pointerType === "pen") {
+          pointerHover = true
+        }
+      }
+
+      const handlePointerMove = (event: PointerEvent) => {
+        updatePointer(event)
+      }
+
+      const handlePointerLeave = (event: PointerEvent) => {
+        if (event.pointerType === "mouse" || event.pointerType === "pen") {
+          pointerHover = false
+          pointerTargetX = 0
+          pointerTargetY = 0
+        }
+      }
+
+      window.addEventListener("pointermove", handlePointerMove, { passive: true })
+      window.addEventListener("pointerleave", handlePointerLeave, { passive: true })
+      state.raf = requestAnimationFrame(applyPointerTilt)
+
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove)
+        window.removeEventListener("pointerleave", handlePointerLeave)
+        if (state.raf) {
+          cancelAnimationFrame(state.raf)
+          state.raf = 0
+        }
+        state.x = 0
+        state.y = 0
+        state.targetX = 0
+        state.targetY = 0
+      }
+    }
+
+    // Mobile : gyro si autorisé, sinon trajectoire idle aléatoire fluide.
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent
     const hasDeviceOrientation = !!deviceOrientationCtor
     const needsPermission =
       typeof deviceOrientationCtor?.requestPermission === "function"
 
-    const clampToUnit = (value: number) => Math.max(-1, Math.min(1, value))
-
-    const state = tiltRef.current
-    const damping = 0.08
-    const strength = 0.55
     const GYRO_STALE_MS = 1800
 
     let gyroLive = false
@@ -447,7 +525,6 @@ export default function SpheresPacking({
       notifyOrientationGranted()
     }
 
-    // Trajectoire idle : Lissajous + reseed aléatoire périodique
     let phaseX = Math.random() * Math.PI * 2
     let phaseY = Math.random() * Math.PI * 2
     let ampX = 0.42
@@ -491,18 +568,7 @@ export default function SpheresPacking({
         state.targetY = idle.y
       }
 
-      state.x += (state.targetX - state.x) * damping
-      state.y += (state.targetY - state.y) * damping
-
-      const spheres = instanceRef.current?.spheres
-      const center = spheres?.physics?.center
-      if (center) {
-        const maxX = spheres.config?.maxX ?? 15
-        const maxY = spheres.config?.maxY ?? 15
-        center.x = state.x * maxX * strength
-        center.y = state.y * maxY * strength
-      }
-
+      writePhysicsCenter()
       state.raf = requestAnimationFrame((t) => applyTilt(t))
     }
 
@@ -540,7 +606,6 @@ export default function SpheresPacking({
     let permissionCleanup: (() => void) | null = null
 
     if (hasDeviceOrientation && needsPermission) {
-      // Idle tant que l’utilisateur n’a pas accepté (ou a refusé)
       const requestPermission = async () => {
         try {
           const result = await deviceOrientationCtor.requestPermission()

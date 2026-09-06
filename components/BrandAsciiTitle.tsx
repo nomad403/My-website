@@ -27,7 +27,7 @@ const BRAND_SHUFFLE_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 interface BrandAsciiTitleProps {
   text: string
-  alternateText: string
+  alternateTexts: string[]
   mode: "day" | "night"
   enabled: boolean
   marginLeft: number
@@ -83,7 +83,7 @@ function clearMask(el: HTMLElement | null) {
 
 export default function BrandAsciiTitle({
   text,
-  alternateText,
+  alternateTexts,
   mode,
   enabled,
   marginLeft,
@@ -110,12 +110,12 @@ export default function BrandAsciiTitle({
   const cancelTransitionRef = useRef<(() => void) | null>(null)
   const sequenceTokenRef = useRef(0)
   const textRef_value = useRef(text)
-  const alternateTextRef = useRef(alternateText)
+  const alternateTextsRef = useRef(alternateTexts)
   const [displayText, setDisplayText] = useState(text)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
   textRef_value.current = text
-  alternateTextRef.current = alternateText
+  alternateTextsRef.current = alternateTexts
 
   const [layout, setLayout] = useState({ width: 0, height: 0 })
 
@@ -232,23 +232,33 @@ export default function BrandAsciiTitle({
     busyRef.current = true
     const token = ++sequenceTokenRef.current
     const primary = textRef_value.current
-    const alternate = alternateTextRef.current
+    const words = alternateTextsRef.current.filter((word) => word.trim().length > 0)
+    const holdPerWord = Math.max(900, Math.round(HOME_HOVER_HOLD_MS * 0.55))
 
     clearHoldTimer()
     cancelTransition()
 
-    await transitionText(primary, alternate)
-    if (token !== sequenceTokenRef.current) return
+    if (words.length === 0) {
+      busyRef.current = false
+      return
+    }
 
-    await new Promise<void>((resolve) => {
-      holdTimerRef.current = window.setTimeout(() => {
-        holdTimerRef.current = null
-        resolve()
-      }, HOME_HOVER_HOLD_MS)
-    })
-    if (token !== sequenceTokenRef.current) return
+    let from = primary
+    for (const word of words) {
+      await transitionText(from, word)
+      if (token !== sequenceTokenRef.current) return
 
-    await transitionText(alternate, primary)
+      await new Promise<void>((resolve) => {
+        holdTimerRef.current = window.setTimeout(() => {
+          holdTimerRef.current = null
+          resolve()
+        }, holdPerWord)
+      })
+      if (token !== sequenceTokenRef.current) return
+      from = word
+    }
+
+    await transitionText(from, primary)
     if (token !== sequenceTokenRef.current) return
 
     busyRef.current = false

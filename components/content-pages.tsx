@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ShuffleText from "./ShuffleText";
+import ShuffleDualLines from "./ShuffleDualLines";
 import ProjectsScrollList, {
   type ProjectScrollItem,
 } from "./ProjectsScrollList";
@@ -51,7 +52,6 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [currentContactStep, setCurrentContactStep] = useState(0);
   const [contactData, setContactData] = useState({
     nom: '',
-    prenom: '',
     contact: '',
     message: ''
   });
@@ -68,7 +68,6 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   // Contact form steps configuration - recalculé à chaque changement de langue
   const contactSteps = [
     { field: 'nom' as const, label: t('contact.fields.name'), type: 'text', placeholder: t('contact.placeholders.name') },
-    { field: 'prenom' as const, label: t('contact.fields.firstname'), type: 'text', placeholder: t('contact.placeholders.firstname') },
     { field: 'contact' as const, label: t('contact.fields.contact'), type: 'text', placeholder: t('contact.placeholders.contact') },
     { field: 'message' as const, label: t('contact.fields.message'), type: 'text', placeholder: t('contact.placeholders.message') }
   ];
@@ -83,16 +82,15 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
 
   // Handle contact form navigation
   const handleContactNext = async () => {
-    if (currentContactStep === 3) {
+    if (currentContactStep === contactSteps.length - 1) {
       // Last step: send email directly
       setIsSending(true);
       setSendStatus('idle');
       
       const payload = {
-        nom: contactData.nom || "Test",
-        prenom: contactData.prenom || "Alpha",
-        contact: contactData.contact || "alpha@test.com",
-        message: contactData.message || "Hello from dev",
+        nom: contactData.nom.trim(),
+        contact: contactData.contact.trim(),
+        message: contactData.message.trim(),
       };
 
       try {
@@ -117,7 +115,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
         
         // Reset form and title after 3 seconds
         setTimeout(() => {
-          setContactData({ nom: '', prenom: '', contact: '', message: '' });
+          setContactData({ nom: '', contact: '', message: '' });
           setCurrentContactStep(0);
           setSendStatus('idle');
           setShouldShuffleBack(true);
@@ -256,10 +254,23 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  <div className="w-full max-w-[90vw] sm:max-w-[600px] mx-auto flex flex-col gap-4">
                    {/* Titre — même largeur que le champ */}
                    <div className="w-full mb-2 md:mb-6">
-                     <h1 className="w-full font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 uppercase tracking-wider text-left">
-                       <ShuffleText triggerShuffle={sendStatus === 'success' || shouldShuffleBack}>
-                         {titleText}
-                       </ShuffleText>
+                     <h1 className="w-full font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 tracking-wide text-left normal-case">
+                       {sendStatus === "success" || shouldShuffleBack ? (
+                         <ShuffleText triggerShuffle={sendStatus === "success" || shouldShuffleBack}>
+                           {titleText}
+                         </ShuffleText>
+                       ) : (
+                         <ShuffleDualLines
+                           key={`${language}-${t("contact.title")}`}
+                           lines={[
+                             {
+                               primary: t("contact.title"),
+                               alternate: t("contact.titleAlt"),
+                             },
+                           ]}
+                           shuffleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?!'"
+                         />
+                       )}
                      </h1>
                    </div>
 
@@ -309,6 +320,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           {currentContactStep > 0 && (
                             <motion.button
                               key="back-button"
+                              type="button"
                               initial={{ opacity: 0, scale: 0.8, x: -20 }}
                               animate={{ opacity: 1, scale: 1, x: 0 }}
                               exit={{ opacity: 0, scale: 0.8, x: -20 }}
@@ -324,7 +336,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="15 18 9 12 15 6"></polyline>
                               </svg>
-                              <span className="font-kode text-sm uppercase tracking-wide">Retour</span>
+                              <span className="font-kode text-sm uppercase tracking-wide">
+                                {t('contact.actions.back')}
+                              </span>
                             </motion.button>
                           )}
                         </AnimatePresence>
@@ -332,6 +346,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                       <div className="flex justify-end">
                         <motion.button
                           key={`next-button-${currentContactStep}`}
+                          type="button"
                           initial={{ opacity: 0, scale: 0.8, x: 20 }}
                           animate={{ opacity: 1, scale: 1, x: 0 }}
                           transition={{ 
@@ -349,13 +364,17 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           }`}
                         >
                           <span className="font-kode text-sm uppercase tracking-wide">
-                            {currentContactStep === 3 ? 'Envoyer' : 'Suivant'}
+                            {isSending
+                              ? t('contact.actions.sending')
+                              : currentContactStep === contactSteps.length - 1
+                                ? t('contact.actions.send')
+                                : t('contact.actions.next')}
                           </span>
                           {isSending ? (
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                           ) : (
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              {currentContactStep === 3 ? (
+                              {currentContactStep === contactSteps.length - 1 ? (
                                 <>
                                   <polyline points="20 6 9 17 4 12"></polyline>
                                 </>
@@ -387,9 +406,9 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                      </AnimatePresence>
                    </div>
 
-                   {/* Témoins de saisie — largeur fixe, grille 2 colonnes */}
+                   {/* Témoins de saisie — largeur fixe, grille adaptée aux 3 champs */}
                    <div
-                     className={`mt-2 md:mt-4 grid grid-cols-1 sm:grid-cols-[repeat(2,288px)] gap-4 justify-start${
+                     className={`mt-2 md:mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 justify-start${
                        contactSteps.some((step) => contactData[step.field]?.trim()) ? ' min-h-[80px] md:min-h-[100px]' : ''
                      }`}
                    >
@@ -403,7 +422,7 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                          <div
                            key={step.field}
                            onClick={() => setCurrentContactStep(index)}
-                           className={`w-full sm:w-[288px] sm:max-w-[288px] min-h-[72px] cursor-pointer transition-all duration-300 px-4 py-3 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm shadow-sm box-border ${
+                           className={`w-full min-h-[72px] cursor-pointer transition-all duration-300 px-4 py-3 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm shadow-sm box-border ${
                              isCurrentStep ? 'text-cyan-600' : 'text-gray-600 hover:text-gray-800'
                            }`}
                          >
