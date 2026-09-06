@@ -611,12 +611,6 @@ body {
   }
 }
 
-@property --projects-fade-mix {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
 :root {
   --mobile-edge-fade: linear-gradient(
     to bottom,
@@ -628,21 +622,13 @@ body {
     transparent 100%
   );
 
-  --projects-list-fade-strong: linear-gradient(
+  --desktop-edge-fade: linear-gradient(
     to bottom,
-    transparent 0%,
-    rgb(0 0 0 / 0.02) 6%,
-    rgb(0 0 0 / 0.08) 12%,
-    rgb(0 0 0 / 0.2) 18%,
-    rgb(0 0 0 / 0.42) 26%,
-    rgb(0 0 0 / 0.72) 34%,
-    #000 42%,
-    #000 58%,
-    rgb(0 0 0 / 0.72) 66%,
-    rgb(0 0 0 / 0.42) 74%,
-    rgb(0 0 0 / 0.2) 82%,
-    rgb(0 0 0 / 0.08) 88%,
-    rgb(0 0 0 / 0.02) 94%,
+    transparent 0,
+    rgb(0 0 0 / 0.18) 3.25rem,
+    #000 7.25rem,
+    #000 calc(100% - 6.75rem),
+    rgb(0 0 0 / 0.18) calc(100% - 3rem),
     transparent 100%
   );
 }
@@ -674,7 +660,7 @@ body {
   transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.projects-scroll-list-shell--panel-open::before {
+.projects-scroll-list-shell--detail-open::before {
   transform: translateY(-50%) rotate(-90deg);
 }
 
@@ -697,77 +683,14 @@ body {
   scroll-behavior: auto;
   overflow-x: clip;
   scroll-snap-type: y mandatory;
-  mask-image: var(--projects-list-fade-strong);
-  -webkit-mask-image: var(--projects-list-fade-strong);
+  mask-image: var(--mobile-edge-fade);
+  -webkit-mask-image: var(--mobile-edge-fade);
 }
 
-@media (max-width: 767px) {
-  /* cross-fade n’accepte pas les var() — gradients inlinés + mix animable */
-  .projects-scroll-list-shell .projects-scroll-list__scroller {
-    --projects-fade-mix: 0;
-    -webkit-mask-image: -webkit-cross-fade(
-      linear-gradient(
-        to bottom,
-        transparent 0,
-        rgb(0 0 0 / 0.2) 2.75rem,
-        #000 5.75rem,
-        #000 calc(100% - 5.25rem),
-        rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
-        transparent 100%
-      ),
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        rgb(0 0 0 / 0.02) 6%,
-        rgb(0 0 0 / 0.08) 12%,
-        rgb(0 0 0 / 0.2) 18%,
-        rgb(0 0 0 / 0.42) 26%,
-        rgb(0 0 0 / 0.72) 34%,
-        #000 42%,
-        #000 58%,
-        rgb(0 0 0 / 0.72) 66%,
-        rgb(0 0 0 / 0.42) 74%,
-        rgb(0 0 0 / 0.2) 82%,
-        rgb(0 0 0 / 0.08) 88%,
-        rgb(0 0 0 / 0.02) 94%,
-        transparent 100%
-      ),
-      calc(var(--projects-fade-mix) * 100%)
-    );
-    mask-image: -webkit-cross-fade(
-      linear-gradient(
-        to bottom,
-        transparent 0,
-        rgb(0 0 0 / 0.2) 2.75rem,
-        #000 5.75rem,
-        #000 calc(100% - 5.25rem),
-        rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
-        transparent 100%
-      ),
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        rgb(0 0 0 / 0.02) 6%,
-        rgb(0 0 0 / 0.08) 12%,
-        rgb(0 0 0 / 0.2) 18%,
-        rgb(0 0 0 / 0.42) 26%,
-        rgb(0 0 0 / 0.72) 34%,
-        #000 42%,
-        #000 58%,
-        rgb(0 0 0 / 0.72) 66%,
-        rgb(0 0 0 / 0.42) 74%,
-        rgb(0 0 0 / 0.2) 82%,
-        rgb(0 0 0 / 0.08) 88%,
-        rgb(0 0 0 / 0.02) 94%,
-        transparent 100%
-      ),
-      calc(var(--projects-fade-mix) * 100%)
-    );
-    transition: --projects-fade-mix 0.58s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .projects-scroll-list-shell--panel-open .projects-scroll-list__scroller {
-    --projects-fade-mix: 1;
+@media (min-width: 1024px) {
+  .projects-scroll-list__scroller {
+    mask-image: var(--desktop-edge-fade);
+    -webkit-mask-image: var(--desktop-edge-fade);
   }
 }
 
@@ -790,12 +713,24 @@ body {
   opacity: 0.38;
   transition: opacity 0.35s ease;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   contain: layout style;
+  overflow: visible;
 }
 
-.projects-scroll-list__item[data-virtual-index] {
+.projects-scroll-list__title-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: visible;
   scroll-snap-align: center;
+  scroll-snap-stop: normal;
+  view-timeline-name: --project-title-view;
+  view-timeline-axis: block;
 }
 
 .projects-scroll-list__item--measure {
@@ -807,8 +742,19 @@ body {
   top: 0;
 }
 
+.projects-scroll-list__item--measure .projects-scroll-list__title-row {
+  flex: 1 1 auto;
+  height: auto;
+}
+
 .projects-scroll-list__item--snapped {
   opacity: 1;
+}
+
+.projects-scroll-list__item--detail-open {
+  z-index: 4;
+  contain: none;
+  overflow: visible;
 }
 
 .projects-scroll-list__item-label {
@@ -830,178 +776,73 @@ body {
 @supports (animation-timeline: view()) {
   .projects-scroll-list__item-label {
     animation: project-li-jump linear both;
-    animation-timeline: view();
+    animation-timeline: --project-title-view;
     will-change: transform;
   }
 }
 
-.project-detail-panel {
-  position: absolute;
-  z-index: 3;
+.projects-scroll-list__detail {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(100%, 36ch);
+  margin-left: var(--jump-max);
+  overflow: hidden;
+  pointer-events: auto;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
   color: #0a0a0a;
-  box-sizing: border-box;
-  left: var(--list-inline-start, clamp(2rem, 6vw, 4.5rem));
-  right: var(--list-inline-end, clamp(1.5rem, 5vw, 3.5rem));
-  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
-  max-width: none;
 }
 
-.project-detail-panel__inner {
+.projects-scroll-list__detail-inner {
   position: relative;
   isolation: isolate;
-  max-width: 22rem;
-  padding: 0.55rem 0.9rem 0.65rem;
-  margin-inline: -0.9rem;
-  background: transparent;
+  padding: 0.2rem 0.35rem 0.6rem 0;
 }
 
-.project-detail-panel__inner::before,
-.project-detail-panel__inner::after {
+.projects-scroll-list__detail-inner::before {
   content: "";
   position: absolute;
   z-index: -1;
+  inset: -0.35rem -1.25rem -1.1rem -0.55rem;
   pointer-events: none;
-}
-
-.project-detail-panel__inner::before {
-  inset: -6.5rem -4rem -3.25rem;
-  background: linear-gradient(
-    to top,
-    rgb(255 255 255 / 0.82) 0%,
-    rgb(255 255 255 / 0.58) 22%,
-    rgb(255 255 255 / 0.32) 48%,
-    rgb(255 255 255 / 0.14) 72%,
-    rgb(255 255 255 / 0.04) 88%,
-    transparent 100%
-  );
-  backdrop-filter: blur(42px) saturate(1.08);
-  -webkit-backdrop-filter: blur(42px) saturate(1.08);
-  mask-image:
-    radial-gradient(
-      ellipse 155% 175% at 50% 100%,
-      #000 0%,
-      #000 8%,
-      rgb(0 0 0 / 0.92) 22%,
-      rgb(0 0 0 / 0.72) 38%,
-      rgb(0 0 0 / 0.48) 52%,
-      rgb(0 0 0 / 0.28) 66%,
-      rgb(0 0 0 / 0.14) 78%,
-      rgb(0 0 0 / 0.05) 90%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to right,
-      transparent 0%,
-      rgb(0 0 0 / 0.35) 8%,
-      #000 18%,
-      #000 82%,
-      rgb(0 0 0 / 0.35) 92%,
-      transparent 100%
-    );
-  -webkit-mask-image:
-    radial-gradient(
-      ellipse 155% 175% at 50% 100%,
-      #000 0%,
-      #000 8%,
-      rgb(0 0 0 / 0.92) 22%,
-      rgb(0 0 0 / 0.72) 38%,
-      rgb(0 0 0 / 0.48) 52%,
-      rgb(0 0 0 / 0.28) 66%,
-      rgb(0 0 0 / 0.14) 78%,
-      rgb(0 0 0 / 0.05) 90%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to right,
-      transparent 0%,
-      rgb(0 0 0 / 0.35) 8%,
-      #000 18%,
-      #000 82%,
-      rgb(0 0 0 / 0.35) 92%,
-      transparent 100%
-    );
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
-}
-
-.project-detail-panel__inner::after {
-  inset: -2.75rem -2rem -1.5rem;
-  background: rgb(255 255 255 / 0.42);
-  backdrop-filter: blur(64px) saturate(1.12);
-  -webkit-backdrop-filter: blur(64px) saturate(1.12);
-  mask-image: radial-gradient(
-    ellipse 120% 130% at 50% 70%,
-    rgb(0 0 0 / 0.85) 0%,
-    rgb(0 0 0 / 0.55) 35%,
-    rgb(0 0 0 / 0.22) 62%,
-    rgb(0 0 0 / 0.06) 82%,
-    transparent 100%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse 120% 130% at 50% 70%,
-    rgb(0 0 0 / 0.85) 0%,
-    rgb(0 0 0 / 0.55) 35%,
-    rgb(0 0 0 / 0.22) 62%,
-    rgb(0 0 0 / 0.06) 82%,
+  background: radial-gradient(
+    ellipse 115% 100% at 18% 12%,
+    rgb(255 255 255 / 0.72) 0%,
+    rgb(255 255 255 / 0.38) 42%,
+    rgb(255 255 255 / 0.12) 72%,
     transparent 100%
   );
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .project-detail-panel__inner::before {
-    background: linear-gradient(
-      to top,
-      rgb(255 255 255 / 0.88) 0%,
-      rgb(255 255 255 / 0.45) 50%,
-      transparent 100%
-    );
-  }
-
-  .project-detail-panel__inner::after {
-    background: rgb(255 255 255 / 0.4);
-  }
-}
-
-.project-detail-panel__eyebrow {
-  margin: 0 0 0.2rem;
-  font-size: 0.6rem;
+.projects-scroll-list__detail-eyebrow {
+  margin: 0 0 0.28rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.35;
+  opacity: 0.95;
+  color: #0a0a0a;
+}
+
+.projects-scroll-list__detail-summary {
+  margin: 0 0 0.45rem;
+  font-size: 0.84rem;
+  font-weight: 300;
+  line-height: 1.48;
   opacity: 0.9;
   color: #0a0a0a;
 }
 
-.project-detail-panel__title {
-  display: none;
-  margin: 0 0 0.55rem;
-  font-size: clamp(1.05rem, 3.8vw, 1.35rem);
-  font-weight: 700;
-  line-height: 1.1;
-  color: #000;
-  opacity: 1;
-}
-
-.project-detail-panel__summary {
-  margin: 0 0 0.45rem;
-  font-size: 0.75rem;
-  font-weight: 300;
-  line-height: 1.4;
-  opacity: 0.78;
-  color: #0a0a0a;
-  max-width: none;
-  display: block;
-  overflow: visible;
-}
-
-.project-detail-panel__summary.font-home-title,
-.project-detail-panel__summary.font-home-title-mobile {
+.projects-scroll-list__detail-summary.font-home-title {
   font-weight: 300;
 }
 
-.project-detail-panel__stack {
+.projects-scroll-list__detail-stack {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.55rem;
+  gap: 0.28rem 0.6rem;
   margin: 0 0 0.45rem;
   padding: 0;
   list-style: none;
@@ -1009,18 +850,16 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.85;
+  opacity: 0.88;
   color: #0a0a0a;
-  overflow: visible;
-  max-width: 100%;
 }
 
-.project-detail-panel__stack li {
+.projects-scroll-list__detail-stack li {
   flex: 0 0 auto;
   white-space: nowrap;
 }
 
-.project-detail-panel__link {
+.projects-scroll-list__detail-link {
   display: inline-block;
   font-size: 0.68rem;
   font-weight: 700;
@@ -1032,12 +871,20 @@ body {
   transition: opacity 0.2s ease;
 }
 
-.project-detail-panel__link:hover {
+.projects-scroll-list__detail-link:hover {
   opacity: 0.55;
 }
 
 @media (min-width: 768px) {
+  .projects-scroll-list-shell {
+    --list-inline-end: max(22rem, 32vw);
+  }
+
   .project-detail-panel {
+    position: absolute;
+    z-index: 3;
+    color: #0a0a0a;
+    box-sizing: border-box;
     left: auto;
     right: clamp(1.75rem, 4.5vw, 3.5rem);
     top: 50%;
@@ -1047,58 +894,83 @@ body {
   }
 
   .project-detail-panel__inner {
+    position: relative;
     max-width: none;
     padding: 0;
-    margin-inline: 0;
-    background: none;
-  }
-
-  .project-detail-panel__inner::before,
-  .project-detail-panel__inner::after {
-    content: none;
-    display: none;
-  }
-
-  .project-detail-panel__title {
-    display: block;
-    font-size: clamp(1.15rem, 1.6vw, 1.55rem);
-    font-weight: 500;
   }
 
   .project-detail-panel__eyebrow {
     margin: 0 0 0.35rem;
     font-size: 0.65rem;
     font-weight: 500;
-    opacity: 0.85;
+    line-height: 1.3;
+    opacity: 0.92;
+    color: #0a0a0a;
+  }
+
+  .project-detail-panel__title {
+    display: block;
+    margin: 0 0 0.55rem;
+    font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+    font-weight: 500;
+    line-height: 1.1;
+    color: #000;
   }
 
   .project-detail-panel__summary {
     margin: 0 0 0.85rem;
-    font-size: 0.9rem;
+    font-size: 0.94rem;
     font-weight: 300;
-    line-height: 1.5;
-    opacity: 0.72;
+    line-height: 1.52;
+    opacity: 0.86;
+    color: #0a0a0a;
     max-width: 36ch;
   }
 
+  .project-detail-panel__summary.font-home-title {
+    font-weight: 300;
+  }
+
   .project-detail-panel__stack {
+    display: flex;
     flex-wrap: wrap;
     gap: 0.35rem 0.75rem;
     margin: 0 0 0.9rem;
+    padding: 0;
+    list-style: none;
     font-size: 0.68rem;
     font-weight: 700;
-    opacity: 0.8;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.86;
+    color: #0a0a0a;
+  }
+
+  .project-detail-panel__stack li {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .project-detail-panel__link {
-    font-size: 0.7rem;
+    display: inline-block;
+    font-size: 0.72rem;
     font-weight: 700;
+    text-decoration: none;
     color: inherit;
+    border-bottom: 1px solid currentColor;
     padding-bottom: 0.1rem;
+    opacity: 1;
+    transition: opacity 0.2s ease;
   }
 
-  .projects-scroll-list-shell {
-    --list-inline-end: max(22rem, 32vw);
+  .project-detail-panel__link:hover {
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 767px) {
+  .project-detail-panel {
+    display: none;
   }
 }
 

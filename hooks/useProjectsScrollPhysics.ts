@@ -30,6 +30,8 @@ interface UseProjectsScrollPhysicsArgs {
   velocityRef: MutableRefObject<number>
   lastScrollTopRef: MutableRefObject<number>
   frameRef: MutableRefObject<number>
+  activeIndexRef: MutableRefObject<number>
+  expandExtraRef: MutableRefObject<number>
   requestScrollTop: (target: number) => void
   syncWindow: (scrollTop: number) => boolean
   paintFallback: (scrollTop: number) => void
@@ -45,6 +47,8 @@ export function useProjectsScrollPhysics({
   velocityRef,
   lastScrollTopRef,
   frameRef,
+  activeIndexRef,
+  expandExtraRef,
   requestScrollTop,
   syncWindow,
   paintFallback,
@@ -177,13 +181,20 @@ export function useProjectsScrollPhysics({
         return
       }
 
-      const to = scrollTopForVirtualIndex(
-        nearestVirtualIndex(
-          scroller.scrollTop,
-          currentMetrics,
-          velocityRef.current,
-        ),
+      const activeHint = activeIndexRef.current
+      const extra = expandExtraRef.current
+      const nearest = nearestVirtualIndex(
+        scroller.scrollTop,
         currentMetrics,
+        velocityRef.current,
+        activeHint,
+        extra,
+      )
+      const to = scrollTopForVirtualIndex(
+        nearest,
+        currentMetrics,
+        nearest,
+        extra,
       )
       glideTo(to, SNAP_GLIDE_MS)
     }
@@ -192,7 +203,13 @@ export function useProjectsScrollPhysics({
       const currentMetrics = metricsRef.current
       if (currentMetrics.itemHeight <= 0) return
 
-      const to = scrollTopForVirtualIndex(virtualIndex, currentMetrics)
+      const extra = expandExtraRef.current
+      const to = scrollTopForVirtualIndex(
+        virtualIndex,
+        currentMetrics,
+        virtualIndex,
+        extra,
+      )
       const blocks = Math.abs(to - scroller.scrollTop) / currentMetrics.itemHeight
       const duration = clamp(
         SELECT_GLIDE_MS + blocks * SELECT_GLIDE_MS_PER_ITEM,
@@ -215,13 +232,20 @@ export function useProjectsScrollPhysics({
 
       const currentMetrics = metricsRef.current
       if (currentMetrics.itemHeight > 0) {
-        const target = scrollTopForVirtualIndex(
-          nearestVirtualIndex(
-            scroller.scrollTop,
-            currentMetrics,
-            velocityBeforeDecay,
-          ),
+        const activeHint = activeIndexRef.current
+        const extra = expandExtraRef.current
+        const nearest = nearestVirtualIndex(
+          scroller.scrollTop,
           currentMetrics,
+          velocityBeforeDecay,
+          activeHint,
+          extra,
+        )
+        const target = scrollTopForVirtualIndex(
+          nearest,
+          currentMetrics,
+          nearest,
+          extra,
         )
         const distance = Math.abs(scroller.scrollTop - target)
         if (
@@ -296,7 +320,9 @@ export function useProjectsScrollPhysics({
       if (frameRef.current) window.cancelAnimationFrame(frameRef.current)
     }
   }, [
+    activeIndexRef,
     animateToVirtualIndexRef,
+    expandExtraRef,
     frameRef,
     lastScrollTopRef,
     metricsRef,

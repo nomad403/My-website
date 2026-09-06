@@ -84,12 +84,29 @@ export function computeLoopBlocks(cycleHeight: number): number {
   return blocks % 2 === 0 ? blocks + 1 : blocks
 }
 
+export function titleOffsetForVirtualIndex(
+  virtualIndex: number,
+  activeVirtualIndex: number,
+  expandExtra: number,
+): number {
+  return virtualIndex > activeVirtualIndex ? expandExtra : 0
+}
+
 export function scrollTopForVirtualIndex(
   virtualIndex: number,
   metrics: ListMetrics,
+  activeVirtualIndex = virtualIndex,
+  expandExtra = 0,
 ): number {
   const { itemHeight, paddingY, viewport } = metrics
-  return paddingY + virtualIndex * itemHeight + itemHeight / 2 - viewport / 2
+  const shift = titleOffsetForVirtualIndex(
+    virtualIndex,
+    activeVirtualIndex,
+    expandExtra,
+  )
+  return (
+    paddingY + virtualIndex * itemHeight + shift + itemHeight / 2 - viewport / 2
+  )
 }
 
 export function computeOverscan(metrics: ListMetrics): number {
@@ -105,13 +122,37 @@ export function nearestVirtualIndex(
   scrollTop: number,
   metrics: ListMetrics,
   velocity = 0,
+  activeHint = 0,
+  expandExtra = 0,
 ): number {
   const { itemHeight, paddingY, viewport } = metrics
   if (itemHeight <= 0) return 0
-  const raw =
-    (scrollTop + viewport / 2 - paddingY - itemHeight / 2) / itemHeight
+
+  const viewportCenter = scrollTop + viewport / 2
   const bias = Math.abs(velocity) < 0.5 ? 0 : Math.sign(velocity) * 0.22
-  return Math.round(raw + bias)
+  const raw =
+    (viewportCenter - paddingY - itemHeight / 2) / itemHeight + bias
+
+  if (expandExtra <= 0) {
+    return Math.round(raw)
+  }
+
+  const lo = Math.floor(raw) - 3
+  const hi = Math.ceil(raw) + 3
+  let best = Math.round(raw)
+  let bestDist = Number.POSITIVE_INFINITY
+
+  for (let vi = lo; vi <= hi; vi += 1) {
+    const shift = titleOffsetForVirtualIndex(vi, activeHint, expandExtra)
+    const center = paddingY + vi * itemHeight + shift + itemHeight / 2
+    const dist = Math.abs(viewportCenter - center)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = vi
+    }
+  }
+
+  return best
 }
 
 export function loopShift(

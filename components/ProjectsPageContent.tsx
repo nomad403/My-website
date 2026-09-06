@@ -20,6 +20,8 @@ function toScrollItem(item: ProjectItem, lang: ProjectLang): ProjectScrollItem {
     name: item.name,
     url: item.url,
     description: projectCopy(item.description, lang),
+    summary: projectCopy(item.summary, lang),
+    stack: item.stack,
   }
 }
 
@@ -34,16 +36,10 @@ export default function ProjectsPageContent() {
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(
     () => PROJECT_ITEMS[0] ?? null,
   )
-  const [panelOpen, setPanelOpen] = useState(false)
 
   const handleActiveChange = useCallback((item: ProjectScrollItem) => {
     const full = PROJECT_ITEMS.find((entry) => entry.id === item.id) ?? null
     setActiveProject(full)
-    setPanelOpen(false)
-  }, [])
-
-  const handleActiveItemTap = useCallback(() => {
-    setPanelOpen((open) => !open)
   }, [])
 
   return (
@@ -52,18 +48,17 @@ export default function ProjectsPageContent() {
 
       <ProjectsScrollList
         items={scrollItems}
-        onActiveChange={handleActiveChange}
         isMobile={isMobile}
-        panelOpen={panelOpen}
-        onActiveItemTap={handleActiveItemTap}
-      />
-      <ProjectDetailPanel
-        item={activeProject}
-        lang={projectLang}
         viewLabel={t("projects.view")}
-        isMobile={isMobile}
-        open={!isMobile || panelOpen}
+        onActiveChange={handleActiveChange}
       />
+      {!isMobile ? (
+        <ProjectDetailPanel
+          item={activeProject}
+          lang={projectLang}
+          viewLabel={t("projects.view")}
+        />
+      ) : null}
 
       <div className="sr-only">
         <p>
@@ -75,14 +70,14 @@ export default function ProjectsPageContent() {
           solutions d&apos;automatisation.
         </p>
         <p>
-          Projets phares : Monday (application mobile de planification
-          adaptative avec IA), TurnUpSphere (plateforme événementielle
-          géolocalisée), AutomatIA (solution d&apos;automatisation IA pour le
-          secteur public), Refrig&apos;Air Services (vitrine professionnelle
-          responsive), Savage Block Party (site vitrine e-commerce), The Message
-          (wearethemessage.fr), et ce portfolio génératif interactif. Chaque
-          projet démontre l&apos;expertise technique et la créativité dans le
-          développement d&apos;expériences utilisateur exceptionnelles.
+          Projets phares : Monday (application mobile avec IA pour
+          l&apos;organisation du quotidien), TurnUpSphere (découverte musicale et
+          interactions sociales), AutomatIA (automatisation e-mails et documents
+          métier par IA), ras-energies (vitrine secteur énergie), Savage (site
+          collectif Savage Block Party avec e-commerce), The Message (expérience
+          web interactive et creative development). Chaque projet démontre
+          l&apos;expertise technique et la créativité dans le développement
+          d&apos;expériences utilisateur exceptionnelles.
         </p>
         <p>
           Technologies utilisées : Next.js, React, TypeScript, Tailwind CSS,
