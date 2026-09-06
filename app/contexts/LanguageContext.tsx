@@ -67,6 +67,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'home.titleAltLine2': 'sans limites.',
         'home.brandAlt': 'bienvenu',
         'home.rotateHint': 'Inclinez votre téléphone',
+        'home.rotateHintFr': 'Inclinez votre téléphone',
+        'home.rotateHintEn': 'Rotate your phone',
         'home.description': 'Développeur freelance créant des applications web personnalisées, des applications mobiles et des outils alimentés par l\'IA. Explorez mon portfolio 3D interactif.',
         
         // Projects page
@@ -120,6 +122,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'home.titleAltLine2': 'without limits.',
         'home.brandAlt': 'welcome',
         'home.rotateHint': 'Rotate your phone',
+        'home.rotateHintFr': 'Inclinez votre téléphone',
+        'home.rotateHintEn': 'Rotate your phone',
         'home.description': 'Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.',
         
         // Projects page

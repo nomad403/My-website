@@ -5,6 +5,13 @@ export function isInteractiveClickTarget(target: EventTarget | null) {
   )
 }
 
+export const ORIENTATION_GRANTED_EVENT = "nomad403:orientation-granted"
+
+export function notifyOrientationGranted() {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(ORIENTATION_GRANTED_EVENT))
+}
+
 export function attachOrientationPermissionOnBackgroundGesture(
   requestPermission: () => void | Promise<void>
 ) {

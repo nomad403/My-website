@@ -21,6 +21,15 @@ import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useSmartPreload } from "@/hooks/useSmartPreload"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
 import { resolveAsciiSettings } from "@/lib/performance"
+import { ORIENTATION_GRANTED_EVENT } from "@/lib/interaction"
+import {
+  markGyroHintShown,
+  wasGyroHintShown,
+} from "@/hooks/useGyroscopeAccessible"
+import {
+  HOME_TITLE_SHUFFLE_MS,
+  HOME_TITLE_STAGGER_MS,
+} from "@/lib/home-title-style"
 
 const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), { ssr: false })
 const AsciiOverlay = dynamic(() => import("@/components/AsciiOverlay"), { ssr: false })
@@ -130,6 +139,20 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
     [t, language],
   )
   const homeBrandAlt = useMemo(() => t("home.brandAlt"), [t, language])
+  const [rotateHintActive, setRotateHintActive] = useState(false)
+  const currentPageRef = useRef(currentPage)
+  currentPageRef.current = currentPage
+  const showHomeTitleRef = useRef(showHomeTitle)
+  showHomeTitleRef.current = showHomeTitle
+
+  const rotateHintLines = useMemo(
+    () => [t("home.rotateHintFr"), t("home.rotateHintEn")],
+    [t, language],
+  )
+
+  const displayedHomeLines = rotateHintActive ? rotateHintLines : homeTitleLines
+  const displayedHomeAltLines = rotateHintActive ? rotateHintLines : homeTitleAltLines
+
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -137,6 +160,28 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
       if (transitionTimerRef.current) {
         clearTimeout(transitionTimerRef.current)
       }
+    }
+  }, [])
+
+  // Après autorisation gyro : shuffle du titre → hint FR + EN, puis retour.
+  useEffect(() => {
+    const HOLD_MS = 3800
+    let holdTimer: ReturnType<typeof setTimeout> | null = null
+
+    const onGranted = () => {
+      if (wasGyroHintShown()) return
+      markGyroHintShown()
+      if (currentPageRef.current !== "home" || !showHomeTitleRef.current) return
+      setRotateHintActive(true)
+      holdTimer = setTimeout(() => {
+        setRotateHintActive(false)
+      }, HOME_TITLE_SHUFFLE_MS + HOME_TITLE_STAGGER_MS + HOLD_MS)
+    }
+
+    window.addEventListener(ORIENTATION_GRANTED_EVENT, onGranted)
+    return () => {
+      window.removeEventListener(ORIENTATION_GRANTED_EVENT, onGranted)
+      if (holdTimer) clearTimeout(holdTimer)
     }
   }, [])
 
@@ -594,12 +639,13 @@ export default function HomePageClient({ initialPage = "home" }: HomePageClientP
           {showHomeTitle && (
             <div className="absolute inset-0 flex w-full items-end pb-[calc(9rem+env(safe-area-inset-bottom,0px))] sm:pb-32 md:pb-32">
                 <HomeTitle
-                  lines={homeTitleLines}
-                  alternateLines={homeTitleAltLines}
+                  lines={displayedHomeLines}
+                  alternateLines={displayedHomeAltLines}
                   alternateBrandText={homeBrandAlt}
                   ready={showHomeTitle}
                   mode={mode}
                   isMobile={isMobileViewport}
+                  enableHover={!rotateHintActive}
                 />
             </div>
           )}

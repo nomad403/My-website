@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { attachOrientationPermissionOnBackgroundGesture } from "@/lib/interaction";
+import { attachOrientationPermissionOnBackgroundGesture, notifyOrientationGranted } from "@/lib/interaction";
 import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/viewport-bleed";
 
 /**
@@ -421,94 +421,166 @@ export default function SpheresPacking({
   }, [visible]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const prefersCoarsePointer =
-      window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-    if (!prefersCoarsePointer) return;
+    if (typeof window === "undefined") return
 
     const deviceOrientationCtor = (window as Record<string, any>)
-      .DeviceOrientationEvent;
-    const hasDeviceOrientation = !!deviceOrientationCtor;
-    if (!hasDeviceOrientation) return;
+      .DeviceOrientationEvent
+    const hasDeviceOrientation = !!deviceOrientationCtor
+    const needsPermission =
+      typeof deviceOrientationCtor?.requestPermission === "function"
 
-    const clampToUnit = (value: number) =>
-      Math.max(-1, Math.min(1, value));
+    const clampToUnit = (value: number) => Math.max(-1, Math.min(1, value))
 
-    const state = tiltRef.current;
-    const damping = 0.12;
-    const strength = 0.65;
+    const state = tiltRef.current
+    const damping = 0.08
+    const strength = 0.55
+    const GYRO_STALE_MS = 1800
 
-    const applyTilt = () => {
-      state.x += (state.targetX - state.x) * damping;
-      state.y += (state.targetY - state.y) * damping;
+    let gyroLive = false
+    let lastGyroAt = 0
+    let orientationAttached = false
+    let grantedNotified = false
 
-      const spheres = instanceRef.current?.spheres;
-      const center = spheres?.physics?.center;
-      if (center) {
-        const maxX = spheres.config?.maxX ?? 15;
-        const maxY = spheres.config?.maxY ?? 15;
-        center.x = state.x * maxX * strength;
-        center.y = state.y * maxY * strength;
-      }
-
-      state.raf = requestAnimationFrame(applyTilt);
-    };
-
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      const beta = event.beta ?? 0;
-      const gamma = event.gamma ?? 0;
-
-      if (state.baseBeta === null || state.baseGamma === null) {
-        state.baseBeta = beta;
-        state.baseGamma = gamma;
-      }
-
-      const betaOffset = (beta - state.baseBeta) / 45;
-      const gammaOffset = (gamma - state.baseGamma) / 45;
-
-      state.targetX = clampToUnit(gammaOffset);
-      state.targetY = clampToUnit(-betaOffset);
-    };
-
-    let permissionCleanup: (() => void) | null = null;
-    if (typeof deviceOrientationCtor.requestPermission === "function") {
-      const requestPermission = async () => {
-        try {
-          const result = await deviceOrientationCtor.requestPermission();
-          if (result === "granted") {
-            window.addEventListener("deviceorientation", handleOrientation, true);
-          }
-        } catch (error) {
-          console.warn("SpheresPacking: orientation permission refusée", error);
-        }
-      };
-
-      const handleFirstGesture = () => {
-        requestPermission();
-      };
-
-      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(handleFirstGesture);
-    } else {
-      window.addEventListener("deviceorientation", handleOrientation, true);
+    const notifyGrantedOnce = () => {
+      if (grantedNotified) return
+      grantedNotified = true
+      notifyOrientationGranted()
     }
 
-    state.raf = requestAnimationFrame(applyTilt);
+    // Trajectoire idle : Lissajous + reseed aléatoire périodique
+    let phaseX = Math.random() * Math.PI * 2
+    let phaseY = Math.random() * Math.PI * 2
+    let ampX = 0.42
+    let ampY = 0.38
+    let freqX = 0.21
+    let freqY = 0.17
+    let reseedAt = 0
+
+    const reseedIdle = (now: number) => {
+      phaseX += (Math.random() - 0.5) * 1.4
+      phaseY += (Math.random() - 0.5) * 1.4
+      ampX = 0.3 + Math.random() * 0.32
+      ampY = 0.28 + Math.random() * 0.3
+      freqX = 0.14 + Math.random() * 0.16
+      freqY = 0.12 + Math.random() * 0.14
+      reseedAt = now + 2600 + Math.random() * 4800
+    }
+
+    const sampleIdleTarget = (now: number) => {
+      if (now >= reseedAt) reseedIdle(now)
+      const t = now * 0.001
+      return {
+        x: clampToUnit(
+          Math.sin(t * freqX + phaseX) * ampX +
+            Math.sin(t * (freqX * 1.7) + phaseY) * ampX * 0.55 +
+            Math.sin(t * 0.09 + phaseX * 0.4) * 0.14,
+        ),
+        y: clampToUnit(
+          Math.cos(t * freqY + phaseY) * ampY +
+            Math.sin(t * (freqY * 1.6) + phaseX) * ampY * 0.55 +
+            Math.cos(t * 0.11 + phaseY * 0.4) * 0.14,
+        ),
+      }
+    }
+
+    const applyTilt = (now = performance.now()) => {
+      const gyroActive = gyroLive && now - lastGyroAt < GYRO_STALE_MS
+      if (!gyroActive) {
+        const idle = sampleIdleTarget(now)
+        state.targetX = idle.x
+        state.targetY = idle.y
+      }
+
+      state.x += (state.targetX - state.x) * damping
+      state.y += (state.targetY - state.y) * damping
+
+      const spheres = instanceRef.current?.spheres
+      const center = spheres?.physics?.center
+      if (center) {
+        const maxX = spheres.config?.maxX ?? 15
+        const maxY = spheres.config?.maxY ?? 15
+        center.x = state.x * maxX * strength
+        center.y = state.y * maxY * strength
+      }
+
+      state.raf = requestAnimationFrame((t) => applyTilt(t))
+    }
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const beta = event.beta ?? 0
+      const gamma = event.gamma ?? 0
+
+      if (state.baseBeta === null || state.baseGamma === null) {
+        state.baseBeta = beta
+        state.baseGamma = gamma
+      }
+
+      const betaOffset = (beta - state.baseBeta) / 45
+      const gammaOffset = (gamma - state.baseGamma) / 45
+
+      state.targetX = clampToUnit(gammaOffset)
+      state.targetY = clampToUnit(-betaOffset)
+      lastGyroAt = performance.now()
+      gyroLive = true
+      notifyGrantedOnce()
+    }
+
+    const attachOrientation = () => {
+      if (orientationAttached || !hasDeviceOrientation) return
+      window.addEventListener("deviceorientation", handleOrientation, true)
+      orientationAttached = true
+    }
+
+    const detachOrientation = () => {
+      if (!orientationAttached) return
+      window.removeEventListener("deviceorientation", handleOrientation, true)
+      orientationAttached = false
+    }
+
+    let permissionCleanup: (() => void) | null = null
+
+    if (hasDeviceOrientation && needsPermission) {
+      // Idle tant que l’utilisateur n’a pas accepté (ou a refusé)
+      const requestPermission = async () => {
+        try {
+          const result = await deviceOrientationCtor.requestPermission()
+          if (result === "granted") {
+            attachOrientation()
+            notifyGrantedOnce()
+          } else {
+            gyroLive = false
+          }
+        } catch (error) {
+          console.warn("SpheresPacking: orientation permission refusée", error)
+          gyroLive = false
+        }
+      }
+
+      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(
+        requestPermission,
+      )
+    } else if (hasDeviceOrientation) {
+      attachOrientation()
+    }
+
+    reseedIdle(performance.now())
+    state.raf = requestAnimationFrame((t) => applyTilt(t))
 
     return () => {
-      permissionCleanup?.();
-      window.removeEventListener("deviceorientation", handleOrientation, true);
+      permissionCleanup?.()
+      detachOrientation()
       if (state.raf) {
-        cancelAnimationFrame(state.raf);
-        state.raf = 0;
+        cancelAnimationFrame(state.raf)
+        state.raf = 0
       }
-      state.x = 0;
-      state.y = 0;
-      state.targetX = 0;
-      state.targetY = 0;
-      state.baseBeta = null;
-      state.baseGamma = null;
-    };
-  }, []);
+      state.x = 0
+      state.y = 0
+      state.targetX = 0
+      state.targetY = 0
+      state.baseBeta = null
+      state.baseGamma = null
+    }
+  }, [])
 
   // Déterminer si les spheres doivent être visibles visuellement
   // Sur les pages avec ASCII, le canvas est actif mais caché visuellement pour l'ASCII

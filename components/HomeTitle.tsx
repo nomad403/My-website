@@ -36,6 +36,7 @@ interface HomeTitleProps {
   mode: "day" | "night"
   isMobile: boolean
   ready: boolean
+  enableHover?: boolean
 }
 
 const BRAND_FONT_FAMILY = '"Electric Blue", ui-sans-serif, system-ui, sans-serif'
@@ -104,6 +105,7 @@ export default function HomeTitle({
   mode,
   isMobile,
   ready,
+  enableHover = true,
 }: HomeTitleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [fontSize, setFontSize] = useState(24)
@@ -230,7 +232,7 @@ export default function HomeTitle({
             lineClassName={`font-home-title w-full text-left normal-case ${titleColorClass}`}
             lineStyle={lineStyle}
             lineGapClassName=""
-            enableHover
+            enableHover={enableHover}
             introShuffle={ready}
             holdDurationMs={HOME_HOVER_HOLD_MS}
             shuffleDurationMs={HOME_TITLE_SHUFFLE_MS}
