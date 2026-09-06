@@ -5,10 +5,8 @@ import { useEffect, useState } from "react"
 const MOBILE_QUERY = "(max-width: 767px)"
 
 export function useMobileViewport() {
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === "undefined") return false
-    return window.matchMedia(MOBILE_QUERY).matches
-  })
+  // Toujours false au SSR + 1er rendu client → évite les mismatches d'hydratation.
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_QUERY)

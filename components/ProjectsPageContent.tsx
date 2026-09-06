@@ -6,6 +6,7 @@ import ProjectsScrollList, {
 } from "@/components/ProjectsScrollList"
 import ProjectDetailPanel from "@/components/ProjectDetailPanel"
 import { useLanguage } from "@/app/contexts/LanguageContext"
+import { useMobileViewport } from "@/hooks/useMobileViewport"
 import {
   PROJECT_ITEMS,
   projectCopy,
@@ -24,6 +25,7 @@ function toScrollItem(item: ProjectItem, lang: ProjectLang): ProjectScrollItem {
 
 export default function ProjectsPageContent() {
   const { t, language } = useLanguage()
+  const isMobile = useMobileViewport()
   const projectLang = (language === "en" ? "en" : "fr") as ProjectLang
   const scrollItems = useMemo(
     () => PROJECT_ITEMS.map((item) => toScrollItem(item, projectLang)),
@@ -32,9 +34,16 @@ export default function ProjectsPageContent() {
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(
     () => PROJECT_ITEMS[0] ?? null,
   )
+  const [panelOpen, setPanelOpen] = useState(false)
+
   const handleActiveChange = useCallback((item: ProjectScrollItem) => {
     const full = PROJECT_ITEMS.find((entry) => entry.id === item.id) ?? null
     setActiveProject(full)
+    setPanelOpen(false)
+  }, [])
+
+  const handleActiveItemTap = useCallback(() => {
+    setPanelOpen((open) => !open)
   }, [])
 
   return (
@@ -44,11 +53,16 @@ export default function ProjectsPageContent() {
       <ProjectsScrollList
         items={scrollItems}
         onActiveChange={handleActiveChange}
+        isMobile={isMobile}
+        panelOpen={panelOpen}
+        onActiveItemTap={handleActiveItemTap}
       />
       <ProjectDetailPanel
         item={activeProject}
         lang={projectLang}
         viewLabel={t("projects.view")}
+        isMobile={isMobile}
+        open={!isMobile || panelOpen}
       />
 
       <div className="sr-only">

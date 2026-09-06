@@ -22,6 +22,10 @@ export const WHEEL_MAX_VELOCITY = 32
 export const SNAP_CAPTURE_VELOCITY = 5
 export const SNAP_CAPTURE_FRACTION = 0.28
 export const SNAP_GLIDE_MS = 220
+/** Durée de base pour un scroll animé vers un item cliqué. */
+export const SELECT_GLIDE_MS = 280
+export const SELECT_GLIDE_MS_PER_ITEM = 55
+export const SELECT_GLIDE_MS_MAX = 520
 
 const JUMP_FROM = 0.28
 const JUMP_TO = 0.72

@@ -611,6 +611,42 @@ body {
   }
 }
 
+@property --projects-fade-mix {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+:root {
+  --mobile-edge-fade: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 0.2) 2.75rem,
+    #000 5.75rem,
+    #000 calc(100% - 5.25rem),
+    rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
+    transparent 100%
+  );
+
+  --projects-list-fade-strong: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.02) 6%,
+    rgb(0 0 0 / 0.08) 12%,
+    rgb(0 0 0 / 0.2) 18%,
+    rgb(0 0 0 / 0.42) 26%,
+    rgb(0 0 0 / 0.72) 34%,
+    #000 42%,
+    #000 58%,
+    rgb(0 0 0 / 0.72) 66%,
+    rgb(0 0 0 / 0.42) 74%,
+    rgb(0 0 0 / 0.2) 82%,
+    rgb(0 0 0 / 0.08) 88%,
+    rgb(0 0 0 / 0.02) 94%,
+    transparent 100%
+  );
+}
+
 .projects-scroll-list-shell {
   --project-list-marker-size: clamp(0.45rem, 1.4vmin, 0.85rem);
   --jump-max: clamp(1.25rem, 6.5vmin, 4rem);
@@ -627,13 +663,19 @@ body {
   top: 50%;
   left: calc(var(--list-inline-start) - var(--project-list-marker-size) * 2);
   z-index: 2;
-  transform: translateY(-50%);
   width: 0;
   height: 0;
   border-top: var(--project-list-marker-size) solid transparent;
   border-bottom: var(--project-list-marker-size) solid transparent;
   border-left: calc(var(--project-list-marker-size) * 1.35) solid currentColor;
   pointer-events: none;
+  transform: translateY(-50%) rotate(0deg);
+  transform-origin: 35% 50%;
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.projects-scroll-list-shell--panel-open::before {
+  transform: translateY(-50%) rotate(-90deg);
 }
 
 .projects-scroll-list {
@@ -655,40 +697,78 @@ body {
   scroll-behavior: auto;
   overflow-x: clip;
   scroll-snap-type: y mandatory;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgb(0 0 0 / 0.02) 6%,
-    rgb(0 0 0 / 0.08) 12%,
-    rgb(0 0 0 / 0.2) 18%,
-    rgb(0 0 0 / 0.42) 26%,
-    rgb(0 0 0 / 0.72) 34%,
-    #000 42%,
-    #000 58%,
-    rgb(0 0 0 / 0.72) 66%,
-    rgb(0 0 0 / 0.42) 74%,
-    rgb(0 0 0 / 0.2) 82%,
-    rgb(0 0 0 / 0.08) 88%,
-    rgb(0 0 0 / 0.02) 94%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgb(0 0 0 / 0.02) 6%,
-    rgb(0 0 0 / 0.08) 12%,
-    rgb(0 0 0 / 0.2) 18%,
-    rgb(0 0 0 / 0.42) 26%,
-    rgb(0 0 0 / 0.72) 34%,
-    #000 42%,
-    #000 58%,
-    rgb(0 0 0 / 0.72) 66%,
-    rgb(0 0 0 / 0.42) 74%,
-    rgb(0 0 0 / 0.2) 82%,
-    rgb(0 0 0 / 0.08) 88%,
-    rgb(0 0 0 / 0.02) 94%,
-    transparent 100%
-  );
+  mask-image: var(--projects-list-fade-strong);
+  -webkit-mask-image: var(--projects-list-fade-strong);
+}
+
+@media (max-width: 767px) {
+  /* cross-fade n’accepte pas les var() — gradients inlinés + mix animable */
+  .projects-scroll-list-shell .projects-scroll-list__scroller {
+    --projects-fade-mix: 0;
+    -webkit-mask-image: -webkit-cross-fade(
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        rgb(0 0 0 / 0.2) 2.75rem,
+        #000 5.75rem,
+        #000 calc(100% - 5.25rem),
+        rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgb(0 0 0 / 0.02) 6%,
+        rgb(0 0 0 / 0.08) 12%,
+        rgb(0 0 0 / 0.2) 18%,
+        rgb(0 0 0 / 0.42) 26%,
+        rgb(0 0 0 / 0.72) 34%,
+        #000 42%,
+        #000 58%,
+        rgb(0 0 0 / 0.72) 66%,
+        rgb(0 0 0 / 0.42) 74%,
+        rgb(0 0 0 / 0.2) 82%,
+        rgb(0 0 0 / 0.08) 88%,
+        rgb(0 0 0 / 0.02) 94%,
+        transparent 100%
+      ),
+      calc(var(--projects-fade-mix) * 100%)
+    );
+    mask-image: -webkit-cross-fade(
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        rgb(0 0 0 / 0.2) 2.75rem,
+        #000 5.75rem,
+        #000 calc(100% - 5.25rem),
+        rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgb(0 0 0 / 0.02) 6%,
+        rgb(0 0 0 / 0.08) 12%,
+        rgb(0 0 0 / 0.2) 18%,
+        rgb(0 0 0 / 0.42) 26%,
+        rgb(0 0 0 / 0.72) 34%,
+        #000 42%,
+        #000 58%,
+        rgb(0 0 0 / 0.72) 66%,
+        rgb(0 0 0 / 0.42) 74%,
+        rgb(0 0 0 / 0.2) 82%,
+        rgb(0 0 0 / 0.08) 88%,
+        rgb(0 0 0 / 0.02) 94%,
+        transparent 100%
+      ),
+      calc(var(--projects-fade-mix) * 100%)
+    );
+    transition: --projects-fade-mix 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .projects-scroll-list-shell--panel-open .projects-scroll-list__scroller {
+    --projects-fade-mix: 1;
+  }
 }
 
 .projects-scroll-list__scroller::-webkit-scrollbar {
@@ -1139,24 +1219,8 @@ body {
 
 @media (max-width: 1023px) {
   .specialist-catalog {
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0,
-      rgb(0 0 0 / 0.2) 2.75rem,
-      #000 5.75rem,
-      #000 calc(100% - 5.25rem),
-      rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0,
-      rgb(0 0 0 / 0.2) 2.75rem,
-      #000 5.75rem,
-      #000 calc(100% - 5.25rem),
-      rgb(0 0 0 / 0.2) calc(100% - 2.5rem),
-      transparent 100%
-    );
+    mask-image: var(--mobile-edge-fade);
+    -webkit-mask-image: var(--mobile-edge-fade);
   }
 }
 

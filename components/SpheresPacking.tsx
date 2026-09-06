@@ -60,6 +60,8 @@ export default function SpheresPacking({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const instanceRef = useRef<ReturnType<Spheres2Ctor> | null>(null);
+  /** Aligné sur l’état réel de pause de la lib (togglePause = flip). */
+  const simPausedRef = useRef(false);
   const currentColorsRef = useRef<number[]>(PAGE_COLORS.home);
   const tiltRef = useRef({
     raf: 0,
@@ -73,6 +75,7 @@ export default function SpheresPacking({
 
   useEffect(() => {
     let cancelled = false;
+    let removeResize: (() => void) | null = null;
 
     const init = async () => {
       if (typeof window === "undefined") return;
@@ -88,76 +91,91 @@ export default function SpheresPacking({
         if (!canvas) return;
         onCanvasReady?.(canvas);
         const resize = () => {
-          if (typeof window !== 'undefined') {
-            const bleed = VIEWPORT_BLEED_PX * 2
-            canvas.width = window.innerWidth + bleed
-            canvas.height = window.innerHeight + bleed
-          }
+          const bleed = VIEWPORT_BLEED_PX * 2;
+          canvas.width = window.innerWidth + bleed;
+          canvas.height = window.innerHeight + bleed;
         };
         resize();
-        if (typeof window !== 'undefined') {
-          window.addEventListener("resize", resize);
-        }
+        window.addEventListener("resize", resize);
+        removeResize = () => window.removeEventListener("resize", resize);
 
-        const inst = ctor(canvas, { 
-          count, 
-          colors: currentColorsRef.current, 
-          minSize, 
-          maxSize 
+        const inst = ctor(canvas, {
+          count,
+          colors: currentColorsRef.current,
+          minSize,
+          maxSize,
         });
-        instanceRef.current = inst;
-
-        return () => {
-          if (typeof window !== 'undefined') {
-            window.removeEventListener("resize", resize);
-          }
+        if (cancelled) {
           try {
             inst.dispose();
           } catch {}
-        };
+          return;
+        }
+        instanceRef.current = inst;
+        simPausedRef.current = false;
+
+        // Si l’onglet est déjà masqué au montage, synchroniser la pause.
+        if (document.hidden) {
+          try {
+            inst.togglePause();
+            simPausedRef.current = true;
+          } catch {}
+        }
       } catch (e) {
         console.error("SpheresPacking: échec de chargement ESM", e);
       }
     };
 
-    const cleanupPromise = init();
+    void init();
 
     return () => {
       cancelled = true;
+      removeResize?.();
       if (instanceRef.current) {
         try {
           instanceRef.current.dispose();
         } catch {}
         instanceRef.current = null;
       }
+      simPausedRef.current = false;
     };
   }, [count, minSize, maxSize, onCanvasReady]);
 
-  // Pause la simulation WebGL quand l'onglet est masqué
+  // Pause / reprise fiables (visibility + bfcache), sans détruire le WebGL.
   useEffect(() => {
     if (typeof document === "undefined") return;
 
-    let paused = false;
-
-    const handleVisibility = () => {
+    const ensurePauseState = (shouldPause: boolean) => {
       const inst = instanceRef.current;
       if (!inst) return;
-
-      if (document.hidden && !paused) {
-        try {
-          inst.togglePause();
-        } catch {}
-        paused = true;
-      } else if (!document.hidden && paused) {
-        try {
-          inst.togglePause();
-        } catch {}
-        paused = false;
-      }
+      if (simPausedRef.current === shouldPause) return;
+      try {
+        inst.togglePause();
+        simPausedRef.current = shouldPause;
+      } catch {}
     };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    const resumeIfVisible = () => {
+      if (document.hidden) return;
+      ensurePauseState(false);
+    };
+
+    const onVisibility = () => {
+      ensurePauseState(document.hidden);
+    };
+
+    const onPageShow = () => {
+      resumeIfVisible();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
+    resumeIfVisible();
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, []);
 
   useEffect(() => {

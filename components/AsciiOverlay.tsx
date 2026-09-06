@@ -107,6 +107,8 @@ export default function AsciiOverlay({
   }, [cover, fontPx, fixedCols, pageKey]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     if (!visible || grid.cols <= 0 || grid.rows <= 0) {
       runningRef.current = false;
       if (preRef.current) preRef.current.textContent = "";
@@ -159,7 +161,13 @@ export default function AsciiOverlay({
       octx.fillRect(0, 0, w, h);
       
       // Échantillonne la source *directement* à la taille w×h
-      octx.drawImage(source, 0, 0, w, h);
+      try {
+        octx.drawImage(source, 0, 0, w, h);
+      } catch {
+        // Canvas source perdu (WebGL) : on réessaie à la frame suivante
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       const { data } = octx.getImageData(0, 0, w, h);
 
       // Réutiliser les buffers au lieu de les recréer
@@ -224,12 +232,30 @@ export default function AsciiOverlay({
       raf = requestAnimationFrame(draw);
     };
 
-    raf = requestAnimationFrame(draw);
+    const kick = () => {
+      if (!runningRef.current) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(draw);
+    };
+
+    const onVisibility = () => {
+      if (!document.hidden) kick();
+    };
+    const onPageShow = () => {
+      if (!document.hidden) kick();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
+    kick();
+
     return () => {
       runningRef.current = false;
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
     };
-  }, [source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, color, opacity]);
+  }, [mounted, source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, color, opacity]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;

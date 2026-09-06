@@ -5,6 +5,9 @@ import {
   RECENTER_DRIFT_BLOCKS,
   SNAP_CAPTURE_FRACTION,
   SNAP_CAPTURE_VELOCITY,
+  SELECT_GLIDE_MS,
+  SELECT_GLIDE_MS_MAX,
+  SELECT_GLIDE_MS_PER_ITEM,
   SNAP_GLIDE_MS,
   WHEEL_FRICTION,
   WHEEL_IMMEDIATE,
@@ -30,6 +33,10 @@ interface UseProjectsScrollPhysicsArgs {
   requestScrollTop: (target: number) => void
   syncWindow: (scrollTop: number) => boolean
   paintFallback: (scrollTop: number) => void
+  /** Appelé pour animer le scroll vers un virtualIndex (clic item). */
+  animateToVirtualIndexRef?: MutableRefObject<
+    ((virtualIndex: number) => void) | null
+  >
 }
 
 export function useProjectsScrollPhysics({
@@ -41,6 +48,7 @@ export function useProjectsScrollPhysics({
   requestScrollTop,
   syncWindow,
   paintFallback,
+  animateToVirtualIndexRef,
 }: UseProjectsScrollPhysicsArgs) {
   useEffect(() => {
     const scroller = scrollerRef.current
@@ -133,18 +141,8 @@ export function useProjectsScrollPhysics({
       idleTimer = window.setTimeout(settle, hasScrollEnd ? 320 : 140)
     }
 
-    const glideToNearest = () => {
-      const currentMetrics = metricsRef.current
-      if (currentMetrics.itemHeight <= 0) {
-        setSnapEnabled(true)
-        return
-      }
-
+    const glideTo = (to: number, durationMs: number) => {
       const from = scroller.scrollTop
-      const to = scrollTopForVirtualIndex(
-        nearestVirtualIndex(from, currentMetrics, velocityRef.current),
-        currentMetrics,
-      )
       const distance = to - from
       if (Math.abs(distance) < 0.5) {
         setSnapEnabled(true)
@@ -152,10 +150,14 @@ export function useProjectsScrollPhysics({
         return
       }
 
+      cancelMotion()
+      setSnapEnabled(false)
+      velocityRef.current = 0
+
       const startedAt = performance.now()
       const step = (now: number) => {
         if (disposed) return
-        const progress = Math.min(1, (now - startedAt) / SNAP_GLIDE_MS)
+        const progress = Math.min(1, (now - startedAt) / durationMs)
         scroller.scrollTop = from + distance * easeOutQuint(progress)
         if (progress < 1) {
           glideFrame = window.requestAnimationFrame(step)
@@ -166,6 +168,42 @@ export function useProjectsScrollPhysics({
         settle()
       }
       glideFrame = window.requestAnimationFrame(step)
+    }
+
+    const glideToNearest = () => {
+      const currentMetrics = metricsRef.current
+      if (currentMetrics.itemHeight <= 0) {
+        setSnapEnabled(true)
+        return
+      }
+
+      const to = scrollTopForVirtualIndex(
+        nearestVirtualIndex(
+          scroller.scrollTop,
+          currentMetrics,
+          velocityRef.current,
+        ),
+        currentMetrics,
+      )
+      glideTo(to, SNAP_GLIDE_MS)
+    }
+
+    const animateToVirtualIndex = (virtualIndex: number) => {
+      const currentMetrics = metricsRef.current
+      if (currentMetrics.itemHeight <= 0) return
+
+      const to = scrollTopForVirtualIndex(virtualIndex, currentMetrics)
+      const blocks = Math.abs(to - scroller.scrollTop) / currentMetrics.itemHeight
+      const duration = clamp(
+        SELECT_GLIDE_MS + blocks * SELECT_GLIDE_MS_PER_ITEM,
+        SELECT_GLIDE_MS,
+        SELECT_GLIDE_MS_MAX,
+      )
+      glideTo(to, duration)
+    }
+
+    if (animateToVirtualIndexRef) {
+      animateToVirtualIndexRef.current = animateToVirtualIndex
     }
 
     const fling = () => {
@@ -248,6 +286,9 @@ export function useProjectsScrollPhysics({
     return () => {
       disposed = true
       cancelMotion()
+      if (animateToVirtualIndexRef) {
+        animateToVirtualIndexRef.current = null
+      }
       scroller.removeEventListener("wheel", onWheel)
       scroller.removeEventListener("scroll", onScroll)
       if (hasScrollEnd) scroller.removeEventListener("scrollend", settle)
@@ -255,6 +296,7 @@ export function useProjectsScrollPhysics({
       if (frameRef.current) window.cancelAnimationFrame(frameRef.current)
     }
   }, [
+    animateToVirtualIndexRef,
     frameRef,
     lastScrollTopRef,
     metricsRef,

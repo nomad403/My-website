@@ -33,6 +33,11 @@ export interface ProjectScrollItem {
 interface ProjectsScrollListProps {
   items: ProjectScrollItem[]
   onActiveChange?: (item: ProjectScrollItem) => void
+  /** Mobile : panneau détail ouvert — oriente la flèche vers le haut. */
+  panelOpen?: boolean
+  /** Mobile : true = viewport mobile (clic sélectionne / ouvre panneau). */
+  isMobile?: boolean
+  onActiveItemTap?: (item: ProjectScrollItem) => void
 }
 
 interface PoolSlot {
@@ -45,6 +50,9 @@ interface PoolSlot {
 export default function ProjectsScrollList({
   items,
   onActiveChange,
+  panelOpen = false,
+  isMobile = false,
+  onActiveItemTap,
 }: ProjectsScrollListProps) {
   const itemCount = items.length
 
@@ -57,6 +65,9 @@ export default function ProjectsScrollList({
   const lastScrollTopRef = useRef(0)
   const velocityRef = useRef(0)
   const frameRef = useRef(0)
+  const animateToVirtualIndexRef = useRef<
+    ((virtualIndex: number) => void) | null
+  >(null)
   const supportsViewTimelineRef = useRef(true)
   const onActiveChangeRef = useRef(onActiveChange)
   onActiveChangeRef.current = onActiveChange
@@ -258,6 +269,7 @@ export default function ProjectsScrollList({
     requestScrollTop,
     syncWindow,
     paintFallback,
+    animateToVirtualIndexRef,
   })
 
   const poolSlots = useMemo<PoolSlot[]>(() => {
@@ -282,14 +294,31 @@ export default function ProjectsScrollList({
 
   if (itemCount === 0) return null
 
-  const handleItemClick = (item: ProjectScrollItem) => {
+  const handleItemClick = (
+    item: ProjectScrollItem,
+    virtualIndex: number,
+    isActive: boolean,
+  ) => {
+    if (isMobile) {
+      if (isActive) {
+        onActiveItemTap?.(item)
+        return
+      }
+      animateToVirtualIndexRef.current?.(virtualIndex)
+      return
+    }
+
     if (item.url) {
       window.open(item.url, "_blank", "noopener,noreferrer")
     }
   }
 
   return (
-    <div className="projects-scroll-list-shell absolute inset-0 w-full">
+    <div
+      className={`projects-scroll-list-shell absolute inset-0 w-full${
+        panelOpen ? " projects-scroll-list-shell--panel-open" : ""
+      }`}
+    >
       <div
         className="projects-scroll-list__scroller h-full overflow-y-auto"
         ref={scrollerRef}
@@ -319,7 +348,9 @@ export default function ProjectsScrollList({
                   data-virtual-index={virtualIndex}
                   className={`projects-scroll-list__item font-kode uppercase tracking-[0.18em] ${
                     isActive ? "projects-scroll-list__item--snapped" : ""
-                  } ${item.url ? "cursor-pointer" : "cursor-default"}`}
+                  } ${
+                    isMobile || item.url ? "cursor-pointer" : "cursor-default"
+                  }`}
                   style={{
                     top,
                     height: metrics?.itemHeight,
@@ -328,13 +359,16 @@ export default function ProjectsScrollList({
                   <button
                     type="button"
                     className="block h-full w-full max-w-full border-0 bg-transparent p-0 text-left font-inherit uppercase tracking-inherit text-inherit"
-                    onClick={() => handleItemClick(item)}
+                    onClick={() =>
+                      handleItemClick(item, virtualIndex, isActive)
+                    }
                     aria-label={
                       item.description
                         ? `${item.name} — ${item.description}`
                         : item.name
                     }
-                    disabled={!item.url}
+                    aria-expanded={isMobile && isActive ? panelOpen : undefined}
+                    disabled={!isMobile && !item.url}
                   >
                     <span className="projects-scroll-list__item-label">
                       {item.name}
