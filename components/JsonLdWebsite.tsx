@@ -35,7 +35,6 @@ export default function JsonLdWebsite() {
             "https://linkedin.com/in/nomad403",
             "https://github.com/nomad403"
           ],
-          "email": "nomad403@protonmail.com",
           "address": {
             "@type": "PostalAddress",
             "addressLocality": "Paris",
@@ -72,8 +71,7 @@ export default function JsonLdWebsite() {
           "url": `${baseUrl}/contact`,
           "mainEntity": {
             "@type": "Person",
-            "name": "NOMAD403",
-            "email": "nomad403@protonmail.com"
+            "name": "NOMAD403"
           }
         }
       }

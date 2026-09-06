@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react"
 import { delay, runShuffleTransition } from "@/lib/shuffle-text-animation"
+import { useCanHover } from "@/hooks/useCanHover"
 
 export interface DualLine {
   primary: string
@@ -46,6 +47,8 @@ export default function ShuffleDualLines({
   shuffleChars,
   renderLineWrapper,
 }: ShuffleDualLinesProps) {
+  const canHoverDevice = useCanHover()
+  const hoverEnabled = enableHover && canHoverDevice
   const [displayLines, setDisplayLines] = useState<string[]>(() =>
     lines.map((line) => line.primary),
   )
@@ -133,7 +136,7 @@ export default function ShuffleDualLines({
   )
 
   const runHoverSequence = useCallback(async () => {
-    if (busyRef.current || !enableHover) return
+    if (busyRef.current || !hoverEnabled) return
 
     busyRef.current = true
     const token = ++sequenceTokenRef.current
@@ -161,10 +164,10 @@ export default function ShuffleDualLines({
     phaseRef.current = "idle"
     busyRef.current = false
     setDisplayLines(linesRef.current.map((line) => line.primary))
-  }, [enableHover, holdDurationMs, runStaggeredTransition])
+  }, [hoverEnabled, holdDurationMs, runStaggeredTransition])
 
   const handleMouseEnter = () => {
-    if (!enableHover || busyRef.current) return
+    if (!hoverEnabled || busyRef.current) return
     void runHoverSequence()
   }
 
@@ -197,7 +200,10 @@ export default function ShuffleDualLines({
   )
 
   return (
-    <span className={className} onMouseEnter={handleMouseEnter}>
+    <span
+      className={className}
+      onMouseEnter={hoverEnabled ? handleMouseEnter : undefined}
+    >
       {displayLines.map((text, index) => {
         const lineNode = (
           <span

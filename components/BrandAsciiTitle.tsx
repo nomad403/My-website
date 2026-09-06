@@ -18,6 +18,7 @@ import {
   type RasterTextOptions,
   type AsciiTextGrid,
 } from "@/lib/raster-text-ascii"
+import { useCanHover } from "@/hooks/useCanHover"
 
 const ASCII_CELL_PX = 5
 const HOVER_RADIUS_PX = 88
@@ -90,6 +91,7 @@ export default function BrandAsciiTitle({
   fontSize,
   scaleX,
 }: BrandAsciiTitleProps) {
+  const canHover = useCanHover()
   const hitRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
@@ -347,11 +349,12 @@ export default function BrandAsciiTitle({
   }
 
   const handlePointerEnter = () => {
+    if (!canHover) return
     void runHoverSequence()
   }
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!enabled || !contentRef.current || !levelGridRef.current) return
+    if (!canHover || !enabled || !contentRef.current || !levelGridRef.current) return
 
     const pointer = toLocalPointer(
       event.clientX,
@@ -368,6 +371,7 @@ export default function BrandAsciiTitle({
   }
 
   const handlePointerLeave = () => {
+    if (!canHover) return
     hoveringRef.current = false
     stopAnimLoop()
     clearMask(visibleTextRef.current)
@@ -388,14 +392,14 @@ export default function BrandAsciiTitle({
     <div className="mt-4 md:mt-6" style={{ marginLeft: `${marginLeft}px` }}>
       <div
         ref={hitRef}
-        className="relative cursor-crosshair select-none"
+        className={`relative select-none ${canHover ? "cursor-crosshair" : "cursor-default"}`}
         style={{
           width: visualWidth ? `${visualWidth}px` : undefined,
           height: visualHeight ? `${visualHeight}px` : undefined,
         }}
-        onPointerEnter={handlePointerEnter}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
+        onPointerEnter={canHover ? handlePointerEnter : undefined}
+        onPointerMove={canHover ? handlePointerMove : undefined}
+        onPointerLeave={canHover ? handlePointerLeave : undefined}
       >
         <div
           ref={contentRef}

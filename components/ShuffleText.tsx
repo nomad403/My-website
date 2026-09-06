@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
+import { useCanHover } from '@/hooks/useCanHover'
 
 interface ShuffleTextProps {
   children: string
@@ -29,6 +30,7 @@ export default function ShuffleText({
   shuffleKey = 0,
   onDisplayChange,
 }: ShuffleTextProps) {
+  const canHoverDevice = useCanHover()
   const [isShuffling, setIsShuffling] = useState(false)
   const [displayText, setDisplayText] = useState(children)
   const rafRef = useRef(0)
@@ -122,13 +124,17 @@ export default function ShuffleText({
 
   useEffect(() => () => stopShuffle(), [])
 
-  const canHover = enableHover && !isShuffling && !triggerShuffle
+  const canHover = enableHover && canHoverDevice && !isShuffling && !triggerShuffle
   const handleMouseEnter = () => {
     if (canHover) startShuffleAnimation()
   }
 
   return (
-    <span className={className} style={style} onMouseEnter={handleMouseEnter}>
+    <span
+      className={className}
+      style={style}
+      onMouseEnter={canHover ? handleMouseEnter : undefined}
+    >
       {displayText}
     </span>
   )

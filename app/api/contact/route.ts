@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
+import {
+  escapeHtml,
+  sanitizeContactPayload,
+  validateContactPayload,
+} from "@/lib/contact-validation"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -15,13 +20,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 })
     }
 
-    const nom = (data?.nom || "").trim()
-    const contact = (data?.contact || "").trim()
-    const message = (data?.message || "").trim()
-
-    if (!nom || !contact || !message) {
-      return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 })
+    if (
+      typeof data?.nom !== "string" ||
+      typeof data?.contact !== "string" ||
+      typeof data?.message !== "string"
+    ) {
+      return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 })
     }
+
+    const payload = sanitizeContactPayload(data)
+    const validation = validateContactPayload(payload)
+    if (!validation.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Invalid fields",
+          field: validation.field,
+          code: validation.code,
+        },
+        { status: 400 },
+      )
+    }
+
+    const { nom, contact, message } = payload
 
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.RESEND_FROM
@@ -38,21 +59,23 @@ export async function POST(req: Request) {
     }
 
     const resend = new Resend(apiKey)
-    const subject = `Contact — ${nom}`
-    const isEmail = /\S+@\S+\.\S+/.test(contact)
+    const safeNom = escapeHtml(nom)
+    const safeContact = escapeHtml(contact)
+    const safeMessage = escapeHtml(message)
+    const isEmail = contact.includes("@")
 
     const result = await resend.emails.send({
       from,
       to,
       reply_to: isEmail ? contact : undefined,
-      subject,
+      subject: `Contact — ${nom.slice(0, 80)}`,
       text: `Nom / Structure: ${nom}\nContact: ${contact}\n\n${message}`,
       html: `
         <h2>Nouveau message</h2>
-        <p><b>Nom / Structure:</b> ${nom}</p>
-        <p><b>Contact:</b> ${contact}</p>
+        <p><b>Nom / Structure:</b> ${safeNom}</p>
+        <p><b>Contact:</b> ${safeContact}</p>
         <hr/>
-        <pre style="white-space:pre-wrap">${message.replace(/</g, "&lt;")}</pre>
+        <pre style="white-space:pre-wrap">${safeMessage}</pre>
       `,
     })
 
@@ -64,7 +87,6 @@ export async function POST(req: Request) {
           ok: false,
           name: error.name,
           message: error.message,
-          details: error,
         },
         { status: 502 },
       )

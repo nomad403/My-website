@@ -224,6 +224,15 @@ body {
   }
 }
 
+/* Évite le zoom auto iOS/Android sur focus (police < 16px). */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* LIQUID GLASS STYLES */
 .liquidGlass-wrapper {
   position: relative;
@@ -237,9 +246,11 @@ body {
   padding: 0.4rem;
   border-radius: 1.8rem;
 }
-.liquidGlass-wrapper:hover {
-  padding: 0.6rem;
-  border-radius: 1.8rem;
+@media (hover: hover) and (pointer: fine) {
+  .liquidGlass-wrapper:hover {
+    padding: 0.6rem;
+    border-radius: 1.8rem;
+  }
 }
 .liquidGlass-effect {
   position: absolute;
@@ -275,9 +286,11 @@ body {
   padding: 0.4rem;
   border-radius: 1.8rem;
 }
-.menu:hover {
-  padding: 0.6rem;
-  border-radius: 1.8rem;
+@media (hover: hover) and (pointer: fine) {
+  .menu:hover {
+    padding: 0.6rem;
+    border-radius: 1.8rem;
+  }
 }
 
 .wrapper {
@@ -352,9 +365,14 @@ body {
   background: #fff;
 }
 
-.nav-link:hover::after,
 .nav-link.active::after {
   width: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover::after {
+    width: 100%;
+  }
 }
 
 .tech-tag {
@@ -400,9 +418,11 @@ body {
   color: #4338ca;
 }
 
-.tech-tag:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .tech-tag:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Animations slide SEULEMENT pour home ↔ projects */
@@ -769,8 +789,10 @@ body {
   cursor: default;
 }
 
-.projects-scroll-list__item:has(button:not(:disabled)):hover {
-  opacity: 0.72;
+@media (hover: hover) and (pointer: fine) {
+  .projects-scroll-list__item:has(button:not(:disabled)):hover {
+    opacity: 0.72;
+  }
 }
 
 @supports (animation-timeline: view()) {
@@ -799,7 +821,7 @@ body {
 .projects-scroll-list__detail-inner {
   position: relative;
   isolation: isolate;
-  padding: 0.2rem 0.35rem 0.6rem 0;
+  padding: 0.55rem 0.35rem 1.15rem 0;
 }
 
 .projects-scroll-list__detail-inner::before {
@@ -871,8 +893,10 @@ body {
   transition: opacity 0.2s ease;
 }
 
-.projects-scroll-list__detail-link:hover {
-  opacity: 0.55;
+@media (hover: hover) and (pointer: fine) {
+  .projects-scroll-list__detail-link:hover {
+    opacity: 0.55;
+  }
 }
 
 @media (min-width: 768px) {
@@ -963,6 +987,9 @@ body {
     transition: opacity 0.2s ease;
   }
 
+}
+
+@media (hover: hover) and (pointer: fine) {
   .project-detail-panel__link:hover {
     opacity: 0.55;
   }
@@ -1025,8 +1052,7 @@ body {
   font-weight: 400;
 }
 
-.specialist-service-glass,
-.specialist-service-glass--idle:hover {
+.specialist-service-glass {
   border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.32);
@@ -1044,6 +1070,19 @@ body {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .specialist-service-glass--idle:hover {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(14px) saturate(1.45);
+    -webkit-backdrop-filter: blur(14px) saturate(1.45);
+    box-shadow:
+      inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
+      inset -1px -1px 1px rgba(255, 255, 255, 0.28),
+      0 6px 18px rgba(0, 0, 0, 0.07);
+  }
 }
 
 @media (min-width: 768px) {

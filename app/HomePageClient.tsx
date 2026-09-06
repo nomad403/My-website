@@ -77,11 +77,11 @@ export default function HomePageClient({
   const showHomeTitle =
     isPreloaded && homeVisible && showAscii && isLanguageReady
   const homeTitleLines = useMemo(
-    () => [t("home.titleLine1")],
+    () => [t("home.titleLine1"), t("home.titleLine2")],
     [t, language],
   )
   const homeTitleAltLines = useMemo(
-    () => [t("home.titleAltLine1")],
+    () => [t("home.titleAltLine1"), t("home.titleAltLine2")],
     [t, language],
   )
   const homeBrandAltWords = useMemo(

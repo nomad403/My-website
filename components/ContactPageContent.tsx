@@ -1,18 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import ShuffleText from "@/components/ShuffleText"
 import ShuffleDualLines from "@/components/ShuffleDualLines"
 import { useLanguage } from "@/app/contexts/LanguageContext"
-
-type ContactField = "nom" | "contact" | "message"
+import {
+  CONTACT_LIMITS,
+  sanitizeContactInput,
+  sanitizeMessageInput,
+  sanitizeNomInput,
+  validateContactField,
+  type ContactField,
+  type ContactValidationCode,
+} from "@/lib/contact-validation"
 
 const FIELD_CLASS =
-  "min-h-[48px] w-full rounded-xl border border-gray-300/50 bg-white/90 px-4 py-3 font-kode text-sm text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-300 placeholder-gray-500 focus:border-cyan-400 focus:outline-none md:px-6 md:text-base"
+  "min-h-[48px] w-full rounded-xl border border-gray-300/50 bg-white/90 px-4 py-3 font-kode text-base text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-300 placeholder-gray-500 focus:border-cyan-400 focus:outline-none md:px-6"
 
 const SHUFFLE_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?!'"
+
+function sanitizeField(field: ContactField, value: string) {
+  if (field === "nom") return sanitizeNomInput(value)
+  if (field === "contact") return sanitizeContactInput(value)
+  return sanitizeMessageInput(value)
+}
 
 export default function ContactPageContent() {
   const { t, language } = useLanguage()
@@ -22,12 +35,18 @@ export default function ContactPageContent() {
     contact: "",
     message: "",
   })
+  const [fieldError, setFieldError] = useState<ContactValidationCode | null>(
+    null,
+  )
   const [isSending, setIsSending] = useState(false)
   const [sendStatus, setSendStatus] = useState<"idle" | "success" | "error">(
     "idle",
   )
   const [titleText, setTitleText] = useState(t("contact.title"))
   const [shouldShuffleBack, setShouldShuffleBack] = useState(false)
+  const titleFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const titleStatusActive =
     sendStatus === "success" || sendStatus === "error" || shouldShuffleBack
 
@@ -36,23 +55,52 @@ export default function ContactPageContent() {
       field: "nom" as const,
       label: t("contact.fields.name"),
       placeholder: t("contact.placeholders.name"),
+      maxLength: CONTACT_LIMITS.nom.max,
     },
     {
       field: "contact" as const,
       label: t("contact.fields.contact"),
       placeholder: t("contact.placeholders.contact"),
+      maxLength: CONTACT_LIMITS.contact.max,
     },
     {
       field: "message" as const,
       label: t("contact.fields.message"),
       placeholder: t("contact.placeholders.message"),
+      maxLength: CONTACT_LIMITS.message.max,
     },
   ]
 
   const activeField = steps[currentStep].field
   const activeValue = formData[activeField]
-  const canSubmit = Boolean(activeValue.trim()) && !isSending
   const isLastStep = currentStep === steps.length - 1
+
+  const clearTitleFeedbackTimer = () => {
+    if (titleFeedbackTimerRef.current) {
+      clearTimeout(titleFeedbackTimerRef.current)
+      titleFeedbackTimerRef.current = null
+    }
+  }
+
+  const showTitleFeedback = (
+    text: string,
+    kind: "success" | "error",
+    durationMs = 2800,
+  ) => {
+    clearTitleFeedbackTimer()
+    setTitleText(text)
+    setSendStatus(kind)
+    titleFeedbackTimerRef.current = setTimeout(() => {
+      setSendStatus("idle")
+      setShouldShuffleBack(true)
+      setTitleText(t("contact.title"))
+      titleFeedbackTimerRef.current = null
+    }, durationMs)
+  }
+
+  useEffect(() => {
+    return () => clearTitleFeedbackTimer()
+  }, [])
 
   useEffect(() => {
     if (sendStatus !== "idle" || shouldShuffleBack) return
@@ -65,18 +113,41 @@ export default function ContactPageContent() {
     return () => clearTimeout(timer)
   }, [shouldShuffleBack])
 
+  useEffect(() => {
+    setFieldError(null)
+  }, [currentStep])
+
   const updateField = (field: ContactField, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: sanitizeField(field, value) }))
+    setFieldError(null)
+    if (sendStatus === "error") {
+      clearTitleFeedbackTimer()
+      setSendStatus("idle")
+      setTitleText(t("contact.title"))
+    }
   }
 
   const handleNext = async () => {
+    if (isSending) return
+
+    const code = validateContactField(activeField, activeValue)
+    if (code) {
+      setFieldError(code)
+      showTitleFeedback(t(`contact.validation.${code}`), "error")
+      return
+    }
+
     if (!isLastStep) {
+      clearTitleFeedbackTimer()
+      setSendStatus("idle")
+      setTitleText(t("contact.title"))
       setCurrentStep((prev) => prev + 1)
       return
     }
 
     setIsSending(true)
     setSendStatus("idle")
+    setFieldError(null)
 
     const payload = {
       nom: formData.nom.trim(),
@@ -92,29 +163,38 @@ export default function ContactPageContent() {
       })
 
       const text = await res.text()
-      if (!res.ok) throw new Error(text || `HTTP ${res.status}`)
+      if (!res.ok) {
+        let validationCode: ContactValidationCode | null = null
+        try {
+          const json = JSON.parse(text) as {
+            code?: ContactValidationCode
+            field?: ContactField
+          }
+          if (json.code && json.field) {
+            const stepIndex = steps.findIndex(
+              (step) => step.field === json.field,
+            )
+            if (stepIndex >= 0) setCurrentStep(stepIndex)
+            validationCode = json.code
+            setFieldError(json.code)
+            showTitleFeedback(t(`contact.validation.${json.code}`), "error")
+          }
+        } catch {
+          // ignore parse errors
+        }
+        if (validationCode) return
+        throw new Error(text || `HTTP ${res.status}`)
+      }
 
-      setTitleText(t("contact.success"))
-      setSendStatus("success")
-
+      showTitleFeedback(t("contact.success"), "success", 3000)
       setTimeout(() => {
         setFormData({ nom: "", contact: "", message: "" })
         setCurrentStep(0)
-        setSendStatus("idle")
-        setShouldShuffleBack(true)
-        setTitleText(t("contact.title"))
       }, 3000)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch"
       console.error("[contact] FAILED", message)
-      setTitleText(t("contact.error"))
-      setSendStatus("error")
-
-      setTimeout(() => {
-        setSendStatus("idle")
-        setShouldShuffleBack(true)
-        setTitleText(t("contact.title"))
-      }, 3000)
+      showTitleFeedback(t("contact.error"), "error", 3000)
     } finally {
       setIsSending(false)
     }
@@ -126,7 +206,7 @@ export default function ContactPageContent() {
         <div className="mx-auto flex w-full max-w-[90vw] flex-col gap-4 sm:max-w-[600px]">
           <div className="mb-2 w-full md:mb-6">
             <h1
-              className={`w-full text-left font-kode text-lg tracking-wide normal-case transition-colors duration-300 sm:text-xl md:text-2xl lg:text-3xl ${
+              className={`w-full text-left font-kode text-lg uppercase tracking-wide transition-colors duration-300 sm:text-xl md:text-2xl lg:text-3xl ${
                 sendStatus === "error" ? "text-red-600" : "text-gray-800"
               }`}
             >
@@ -159,8 +239,11 @@ export default function ContactPageContent() {
               <textarea
                 placeholder={steps[currentStep].placeholder}
                 value={activeValue}
+                maxLength={steps[currentStep].maxLength}
                 onChange={(e) => updateField(activeField, e.target.value)}
-                className={`custom-scrollbar max-h-[200px] resize-none overflow-y-auto ${FIELD_CLASS}`}
+                className={`custom-scrollbar max-h-[200px] resize-none overflow-y-auto ${FIELD_CLASS}${
+                  fieldError ? " border-red-400 focus:border-red-400" : ""
+                }`}
                 rows={1}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement
@@ -173,10 +256,21 @@ export default function ContactPageContent() {
             ) : (
               <input
                 type="text"
+                inputMode={activeField === "contact" ? "email" : "text"}
+                autoComplete={
+                  activeField === "nom"
+                    ? "name"
+                    : activeField === "contact"
+                      ? "email"
+                      : "off"
+                }
                 placeholder={steps[currentStep].placeholder}
                 value={activeValue}
+                maxLength={steps[currentStep].maxLength}
                 onChange={(e) => updateField(activeField, e.target.value)}
-                className={FIELD_CLASS}
+                className={`${FIELD_CLASS}${
+                  fieldError ? " border-red-400 focus:border-red-400" : ""
+                }`}
               />
             )}
           </div>
@@ -233,11 +327,11 @@ export default function ContactPageContent() {
                   duration: 0.3,
                 }}
                 onClick={() => void handleNext()}
-                disabled={!canSubmit}
+                disabled={isSending}
                 className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 transition-all duration-300 ${
-                  canSubmit
-                    ? "border-cyan-400 text-cyan-500 hover:scale-105 hover:text-cyan-600"
-                    : "cursor-not-allowed border-gray-200 text-gray-400"
+                  isSending
+                    ? "cursor-not-allowed border-gray-200 text-gray-400"
+                    : "border-cyan-400 text-cyan-500 hover:scale-105 hover:text-cyan-600"
                 }`}
               >
                 <span className="font-kode text-sm uppercase tracking-wide">

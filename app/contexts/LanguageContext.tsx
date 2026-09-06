@@ -59,8 +59,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.contact': 'CONTACT',
         
         // Home page
-        'home.titleLine1': 'Développez vos idées sans limites.',
-        'home.titleAltLine1': 'Web, mobile, IA, automatisation.',
+        'home.titleLine1': 'Développeur,',
+        'home.titleLine2': "créateur d'expérience.",
+        'home.titleAltLine1': 'Web, mobile,',
+        'home.titleAltLine2': 'IA, automatisation.',
         'home.brandAlt': 'explorez',
         'home.rotateHintFr': 'Inclinez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
@@ -84,15 +86,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'contact.fields.message': 'VOTRE MESSAGE',
         'contact.placeholders.name': 'Nom ou structure',
         'contact.placeholders.contact': 'email@exemple.com ou +33 6 00 00 00 00',
-        'contact.placeholders.message': 'Décrivez votre projet, vos besoins, budget et délais...',
+        'contact.placeholders.message': 'Parlez-moi de votre projet…',
         'contact.error': "Échec de l'envoi. Veuillez réessayer.",
+        'contact.validation.required': 'Ce champ est requis.',
+        'contact.validation.nom_invalid': 'Utilisez un nom ou une structure valide.',
+        'contact.validation.nom_too_short': 'Le nom est trop court.',
+        'contact.validation.nom_too_long': 'Le nom est trop long.',
+        'contact.validation.contact_invalid': 'Indiquez un e-mail ou un téléphone valide.',
+        'contact.validation.contact_too_long': 'Le contact est trop long.',
+        'contact.validation.message_too_short': 'Le message est trop court.',
+        'contact.validation.message_too_long': 'Le message est trop long.',
+        'contact.validation.message_invalid': 'Le message contient des éléments non autorisés.',
         'contact.actions.back': 'Retour',
         'contact.actions.next': 'Suivant',
         'contact.actions.send': 'Envoyer',
         'contact.actions.sending': 'Envoi…',
-        
-        // Social
-        'social.email': 'nomad403@protonmail.com',
         
         // Language switcher
         'lang.switch': 'Changer de langue',
@@ -107,8 +115,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.contact': 'CONTACT',
         
         // Home page
-        'home.titleLine1': 'Develop your ideas without limits.',
-        'home.titleAltLine1': 'Web, mobile, AI, automation.',
+        'home.titleLine1': 'Developer,',
+        'home.titleLine2': 'experience creator.',
+        'home.titleAltLine1': 'Web, mobile,',
+        'home.titleAltLine2': 'AI, automation.',
         'home.brandAlt': 'explore',
         'home.rotateHintFr': 'Inclinez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
@@ -132,15 +142,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'contact.fields.message': 'YOUR MESSAGE',
         'contact.placeholders.name': 'Name or company',
         'contact.placeholders.contact': 'email@example.com or +33 6 00 00 00 00',
-        'contact.placeholders.message': 'Describe your project, needs, budget and timeline...',
+        'contact.placeholders.message': 'Tell me about your project…',
         'contact.error': 'Sending failed. Please try again.',
+        'contact.validation.required': 'This field is required.',
+        'contact.validation.nom_invalid': 'Enter a valid name or company.',
+        'contact.validation.nom_too_short': 'The name is too short.',
+        'contact.validation.nom_too_long': 'The name is too long.',
+        'contact.validation.contact_invalid': 'Enter a valid email or phone number.',
+        'contact.validation.contact_too_long': 'The contact is too long.',
+        'contact.validation.message_too_short': 'The message is too short.',
+        'contact.validation.message_too_long': 'The message is too long.',
+        'contact.validation.message_invalid': 'The message contains disallowed content.',
         'contact.actions.back': 'Back',
         'contact.actions.next': 'Next',
         'contact.actions.send': 'Send',
         'contact.actions.sending': 'Sending…',
-        
-        // Social
-        'social.email': 'nomad403@protonmail.com',
         
         // Language switcher
         'lang.switch': 'Switch language',

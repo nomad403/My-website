@@ -448,18 +448,24 @@ export default function SpheresPacking({
     const state = tiltRef.current
     const damping = prefersCoarsePointer ? 0.08 : 0.14
     const strength = prefersCoarsePointer ? 0.55 : 0.5
+    /** Idle sans gyro : follow plus marqué pour rester lisible à travers l’ASCII. */
+    const idleDamping = prefersCoarsePointer ? 0.12 : damping
+    const idleStrength = prefersCoarsePointer ? 0.92 : strength
 
-    const writePhysicsCenter = () => {
-      state.x += (state.targetX - state.x) * damping
-      state.y += (state.targetY - state.y) * damping
+    const writePhysicsCenter = (
+      motionDamping = damping,
+      motionStrength = strength,
+    ) => {
+      state.x += (state.targetX - state.x) * motionDamping
+      state.y += (state.targetY - state.y) * motionDamping
 
       const spheres = instanceRef.current?.spheres
       const center = spheres?.physics?.center
       if (center) {
         const maxX = spheres.config?.maxX ?? 15
         const maxY = spheres.config?.maxY ?? 15
-        center.x = state.x * maxX * strength
-        center.y = state.y * maxY * strength
+        center.x = state.x * maxX * motionStrength
+        center.y = state.y * maxY * motionStrength
       }
     }
 
@@ -545,20 +551,20 @@ export default function SpheresPacking({
 
     let phaseX = Math.random() * Math.PI * 2
     let phaseY = Math.random() * Math.PI * 2
-    let ampX = 0.42
-    let ampY = 0.38
-    let freqX = 0.21
-    let freqY = 0.17
+    let ampX = 0.72
+    let ampY = 0.66
+    let freqX = 0.28
+    let freqY = 0.24
     let reseedAt = 0
 
     const reseedIdle = (now: number) => {
-      phaseX += (Math.random() - 0.5) * 1.4
-      phaseY += (Math.random() - 0.5) * 1.4
-      ampX = 0.3 + Math.random() * 0.32
-      ampY = 0.28 + Math.random() * 0.3
-      freqX = 0.14 + Math.random() * 0.16
-      freqY = 0.12 + Math.random() * 0.14
-      reseedAt = now + 2600 + Math.random() * 4800
+      phaseX += (Math.random() - 0.5) * 2.2
+      phaseY += (Math.random() - 0.5) * 2.2
+      ampX = 0.58 + Math.random() * 0.4
+      ampY = 0.52 + Math.random() * 0.4
+      freqX = 0.2 + Math.random() * 0.22
+      freqY = 0.18 + Math.random() * 0.2
+      reseedAt = now + 2200 + Math.random() * 3600
     }
 
     const sampleIdleTarget = (now: number) => {
@@ -567,13 +573,13 @@ export default function SpheresPacking({
       return {
         x: clampToUnit(
           Math.sin(t * freqX + phaseX) * ampX +
-            Math.sin(t * (freqX * 1.7) + phaseY) * ampX * 0.55 +
-            Math.sin(t * 0.09 + phaseX * 0.4) * 0.14,
+            Math.sin(t * (freqX * 1.85) + phaseY) * ampX * 0.72 +
+            Math.sin(t * 0.11 + phaseX * 0.45) * 0.22,
         ),
         y: clampToUnit(
           Math.cos(t * freqY + phaseY) * ampY +
-            Math.sin(t * (freqY * 1.6) + phaseX) * ampY * 0.55 +
-            Math.cos(t * 0.11 + phaseY * 0.4) * 0.14,
+            Math.sin(t * (freqY * 1.75) + phaseX) * ampY * 0.72 +
+            Math.cos(t * 0.13 + phaseY * 0.45) * 0.22,
         ),
       }
     }
@@ -584,9 +590,11 @@ export default function SpheresPacking({
         const idle = sampleIdleTarget(now)
         state.targetX = idle.x
         state.targetY = idle.y
+        writePhysicsCenter(idleDamping, idleStrength)
+      } else {
+        writePhysicsCenter(damping, strength)
       }
 
-      writePhysicsCenter()
       state.raf = requestAnimationFrame((t) => applyTilt(t))
     }
 
