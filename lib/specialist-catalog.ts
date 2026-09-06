@@ -34,7 +34,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
       },
       {
         id: "web-landing-page",
-        title: L("Page d'atterrissage", "Landing page"),
+        title: L("Landing page", "Landing page"),
         description: L(
           "Une expérience ciblée autour d'une offre, d'une campagne ou d'un objectif de conversion.",
           "A focused experience built around an offer, a campaign, or a conversion goal."
