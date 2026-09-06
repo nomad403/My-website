@@ -58,12 +58,15 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [titleText, setTitleText] = useState(t('contact.title'));
-  
-  // Mettre à jour le titre quand la langue change
-  useEffect(() => {
-    setTitleText(t('contact.title'));
-  }, [t]);
   const [shouldShuffleBack, setShouldShuffleBack] = useState(false);
+  const titleStatusActive =
+    sendStatus === "success" || sendStatus === "error" || shouldShuffleBack;
+  
+  // Mettre à jour le titre quand la langue change (hors feedback envoi)
+  useEffect(() => {
+    if (sendStatus !== "idle" || shouldShuffleBack) return;
+    setTitleText(t("contact.title"));
+  }, [language, sendStatus, shouldShuffleBack, t]);
 
   // Contact form steps configuration - recalculé à chaque changement de langue
   const contactSteps = [
@@ -124,8 +127,14 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
         
       } catch (err: any) {
         console.error("[contact] FAILED", err?.message);
-        alert("Erreur: " + (err?.message ?? "Failed to fetch"));
-        setSendStatus('error');
+        setTitleText(t("contact.error"));
+        setSendStatus("error");
+
+        setTimeout(() => {
+          setSendStatus("idle");
+          setShouldShuffleBack(true);
+          setTitleText(t("contact.title"));
+        }, 3000);
       } finally {
         setIsSending(false);
       }
@@ -254,9 +263,18 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                  <div className="w-full max-w-[90vw] sm:max-w-[600px] mx-auto flex flex-col gap-4">
                    {/* Titre — même largeur que le champ */}
                    <div className="w-full mb-2 md:mb-6">
-                     <h1 className="w-full font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-800 tracking-wide text-left normal-case">
-                       {sendStatus === "success" || shouldShuffleBack ? (
-                         <ShuffleText triggerShuffle={sendStatus === "success" || shouldShuffleBack}>
+                     <h1
+                       className={`w-full font-kode text-lg sm:text-xl md:text-2xl lg:text-3xl tracking-wide text-left normal-case transition-colors duration-300 ${
+                         sendStatus === "error" ? "text-red-600" : "text-gray-800"
+                       }`}
+                     >
+                       {titleStatusActive ? (
+                         <ShuffleText
+                           key={`${sendStatus}-${titleText}`}
+                           triggerShuffle
+                           enableHover={false}
+                           shuffleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?!'"
+                         >
                            {titleText}
                          </ShuffleText>
                        ) : (
@@ -385,25 +403,6 @@ export default function ContentPages({ currentPage, onBack, isVisible = true }: 
                           )}
                         </motion.button>
                      </div>
-                   </div>
-
-                   {/* Message d'erreur */}
-                   <div className="text-center min-h-[24px]">
-                     <AnimatePresence mode="wait">
-                       {sendStatus === 'error' && (
-                         <motion.div
-                           key="error-message"
-                           initial={{ opacity: 0, y: 10 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           exit={{ opacity: 0, y: -10 }}
-                           transition={{ duration: 0.3 }}
-                         >
-                           <p className="text-red-600 font-kode text-sm">
-                             {t('contact.error')}
-                           </p>
-                         </motion.div>
-                       )}
-                     </AnimatePresence>
                    </div>
 
                    {/* Témoins de saisie — largeur fixe, grille adaptée aux 3 champs */}
