@@ -10,7 +10,6 @@ const INTERACTIVE_SELECTOR = [
   'input[type="button"]:not(:disabled)',
   '[role="button"]:not([aria-disabled="true"])',
   ".cursor-pointer",
-  ".carousel-item",
 ].join(", ")
 
 function findInteractiveTarget(target: EventTarget | null) {

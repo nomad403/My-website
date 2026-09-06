@@ -564,156 +564,6 @@ body {
   font-size: 0.9rem;
 }
 
-/* Styles pour le carrousel cylindrique 3D */
-.cylinder-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-}
-
-.container-carrousel {
-  --widthItem: 320px;
-  --heightItem: 180px;
-  width: var(--widthItem);
-  height: var(--heightItem);
-  perspective: 1600px;
-  transition: all 0.3s ease-out;
-  position: relative;
-  margin: auto;
-}
-
-.carrousel {
-  --rotatey: 0;
-  position: relative;
-  transform: rotatey(var(--rotatey));
-  transform-style: preserve-3d;
-  user-select: none;
-  cursor: grab;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.3s ease-out;
-}
-
-.carrousel-item {
-  opacity: 0.3;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0;
-  transition: opacity 0.5s;
-  width: 100%;
-  height: 100%;
-  --rotatey: 0;
-  transform: rotatey(var(--rotatey)) translatez(var(--tz));
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.carrousel-item:hover {
-  opacity: 1;
-}
-
-.carrousel-item.selected {
-  opacity: 1 !important;
-}
-
-.carrousel-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  aspect-ratio: 16 / 9;
-}
-
-.item-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-  color: white;
-  padding: 10px;
-  border-radius: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.carrousel-item:hover .item-overlay {
-  opacity: 0;
-}
-
-.item-overlay h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: var(--font-enigma), ui-monospace, monospace;
-}
-
-/* Effet négatif dynamique pour les textes */
-.negative-blend {
-  mix-blend-mode: difference;
-  color: white;
-  filter: contrast(2) brightness(1.5) saturate(0.8);
-  text-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.negative-blend:hover {
-  filter: contrast(2.5) brightness(1.8) saturate(1);
-}
-
-/* Responsive breakpoints pour le carrousel - optimisé pour écrans moyens */
-@media screen and (max-width: 480px) {
-  .container-carrousel {
-    --widthItem: min(85vw, 280px);
-    --heightItem: min(45vh, 160px);
-    perspective: 1200px;
-  }
-  
-  .carrousel-item {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-}
-
-@media screen and (min-width: 481px) and (max-width: 767px) {
-  .container-carrousel {
-    --widthItem: min(80vw, 320px);
-    --heightItem: min(50vh, 180px);
-    perspective: 1400px;
-  }
-}
-
-@media screen and (min-width: 768px) and (max-width: 1023px) {
-  .container-carrousel {
-    --widthItem: min(70vw, 400px);
-    --heightItem: min(55vh, 240px);
-    perspective: 1600px;
-  }
-}
-
-/* Breakpoint spécifique pour écrans moyens de PC (1024px - 1280px) */
-@media screen and (min-width: 1024px) and (max-width: 1280px) {
-  .container-carrousel {
-    --widthItem: min(60vw, 420px);
-    --heightItem: min(60vh, 250px);
-    perspective: 1700px;
-  }
-}
-
-/* Grands écrans (> 1280px) */
-@media screen and (min-width: 1281px) {
-  .container-carrousel {
-    --widthItem: min(55vw, 550px);
-    --heightItem: min(65vh, 350px);
-    perspective: 1800px;
-  }
-}
-
-/* Header / footer transparents — contenu visible sur toute la hauteur */
 .site-chrome {
   background: transparent;
   pointer-events: none;
@@ -723,16 +573,6 @@ body {
   pointer-events: auto;
 }
 
-.site-chrome__panel {
-  pointer-events: auto;
-}
-
-/*
- * Courbe du décalage horizontal, échantillonnée à l'avance sur sin(πt) entre
- * 28 % et 72 % de la traversée du scrollport. Tous les items suivent la même
- * courbe : rien à recalculer par frame. Sur une view-timeline, `transform`
- * est composé par le GPU.
- */
 @keyframes project-li-jump {
   0%,
   28% {
@@ -813,13 +653,8 @@ body {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: auto;
-  /* `visible` calculerait en `auto` face à overflow-y : les titres en nowrap
-     rendraient alors le conteneur scrollable horizontalement. */
   overflow-x: clip;
-  /* Le snap est délégué au navigateur : il reste correct à toute vélocité,
-     inertie comprise. */
   scroll-snap-type: y mandatory;
-  /* Fondu progressif très marqué aux extrémités (haut / bas). */
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -920,7 +755,6 @@ body {
   }
 }
 
-/* Panneau détail projet — droite desktop, bas mobile */
 .project-detail-panel {
   position: absolute;
   z-index: 3;
@@ -936,7 +770,6 @@ body {
   position: relative;
   isolation: isolate;
   max-width: 22rem;
-  /* Mobile : panneau bas, compact, blur réduit pour laisser voir la liste. */
   padding: 0.55rem 0.9rem 0.65rem;
   margin-inline: -0.9rem;
   background: transparent;
@@ -950,10 +783,6 @@ body {
   pointer-events: none;
 }
 
-/*
- * Halo mobile : un seul voile très étendu, masqué par un radial ancré en bas
- * avec beaucoup d’étapes — le début du fondu ne doit pas se lire comme une ligne.
- */
 .project-detail-panel__inner::before {
   inset: -6.5rem -4rem -3.25rem;
   background: linear-gradient(
@@ -1015,7 +844,6 @@ body {
   -webkit-mask-composite: source-in;
 }
 
-/* Noyau très doux sous le texte — pas de plateau opaque net. */
 .project-detail-panel__inner::after {
   inset: -2.75rem -2rem -1.5rem;
   background: rgb(255 255 255 / 0.42);
@@ -1054,7 +882,6 @@ body {
   }
 }
 
-/* Hiérarchie de scan : type + stack en gras, pitch en light */
 .project-detail-panel__eyebrow {
   margin: 0 0 0.2rem;
   font-size: 0.6rem;
@@ -1064,7 +891,6 @@ body {
   color: #0a0a0a;
 }
 
-/* Redondant avec la liste mobile — visible desktop seulement. */
 .project-detail-panel__title {
   display: none;
   margin: 0 0 0.55rem;
@@ -1191,34 +1017,14 @@ body {
     padding-bottom: 0.1rem;
   }
 
-  /* Laisse de la place à droite pour le panneau (courbe + texte). */
   .projects-scroll-list-shell {
     --list-inline-end: max(22rem, 32vw);
   }
 }
 
-/* Styles pour le carrousel horizontal */
-.projects-gallery-full-bleed {
-  width: calc(100% + 2 * var(--viewport-bleed));
-  max-width: 100vw;
-  margin-left: calc(-1 * var(--viewport-bleed));
-  margin-right: calc(-1 * var(--viewport-bleed));
-}
-
-.horizontal-carousel-container {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.horizontal-carousel-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* Liste expertise — mobile : flux page unique + fondu header/footer ; desktop : colonne + mask liste */
 .specialist-catalog {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* Axe vertical commun : titre intro + premier titre de liste (WEB) */
   --specialist-titles-top: 8rem;
 }
 
@@ -1248,7 +1054,6 @@ body {
   }
 }
 
-/* Geist Mono body — sous les titres ProFont, échelle stable mobile → desktop */
 .specialist-catalog__body {
   font-size: 0.875rem;
   line-height: 1.65;
@@ -1268,8 +1073,8 @@ body {
   font-weight: 400;
 }
 
-/* Liquid glass — lisible sur fond day + ASCII (contrairement à white/10) */
-.specialist-service-glass {
+.specialist-service-glass,
+.specialist-service-glass--idle:hover {
   border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.32);
@@ -1287,17 +1092,6 @@ body {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
-}
-
-.specialist-service-glass--idle:hover {
-  border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.32);
-  backdrop-filter: blur(14px) saturate(1.45);
-  -webkit-backdrop-filter: blur(14px) saturate(1.45);
-  box-shadow:
-    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
-    inset -1px -1px 1px rgba(255, 255, 255, 0.28),
-    0 6px 18px rgba(0, 0, 0, 0.07);
 }
 
 @media (min-width: 768px) {
@@ -1399,7 +1193,6 @@ body {
   }
 }
 
-/* Scrollbar personnalisée pour le textarea du formulaire de contact */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 211, 238, 0.3) transparent;
@@ -1424,15 +1217,7 @@ body {
   background: rgba(34, 211, 238, 0.6);
 }
 
-/* Suppression complète des flèches directionnelles */
 .custom-scrollbar::-webkit-scrollbar-button {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-.custom-scrollbar::-webkit-scrollbar-button:start:decrement,
-.custom-scrollbar::-webkit-scrollbar-button:end:increment {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
@@ -1442,7 +1227,6 @@ body {
   background: transparent;
 }
 
-/* Masquer la scrollbar tant qu'on n'a pas atteint la taille max */
 .custom-scrollbar:not(.scrollable) {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1451,29 +1235,4 @@ body {
 .custom-scrollbar:not(.scrollable)::-webkit-scrollbar {
   display: none;
 }
-
-/* Edge fade effect pour les listes scrollables - CSS mask pur */
-/* Le fade s'applique uniquement sur desktop (lg et plus) pour éviter les problèmes sur mobile */
-/* Le mask commence dès le début du conteneur (avant le padding interne) */
-.scroll-fade-container {
-  /* Fade progressif : transparent en haut → opaque au centre → opaque au centre → transparent en bas */
-  /* Zone de fade : 64px en haut (Apple-like) et 80px en bas */
-  /* Le fade commence immédiatement sous le header grâce à la structure avec padding interne */
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 64px,
-    black calc(100% - 80px),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 64px,
-    black calc(100% - 80px),
-    transparent 100%
-  );
-}
-
-/* Le fade est maintenant activé sur mobile également */
 

@@ -59,28 +59,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.contact': 'CONTACT',
         
         // Home page
-        'home.title': 'NOMAD403',
-        'home.subtitle': "Bienvenue dans mon espace de création d'expérience, je suis Glenn, développeur et créateur d'expérience",
-        'home.titleLine1': 'Développeur,',
-        'home.titleLine2': " créateur d'expérience.",
-        'home.titleAltLine1': 'Web, mobile, IA, automatisation,',
-        'home.titleAltLine2': ' développez vos idées sans limites.',
+        'home.titleLine1': 'Développez vos idées sans limites.',
+        'home.titleAltLine1': 'Web, mobile, IA, automatisation.',
         'home.brandAlt': 'explorez',
-        'home.rotateHint': 'Inclinez votre téléphone',
         'home.rotateHintFr': 'Inclinez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
-        'home.description': 'Développeur freelance créant des applications web personnalisées, des applications mobiles et des outils alimentés par l\'IA. Explorez mon portfolio 3D interactif.',
         
         // Projects page
-        'projects.title': 'Projets Portfolio',
-        'projects.subtitle': 'Web, Mobile & IA',
-        'projects.description': 'Parcourez les projets sélectionnés en développement web, applications mobiles et solutions IA. De qualité, évolutifs et conçus pour l\'impact.',
         'projects.view': 'Voir le projet',
         
         // Specialist page
         'specialist.title': 'Offres & Expertise',
         'specialist.subtitle': 'Web, Mobile, Automatisation, IA, Conseil',
-        'specialist.description': 'Catalogue des prestations Nomad403 : web, mobile, automatisation, intelligence artificielle et conseil technique.',
         'specialist.intro': 'Un projet ne devrait jamais être limité par une manière de faire.',
         'specialist.text1': 'J’accompagne les entreprises sur des projets numériques aux périmètres variés, du web et du mobile à l’automatisation, l’intelligence artificielle et la conception d’outils métier.',
         'specialist.text2': 'Mon approche est nomade. Je croise les disciplines et les expertises pour m’adapter au contexte, considérer le projet dans sa globalité et construire une réponse en phase avec ses enjeux.',
@@ -117,28 +107,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'nav.contact': 'CONTACT',
         
         // Home page
-        'home.title': 'NOMAD403',
-        'home.subtitle': "Welcome to my experience creation space, I'm Glenn, developer and experience creator",
-        'home.titleLine1': 'Developer,',
-        'home.titleLine2': ' experience creator.',
-        'home.titleAltLine1': 'Web, mobile, AI, automation,',
-        'home.titleAltLine2': ' develop your ideas without limits.',
+        'home.titleLine1': 'Develop your ideas without limits.',
+        'home.titleAltLine1': 'Web, mobile, AI, automation.',
         'home.brandAlt': 'explore',
-        'home.rotateHint': 'Rotate your phone',
         'home.rotateHintFr': 'Inclinez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
-        'home.description': 'Freelance developer building custom web apps, mobile applications, and AI-powered tools. Explore my interactive 3D portfolio.',
         
         // Projects page
-        'projects.title': 'Portfolio Projects',
-        'projects.subtitle': 'Web, Mobile & AI',
-        'projects.description': 'Browse selected projects in web development, mobile apps, and AI solutions. High-quality, scalable, and designed for impact.',
         'projects.view': 'View project',
         
         // Specialist page
         'specialist.title': 'Services & Expertise',
         'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting',
-        'specialist.description': 'Nomad403 service catalog: web, mobile, automation, artificial intelligence, and technical consulting.',
         'specialist.intro': 'A project should never be limited by a single way of doing things.',
         'specialist.text1': 'I support companies on digital projects with varied scopes — from web and mobile to automation, artificial intelligence, and custom business tools.',
         'specialist.text2': 'My approach is nomadic. I cross disciplines and expertise to adapt to the context, consider the project as a whole, and build a response aligned with its stakes.',
