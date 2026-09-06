@@ -77,8 +77,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         
         // Specialist page
         'specialist.title': 'Offres & Expertise',
-        'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting',
-        'specialist.description': 'Catalogue des prestations Nomad403 : web, mobile, automatisation, intelligence artificielle et consulting technique.',
+        'specialist.subtitle': 'Web, Mobile, Automatisation, IA, Conseil',
+        'specialist.description': 'Catalogue des prestations Nomad403 : web, mobile, automatisation, intelligence artificielle et conseil technique.',
         'specialist.intro': 'Chaque projet est pour moi une exploration. L’esprit Nomad403 repose sur la curiosité, l’expérimentation et l’adaptation continue, avec une mission claire : créer des outils numériques modernes, rapides et alignés sur vos enjeux.',
         'specialist.text1': 'Je conçois des sites web sur mesure optimisés pour la performance et le SEO, des applications mobiles fiables et évolutives, ainsi que des solutions d’automatisation et d’IA capables de réduire les tâches répétitives.',
         'specialist.text2': 'Comprendre votre métier me permet de simplifier votre quotidien, d’améliorer vos processus et de transformer chaque défi en solution tangible et durable.',

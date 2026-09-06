@@ -34,12 +34,17 @@ export default function HeaderLogo({
   const alignClass =
     variant === "loader" ? "inline-block text-center" : "block w-fit text-left cursor-default"
 
+  const lines =
+    variant === "loader"
+      ? [{ primary: "NOMAD403", alternate: "NOMAD403" }]
+      : LOGO_DUAL_LINES.map((line) => ({
+          primary: line.primary,
+          alternate: line.alternate,
+        }))
+
   return (
     <ShuffleDualLines
-      lines={LOGO_DUAL_LINES.map((line) => ({
-        primary: line.primary,
-        alternate: line.alternate,
-      }))}
+      lines={lines}
       className={`${alignClass} font-kode font-normal uppercase leading-[0.95] tracking-[0.06em] ${sizeClass} ${colorClass} ${className}`}
       enableHover={variant === "header"}
       holdDurationMs={HOME_HOVER_HOLD_MS}

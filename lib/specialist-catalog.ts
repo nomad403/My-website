@@ -28,13 +28,13 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
         id: "web-site-vitrine",
         title: L("Site vitrine", "Showcase website"),
         description: L(
-          "Une présence digitale sur mesure pour présenter votre activité avec clarté et caractère.",
+          "Une présence numérique sur mesure pour présenter votre activité avec clarté et caractère.",
           "A bespoke digital presence to present your business with clarity and character."
         ),
       },
       {
         id: "web-landing-page",
-        title: L("Landing page", "Landing page"),
+        title: L("Page d'atterrissage", "Landing page"),
         description: L(
           "Une expérience ciblée autour d'une offre, d'une campagne ou d'un objectif de conversion.",
           "A focused experience built around an offer, a campaign, or a conversion goal."
@@ -50,7 +50,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
       },
       {
         id: "web-application",
-        title: L("Web application", "Web application"),
+        title: L("Application web", "Web application"),
         description: L(
           "Une application accessible depuis le navigateur, conçue autour de fonctionnalités et d'usages spécifiques.",
           "A browser-based application shaped around specific features and use cases."
@@ -66,7 +66,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
       },
       {
         id: "web-dashboard",
-        title: L("Dashboard", "Dashboard"),
+        title: L("Tableau de bord", "Dashboard"),
         description: L(
           "Centraliser vos données essentielles dans une interface claire et exploitable.",
           "Centralize your essential data in a clear, actionable interface."
@@ -194,7 +194,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
         id: "mobile-publication",
         title: L("Publication", "Store release"),
         description: L(
-          "Préparer et accompagner la mise en ligne sur les stores.",
+          "Préparer et accompagner la mise en ligne sur les boutiques d'applications.",
           "Prepare and support launch on app stores."
         ),
       },
@@ -218,7 +218,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
   },
   {
     id: "automation",
-    title: L("AUTOMATION", "AUTOMATION"),
+    title: L("AUTOMATISATION", "AUTOMATION"),
     services: [
       {
         id: "automation-audit-processus",
@@ -232,7 +232,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
         id: "automation-metier",
         title: L("Automatisation métier", "Business automation"),
         description: L(
-          "Transformer un processus manuel en workflow structuré et autonome.",
+          "Transformer un processus manuel en flux de travail structuré et autonome.",
           "Turn a manual process into a structured, autonomous workflow."
         ),
       },
@@ -272,13 +272,13 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
         id: "automation-administrative",
         title: L("Automatisation administrative", "Administrative automation"),
         description: L(
-          "Réduire les opérations manuelles liées aux validations, notifications, relances ou reporting.",
+          "Réduire les opérations manuelles liées aux validations, notifications, relances ou bilans.",
           "Reduce manual work around validations, notifications, follow-ups, and reporting."
         ),
       },
       {
         id: "automation-workflow-api",
-        title: L("Workflow API", "API workflow"),
+        title: L("Orchestration API", "API workflow"),
         description: L(
           "Orchestrer des traitements entre différents services grâce à leurs API.",
           "Orchestrate processing across services through their APIs."
@@ -288,7 +288,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
         id: "automation-reprise",
         title: L("Reprise d'automatisation", "Automation takeover"),
         description: L(
-          "Comprendre et reprendre des workflows existants pour poursuivre leur exploitation.",
+          "Comprendre et reprendre des flux existants pour poursuivre leur exploitation.",
           "Understand and take over existing workflows to keep them running."
         ),
       },
@@ -320,7 +320,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
   },
   {
     id: "ai",
-    title: L("AI", "AI"),
+    title: L("IA", "AI"),
     services: [
       {
         id: "ai-cadrage",
@@ -438,7 +438,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
   },
   {
     id: "consulting",
-    title: L("CONSULTING", "CONSULTING"),
+    title: L("CONSEIL", "CONSULTING"),
     services: [
       {
         id: "consulting-audit-technique",
@@ -490,7 +490,7 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
       },
       {
         id: "consulting-privacy",
-        title: L("Privacy by design", "Privacy by design"),
+        title: L("Confidentialité dès la conception", "Privacy by design"),
         description: L(
           "Intégrer la protection des données dès les choix de conception et d'architecture.",
           "Integrate data protection from the earliest design and architecture choices."

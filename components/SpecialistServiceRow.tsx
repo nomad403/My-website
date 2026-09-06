@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   pickLocalized,
   type SpecialistLang,
   type SpecialistService,
 } from "@/lib/specialist-catalog"
+import ShuffleText from "@/components/ShuffleText"
 
 interface SpecialistServiceRowProps {
   service: SpecialistService
@@ -41,9 +41,14 @@ export default function SpecialistServiceRow({
           aria-controls={panelId}
           onClick={() => onToggle(service.id)}
         >
-        <span className="font-kode text-sm md:text-base font-normal text-black/90 group-hover:text-inherit">
+        <ShuffleText
+          className="font-kode text-sm md:text-base font-normal text-black/90 group-hover:text-inherit"
+          shuffleDuration={150}
+          letterDelay={12}
+          enableHover={!reducedMotion}
+        >
           {title}
-        </span>
+        </ShuffleText>
         <span
           className="font-kode shrink-0 text-base md:text-lg font-light leading-none text-black/70 transition-transform duration-200 group-hover:text-inherit"
           aria-hidden="true"
@@ -72,7 +77,7 @@ export default function SpecialistServiceRow({
               transition={{ duration: reducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
               className="overflow-hidden"
             >
-              <p className="max-w-xl pb-4 pr-10 font-home-title text-sm md:text-[0.95rem] leading-relaxed text-black/70">
+              <p className="specialist-catalog__service-body max-w-xl pb-4 pr-10 font-home-title text-black/70">
                 {description}
               </p>
             </motion.div>

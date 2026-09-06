@@ -1099,6 +1099,73 @@ body {
 .specialist-catalog {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Axe vertical commun : titre intro + premier titre de liste (WEB) */
+  --specialist-titles-top: 8rem;
+}
+
+@media (min-width: 768px) {
+  .specialist-catalog {
+    --specialist-titles-top: 10rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .specialist-catalog {
+    --specialist-titles-top: clamp(10rem, 22vh, 14rem);
+  }
+}
+
+.specialist-catalog__intro-inner {
+  padding-top: var(--specialist-titles-top);
+}
+
+.specialist-catalog__track {
+  padding-top: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .specialist-catalog__track {
+    padding-top: var(--specialist-titles-top);
+  }
+}
+
+/* Geist Mono body — sous les titres ProFont, échelle stable mobile → desktop */
+.specialist-catalog__body {
+  font-size: 0.875rem;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+.specialist-catalog__service-body {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+@media (min-width: 768px) {
+  .specialist-catalog__body {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  .specialist-catalog__service-body {
+    font-size: 0.875rem;
+    line-height: 1.65;
+  }
+}
+
+@media (min-width: 1024px) {
+  .specialist-catalog__body {
+    font-size: 1rem;
+    line-height: 1.72;
+  }
+
+  .specialist-catalog__service-body {
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
 }
 
 .specialist-catalog::-webkit-scrollbar {
