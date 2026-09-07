@@ -435,7 +435,7 @@ export default function ProjectsScrollList({
             <li
               ref={measureRef}
               aria-hidden
-              className="projects-scroll-list__item projects-scroll-list__item--measure font-kode uppercase tracking-[0.18em]"
+              className="projects-scroll-list__item projects-scroll-list__item--measure font-kode uppercase tracking-[0.14em]"
             >
               <div className="projects-scroll-list__title-row">
                 <span className="projects-scroll-list__item-label">
@@ -454,7 +454,7 @@ export default function ProjectsScrollList({
                   <li
                     key={key}
                     data-virtual-index={virtualIndex}
-                    className={`projects-scroll-list__item font-kode uppercase tracking-[0.18em] cursor-pointer ${
+                    className={`projects-scroll-list__item font-kode uppercase tracking-[0.14em] ${
                       isActive ? "projects-scroll-list__item--snapped" : ""
                     } ${
                       detailVisible
@@ -474,7 +474,7 @@ export default function ProjectsScrollList({
                     >
                       <button
                         type="button"
-                        className="projects-scroll-list__item-trigger block max-w-full border-0 bg-transparent p-0 text-left font-inherit uppercase tracking-inherit text-inherit"
+                        className="projects-scroll-list__item-trigger"
                         onClick={() =>
                           handleItemClick(item, virtualIndex, isActive)
                         }
@@ -517,7 +517,7 @@ export default function ProjectsScrollList({
                         >
                           <div className="projects-scroll-list__detail-inner">
                             {item.description ? (
-                              <p className="projects-scroll-list__detail-eyebrow font-kode uppercase tracking-[0.18em]">
+                              <p className="projects-scroll-list__detail-eyebrow font-kode uppercase tracking-[0.1em]">
                                 {item.description}
                               </p>
                             ) : null}
@@ -538,7 +538,7 @@ export default function ProjectsScrollList({
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="projects-scroll-list__detail-link font-kode uppercase tracking-[0.16em]"
+                                className="projects-scroll-list__detail-link font-kode uppercase tracking-[0.1em]"
                                 onClick={(event) => event.stopPropagation()}
                               >
                                 {viewLabel}

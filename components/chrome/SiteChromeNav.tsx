@@ -88,7 +88,7 @@ export default function SiteChromeNav({
           <HeaderLogo mode={mode} />
         </button>
 
-        <div className="hidden items-center space-x-8 font-kode text-[0.95rem] font-light uppercase tracking-[0.04em] md:flex">
+        <div className="hidden items-center space-x-8 font-kode text-[0.95rem] font-normal uppercase tracking-[0.06em] md:flex">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.id}
@@ -185,7 +185,7 @@ export function SiteChromeMobileMenu({
             mode === "night" ? "text-white" : "text-black"
           }`}
         >
-          <div className="flex flex-col gap-5 font-kode text-2xl font-light uppercase tracking-[0.05em]">
+          <div className="flex flex-col gap-5 font-kode text-2xl font-normal uppercase tracking-[0.06em]">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.id}

@@ -37,11 +37,11 @@ export default function ProjectDetailPanel({
           }}
         >
           {description ? (
-            <p className="project-detail-panel__eyebrow font-kode uppercase tracking-[0.18em]">
+            <p className="project-detail-panel__eyebrow font-kode uppercase tracking-[0.1em]">
               {description}
             </p>
           ) : null}
-          <h2 className="project-detail-panel__title font-kode uppercase tracking-[0.12em]">
+          <h2 className="project-detail-panel__title font-kode uppercase tracking-[0.1em]">
             {item.name}
           </h2>
           {summary ? (
@@ -61,7 +61,7 @@ export default function ProjectDetailPanel({
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="project-detail-panel__link font-kode uppercase tracking-[0.16em]"
+              className="project-detail-panel__link font-kode uppercase tracking-[0.1em]"
             >
               {viewLabel}
             </a>

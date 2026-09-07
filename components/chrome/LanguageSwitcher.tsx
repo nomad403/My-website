@@ -28,7 +28,7 @@ export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherP
 
   return (
     <div
-      className={`flex items-center gap-2.5 font-kode text-[0.7rem] font-light uppercase tracking-[0.22em] ${tone} ${
+      className={`flex items-center gap-2.5 font-kode text-[0.7rem] font-normal uppercase tracking-[0.12em] ${tone} ${
         isMobile ? "justify-start" : ""
       }`}
       role="group"

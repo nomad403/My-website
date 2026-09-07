@@ -38,7 +38,7 @@ export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
   return (
     <div className="site-chrome absolute bottom-0 left-0 right-0 z-50 p-6 sm:p-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-kode text-xs font-light uppercase tracking-wider sm:text-sm">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-kode text-xs font-normal uppercase tracking-[0.1em] sm:text-sm">
           {SOCIAL_LINKS.map((link) => (
             <a
               key={link.href}

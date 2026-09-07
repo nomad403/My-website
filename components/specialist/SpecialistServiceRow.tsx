@@ -28,7 +28,7 @@ export default function SpecialistServiceRow({
   const panelId = `specialist-service-${service.id}`
 
   return (
-    <div className="border-t border-black/15 first:border-t-0">
+    <div className="border-t-2 border-black/30 first:border-t-0">
       <div
         className={`px-2 transition-all duration-300 ${
           isOpen
@@ -38,7 +38,7 @@ export default function SpecialistServiceRow({
       >
         <button
           type="button"
-          className={`group flex w-full items-center justify-between gap-4 py-3.5 text-left transition-colors duration-200 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:py-4 ${
+          className={`group flex w-full items-center justify-between gap-4 pt-3.5 pb-2 text-left transition-colors duration-200 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:pt-4 md:pb-2 ${
             isOpen ? "text-cyan-600" : ""
           }`}
           aria-expanded={isOpen}
@@ -46,8 +46,8 @@ export default function SpecialistServiceRow({
           onClick={() => onToggle(service.id)}
         >
           <ShuffleText
-            className={`font-kode text-sm font-normal group-hover:text-inherit md:text-base ${
-              isOpen ? "text-cyan-600" : "text-black/90"
+            className={`font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] group-hover:text-inherit md:text-[1.0625rem] ${
+              isOpen ? "text-cyan-600" : "text-black"
             }`}
             shuffleDuration={150}
             letterDelay={12}
@@ -55,16 +55,22 @@ export default function SpecialistServiceRow({
           >
             {title}
           </ShuffleText>
-          <span
-            className={`font-kode shrink-0 text-base font-light leading-none transition-colors duration-200 md:text-lg ${
+          <motion.span
+            className={`font-enigma inline-block shrink-0 origin-center text-xl font-normal leading-none md:text-2xl ${
               isOpen
                 ? "text-cyan-600"
-                : "text-black/70 group-hover:text-cyan-600"
+                : "text-black/55 group-hover:text-cyan-600"
             }`}
             aria-hidden="true"
+            animate={{ rotate: isOpen ? 45 : 0 }}
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
+            }
           >
-            {isOpen ? "×" : "+"}
-          </span>
+            +
+          </motion.span>
         </button>
 
         <AnimatePresence initial={false}>
@@ -86,7 +92,7 @@ export default function SpecialistServiceRow({
               }}
               className="overflow-hidden"
             >
-              <p className="specialist-catalog__service-body max-w-xl pb-4 pr-10 font-home-title text-black/70">
+              <p className="specialist-catalog__service-body max-w-xl pb-3.5 pr-10 pt-0 font-home-title text-black/70">
                 {description}
               </p>
             </motion.div>

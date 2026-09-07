@@ -6,7 +6,7 @@ export const HOME_TITLE_SHUFFLE_MS = 900
 export const HOME_TITLE_LINE_HEIGHT = 1.1
 /** Interligne plus serré sur mobile : les deux lignes restent lisibles sans flotter. */
 export const HOME_TITLE_LINE_HEIGHT_MOBILE = 0.98
-export const HOME_TITLE_MIN_FONT_PX = 11
+export const HOME_TITLE_MIN_FONT_PX = 14
 export const HOME_TITLE_MAX_FONT_PX_MOBILE = 36
 export const HOME_TITLE_MAX_FONT_PX_DESKTOP = 52
 export const HOME_TITLE_STAGGER_MS = 80

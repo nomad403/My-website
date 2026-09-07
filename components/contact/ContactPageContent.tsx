@@ -206,7 +206,7 @@ export default function ContactPageContent() {
         <div className="mx-auto flex w-full max-w-[90vw] flex-col gap-4 sm:max-w-[600px]">
           <div className="mb-2 w-full md:mb-6">
             <h1
-              className={`w-full text-left font-kode text-lg uppercase tracking-wide transition-colors duration-300 sm:text-xl md:text-2xl lg:text-3xl ${
+              className={`w-full text-left font-kode text-2xl font-normal uppercase tracking-[0.08em] transition-colors duration-300 md:text-3xl lg:text-4xl ${
                 sendStatus === "error" ? "text-red-600" : "text-gray-800"
               }`}
             >

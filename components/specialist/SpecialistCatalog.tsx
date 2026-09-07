@@ -37,7 +37,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
         <div className="mx-auto grid min-h-full w-full max-w-7xl grid-cols-1 lg:h-full lg:grid-cols-12 lg:gap-x-10">
           <section className="min-w-0 text-black lg:col-span-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-8 xl:col-span-5 xl:pr-12">
             <div className="specialist-catalog__intro-inner pb-6 md:pb-8 lg:pb-28">
-              <h1 className="font-kode text-2xl font-medium uppercase leading-tight text-black md:text-3xl lg:text-4xl">
+              <h1 className="font-kode text-2xl font-normal uppercase leading-tight tracking-[0.08em] text-black md:text-3xl lg:text-4xl">
                 <ShuffleText
                   shuffleDuration={150}
                   letterDelay={12}
@@ -46,7 +46,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                   {t("specialist.title")}
                 </ShuffleText>
               </h1>
-              <p className="mt-2 font-kode text-xs uppercase text-black/45 md:text-sm">
+              <p className="mt-2 font-kode text-xs uppercase tracking-[0.08em] text-black/45 md:text-sm">
                 {t("specialist.subtitle")}
               </p>
               <div className="mt-6 flex w-full max-w-[34rem] flex-col gap-5 text-left md:mt-8 md:gap-6">
@@ -74,7 +74,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                     <div className="mb-5 md:mb-6">
                       <h2
                         id={`specialist-cat-${category.id}`}
-                        className="font-kode text-xl font-medium uppercase tracking-[0.12em] text-black md:text-2xl lg:text-3xl"
+                        className="font-kode text-lg font-normal uppercase tracking-[0.1em] text-black md:text-xl lg:text-2xl"
                       >
                         <ShuffleText
                           shuffleDuration={150}
@@ -86,7 +86,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                       </h2>
                     </div>
 
-                    <div className="border-y border-black/15">
+                    <div className="border-y-2 border-black/30">
                       {category.services.map((service) => (
                         <SpecialistServiceRow
                           key={service.id}
