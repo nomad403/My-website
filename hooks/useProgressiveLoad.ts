@@ -5,7 +5,7 @@ import {
   getLoadStageFlags,
   type LoadStage,
   type PerformanceProfile,
-} from "@/lib/performance"
+} from "@/lib/ui/performance"
 
 export function useProgressiveLoad(
   profile: PerformanceProfile | null,

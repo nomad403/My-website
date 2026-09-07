@@ -22,7 +22,7 @@ import {
   scrollTopForVirtualIndex,
   supportsScrollEndEvent,
   type ListMetrics,
-} from "@/lib/projects-scroll-math"
+} from "@/lib/projects/projects-scroll-math"
 
 interface UseProjectsScrollPhysicsArgs {
   scrollerRef: RefObject<HTMLDivElement | null>

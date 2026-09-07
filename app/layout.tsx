@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "../styles/globals.css"
 import localFont from "next/font/local"
-import ClientLayout from "@/components/ClientLayout"
+import ClientLayout from "@/components/chrome/ClientLayout"
 
 const displayFont = localFont({
   src: "../public/fonts/ProFont.woff2",

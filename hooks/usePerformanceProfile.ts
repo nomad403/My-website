@@ -6,7 +6,7 @@ import {
   probePerformanceTierOnce,
   type PerformanceProfile,
   type PerformanceTier,
-} from "@/lib/performance"
+} from "@/lib/ui/performance"
 
 /** Shared resolved tier so Home progressive load stays in sync. */
 let sharedResolvedTier: PerformanceTier | null = null

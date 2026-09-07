@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { LoadStage, PerformanceProfile } from "@/lib/performance"
+import type { LoadStage, PerformanceProfile } from "@/lib/ui/performance"
 
 export function useSmartPreload(
   profile: PerformanceProfile | null,

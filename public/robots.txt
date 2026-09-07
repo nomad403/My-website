@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://www.nomad403.com
-
-# Sitemaps
-Sitemap: https://www.nomad403.com/sitemap.xml

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ORIENTATION_GRANTED_EVENT } from "@/lib/interaction"
+import { ORIENTATION_GRANTED_EVENT } from "@/lib/ui/interaction"
 import {
   markGyroHintShown,
   wasGyroHintShown,
@@ -9,7 +9,7 @@ import {
 import {
   HOME_TITLE_SHUFFLE_MS,
   HOME_TITLE_STAGGER_MS,
-} from "@/lib/home-title-style"
+} from "@/lib/home/home-title-style"
 
 const HOLD_MS = 3800
 

@@ -4,7 +4,7 @@ import {
   escapeHtml,
   sanitizeContactPayload,
   validateContactPayload,
-} from "@/lib/contact-validation"
+} from "@/lib/contact/contact-validation"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

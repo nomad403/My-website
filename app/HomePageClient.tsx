@@ -3,37 +3,37 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { AnimatePresence, motion } from "framer-motion"
-import { useBackground } from "./contexts/BackgroundContext"
-import { usePage } from "./contexts/PageContext"
-import { useLanguage } from "./contexts/LanguageContext"
-import ContentPages from "@/components/content-pages"
-import HomeTitle from "@/components/HomeTitle"
-import HeaderLogo from "@/components/HeaderLogo"
-import DynamicHead from "@/components/DynamicHead"
-import LanguageSwitcher from "@/components/LanguageSwitcher"
-import JsonLdPerson from "@/components/JsonLdPerson"
+import { useBackground } from "@/contexts/BackgroundContext"
+import { usePage } from "@/contexts/PageContext"
+import { useLanguage } from "@/contexts/LanguageContext"
+import ContentPages from "@/components/seo/content-pages"
+import HomeTitle from "@/components/home/HomeTitle"
+import HeaderLogo from "@/components/chrome/HeaderLogo"
+import DynamicHead from "@/components/seo/DynamicHead"
+import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
+import JsonLdPerson from "@/components/seo/JsonLdPerson"
 import SiteChromeNav, {
   SiteChromeMobileMenu,
-} from "@/components/SiteChromeNav"
-import SiteSocialFooter from "@/components/SiteSocialFooter"
-import HomeSeoBlock from "@/components/HomeSeoBlock"
-import { getPageMetadata } from "@/config/metadata"
+} from "@/components/chrome/SiteChromeNav"
+import SiteSocialFooter from "@/components/chrome/SiteSocialFooter"
+import HomeSeoBlock from "@/components/home/HomeSeoBlock"
+import { getPageMetadata } from "@/lib/seo/metadata"
 import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useSmartPreload } from "@/hooks/useSmartPreload"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
 import { useGyroRotateHint } from "@/hooks/useGyroRotateHint"
-import { resolveAsciiSettings } from "@/lib/performance"
+import { resolveAsciiSettings } from "@/lib/ui/performance"
 import {
   getPageConfig,
   pageIdToPath,
   pathToPageId,
-} from "@/lib/page-config"
+} from "@/lib/home/page-config"
 
-const SpheresPacking = dynamic(() => import("@/components/SpheresPacking"), {
+const SpheresPacking = dynamic(() => import("@/components/ascii/SpheresPacking"), {
   ssr: false,
 })
-const AsciiOverlay = dynamic(() => import("@/components/AsciiOverlay"), {
+const AsciiOverlay = dynamic(() => import("@/components/ascii/AsciiOverlay"), {
   ssr: false,
 })
 

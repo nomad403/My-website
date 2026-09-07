@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import HomePageClient from "../HomePageClient"
-import { BRAND_KEYWORDS } from "@/config/metadata"
+import { BRAND_KEYWORDS } from "@/lib/seo/metadata"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

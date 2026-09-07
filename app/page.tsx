@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import HomePageClient from "./HomePageClient"
-import { pageMetadata } from "@/config/metadata"
+import { pageMetadata } from "@/lib/seo/metadata"
 
 const BASE_URL = "https://www.nomad403.com"
 const PREVIEW_IMAGE = `${BASE_URL}/preview.jpg`
