@@ -22,6 +22,7 @@ export const PROJECT_ITEMS: ProjectItem[] = [
   {
     id: 1,
     name: "Monday",
+    url: "https://monday-website.glennrichard-dev.workers.dev/",
     description: L("Application android, IA", "Android app, AI"),
     summary: L(
       "Application mobile intégrant des fonctionnalités d’intelligence artificielle autour de l’organisation et des usages du quotidien. Conception de l’expérience, de l’interface et du fonctionnement applicatif.",
