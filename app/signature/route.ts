@@ -15,7 +15,7 @@ const SIGNATURE_PATH = path.join(
 export async function GET() {
   try {
     const body = await readFile(SIGNATURE_PATH)
-    return new NextResponse(body, {
+    return new NextResponse(new Uint8Array(body), {
       status: 200,
       headers: {
         "Content-Type": "image/png",

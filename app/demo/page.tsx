@@ -20,10 +20,7 @@ export const metadata: Metadata = {
 }
 
 type DemoPageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<
-    string,
-    string | string[] | undefined
-  >
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function firstParam(
@@ -34,7 +31,7 @@ function firstParam(
 }
 
 export default async function DemoPage({ searchParams }: DemoPageProps) {
-  const params = await Promise.resolve(searchParams ?? {})
+  const params = (await searchParams) ?? {}
   const scope = parseDemoScope(firstParam(params.page))
   const lang = parseDemoLang(firstParam(params.lang))
 
