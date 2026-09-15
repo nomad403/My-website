@@ -10,6 +10,7 @@ import {
 } from "react"
 import { delay, runShuffleTransition } from "@/lib/ui/shuffle-text-animation"
 import { useCanHover } from "@/hooks/useCanHover"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 export interface DualLine {
   primary: string
@@ -27,6 +28,11 @@ interface ShuffleDualLinesProps {
   lineStaggerMs?: number
   enableHover?: boolean
   introShuffle?: boolean
+  /**
+   * Incrémente pour forcer une narration : affiche le texte courant → alternate,
+   * puis reste dessus (pas de retour « in » vers primary).
+   */
+  playToken?: number
   shuffleChars?: string
   renderLineWrapper?: (lineNode: ReactNode, index: number) => ReactNode
 }
@@ -44,6 +50,7 @@ export default function ShuffleDualLines({
   lineStaggerMs = 80,
   enableHover = true,
   introShuffle = false,
+  playToken = 0,
   shuffleChars,
   renderLineWrapper,
 }: ShuffleDualLinesProps) {
@@ -87,10 +94,10 @@ export default function ShuffleDualLines({
   }, [])
 
   const transitionLine = useCallback(
-    (index: number, from: string, to: string) =>
+    (index: number, from: string, to: string, durationMs = shuffleDurationMs) =>
       new Promise<void>((resolve) => {
         const cancel = runShuffleTransition(from, to, {
-          totalDuration: shuffleDurationMs,
+          totalDuration: durationMs,
           shuffleChars,
           onUpdate: (text) => setLineText(index, text),
           onComplete: resolve,
@@ -102,53 +109,74 @@ export default function ShuffleDualLines({
 
   const runStaggeredTransition = useCallback(
     async (
-      direction: "toAlternate" | "toPrimary" | "intro",
+      direction: "toAlternate" | "toPrimary" | "intro" | "toPrimaryFromDisplay",
       token: number,
+      options?: { durationMs?: number; staggerMs?: number },
     ) => {
       const currentLines = linesRef.current
+      const durationMs = options?.durationMs ?? shuffleDurationMs
+      const staggerMs = options?.staggerMs ?? lineStaggerMs
 
       await Promise.all(
         currentLines.map(async (line, index) => {
-          await delay(index * lineStaggerMs)
+          await delay(index * staggerMs)
           if (token !== sequenceTokenRef.current) return
 
           if (direction === "intro") {
-            await transitionLine(index, line.primary, line.primary)
+            await transitionLine(index, line.primary, line.primary, durationMs)
+            return
+          }
+
+          if (direction === "toPrimaryFromDisplay") {
+            const from = displayLinesRef.current[index] ?? line.primary
+            const to = line.primary
+            if (from === to) {
+              setLineText(index, to)
+              return
+            }
+            await transitionLine(index, from, to, durationMs)
             return
           }
 
           if (direction === "toAlternate") {
-            const from = line.primary
+            const from = displayLinesRef.current[index] ?? line.primary
             const to = line.alternate
-            if (from === to) return
-            await transitionLine(index, from, to)
+            if (from === to) {
+              setLineText(index, to)
+              return
+            }
+            await transitionLine(index, from, to, durationMs)
             return
           }
 
           const from = displayLinesRef.current[index] ?? line.alternate
           const to = line.primary
           if (from === to) return
-          await transitionLine(index, from, to)
+          await transitionLine(index, from, to, durationMs)
         }),
       )
     },
-    [lineStaggerMs, transitionLine],
+    [lineStaggerMs, setLineText, shuffleDurationMs, transitionLine],
   )
 
-  const runHoverSequence = useCallback(async () => {
-    if (busyRef.current || !hoverEnabled) return
+  /** Hover : primary → alternate → primary. */
+  const runHoverLoop = useCallback(async () => {
+    if (busyRef.current) return
 
     busyRef.current = true
     const token = ++sequenceTokenRef.current
     clearHoldTimer()
     cancelTransitions()
 
+    // Partir du primary affiché.
+    setDisplayLines(linesRef.current.map((line) => line.primary))
+    displayLinesRef.current = linesRef.current.map((line) => line.primary)
+
     phaseRef.current = "to-alt"
     await runStaggeredTransition("toAlternate", token)
     if (token !== sequenceTokenRef.current) return
 
     phaseRef.current = "holding-alt"
-
     await new Promise<void>((resolve) => {
       holdTimerRef.current = window.setTimeout(() => {
         holdTimerRef.current = null
@@ -164,18 +192,97 @@ export default function ShuffleDualLines({
     phaseRef.current = "idle"
     busyRef.current = false
     setDisplayLines(linesRef.current.map((line) => line.primary))
-  }, [hoverEnabled, holdDurationMs, runStaggeredTransition])
+  }, [holdDurationMs, runStaggeredTransition, shuffleDurationMs])
+
+  /**
+   * Démo / playToken — timeline fixe :
+   * [shuffle|pad] → hold primary → [shuffle|pad] → hold alternate.
+   * Même durée d’affichage pour chaque beat, avec ou sans changement de texte.
+   */
+  const runDemoSequence = useCallback(async () => {
+    busyRef.current = true
+    const token = ++sequenceTokenRef.current
+    clearHoldTimer()
+    cancelTransitions()
+
+    const nextLines = linesRef.current
+    const shuffleMs = DEMO_SHUFFLE_MS
+    const holdMs = DEMO_HOLD_MS
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        holdTimerRef.current = window.setTimeout(() => {
+          holdTimerRef.current = null
+          resolve()
+        }, ms)
+      })
+
+    const onPrimary = nextLines.every(
+      (line, index) =>
+        (displayLinesRef.current[index] ?? line.primary) === line.primary,
+    )
+
+    // Phase 1 : arriver sur primary (shuffle si changement, sinon pad).
+    const demoMotion = { durationMs: shuffleMs, staggerMs: 0 }
+    if (!onPrimary) {
+      phaseRef.current = "to-primary"
+      await runStaggeredTransition("toPrimaryFromDisplay", token, demoMotion)
+      if (token !== sequenceTokenRef.current) return
+    } else {
+      setDisplayLines(nextLines.map((line) => line.primary))
+      displayLinesRef.current = nextLines.map((line) => line.primary)
+      await wait(shuffleMs)
+      if (token !== sequenceTokenRef.current) return
+    }
+
+    // Phase 2 : lecture primary.
+    phaseRef.current = "holding-alt"
+    await wait(holdMs)
+    if (token !== sequenceTokenRef.current) return
+
+    // Phase 3 : out vers alternate (ou pad si identique) — sans sfx.
+    const hasAlternate = nextLines.some(
+      (line) => line.primary !== line.alternate,
+    )
+    if (hasAlternate) {
+      phaseRef.current = "to-alt"
+      await runStaggeredTransition("toAlternate", token, demoMotion)
+      if (token !== sequenceTokenRef.current) return
+    } else {
+      await wait(shuffleMs)
+      if (token !== sequenceTokenRef.current) return
+    }
+
+    // Phase 4 : lecture alternate (durée égale au primary).
+    setDisplayLines(nextLines.map((line) => line.alternate))
+    phaseRef.current = "holding-alt"
+    await wait(holdMs)
+    if (token !== sequenceTokenRef.current) return
+
+    phaseRef.current = "idle"
+    busyRef.current = false
+  }, [runStaggeredTransition])
 
   const handleMouseEnter = () => {
     if (!hoverEnabled || busyRef.current) return
-    void runHoverSequence()
+    void runHoverLoop()
   }
 
   useEffect(() => {
+    if (!playToken) return
+    void runDemoSequence()
+  }, [playToken, runDemoSequence])
+
+  useEffect(() => {
     if (!introShuffle || introPlayedRef.current || lines.length === 0) return
+    if (playToken > 0) {
+      introPlayedRef.current = true
+      return
+    }
     introPlayedRef.current = true
 
     void (async () => {
+      if (busyRef.current) return
       busyRef.current = true
       phaseRef.current = "to-primary"
       const token = ++sequenceTokenRef.current
@@ -184,12 +291,12 @@ export default function ShuffleDualLines({
       phaseRef.current = "idle"
       busyRef.current = false
     })()
-  }, [introShuffle, lines.length, runStaggeredTransition])
+  }, [introShuffle, lines.length, playToken, runStaggeredTransition, shuffleDurationMs])
 
   useEffect(() => {
-    if (busyRef.current) return
+    if (busyRef.current || playToken > 0) return
     setDisplayLines(lines.map((line) => line.primary))
-  }, [lines])
+  }, [lines, playToken])
 
   useEffect(
     () => () => {

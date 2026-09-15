@@ -14,6 +14,8 @@ import {
   type ContactField,
   type ContactValidationCode,
 } from "@/lib/contact/contact-validation"
+import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 const FIELD_CLASS =
   "min-h-[48px] w-full rounded-xl border border-gray-300/50 bg-white/90 px-4 py-3 font-kode text-base text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-300 placeholder-gray-500 focus:border-cyan-400 focus:outline-none md:px-6"
@@ -29,6 +31,7 @@ function sanitizeField(field: ContactField, value: string) {
 
 export default function ContactPageContent() {
   const { t, language } = useLanguage()
+  const demoStory = useDemoStoryOptional()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     nom: "",
@@ -219,6 +222,33 @@ export default function ContactPageContent() {
                 >
                   {titleText}
                 </ShuffleText>
+              ) : demoStory?.voice ? (
+                <ShuffleDualLines
+                  lines={[
+                    {
+                      primary: demoStory.voice.lines[0] ?? t("contact.title"),
+                      alternate:
+                        demoStory.voice.alternate[0] ?? t("contact.titleAlt"),
+                    },
+                    ...(demoStory.voice.lines[1]
+                      ? [
+                          {
+                            primary: demoStory.voice.lines[1],
+                            alternate:
+                              demoStory.voice.alternate[1] ??
+                              demoStory.voice.lines[1],
+                          },
+                        ]
+                      : []),
+                  ]}
+                  shuffleChars={SHUFFLE_CHARS}
+                  playToken={demoStory.voiceToken}
+                  enableHover={false}
+                  holdDurationMs={DEMO_HOLD_MS}
+                  shuffleDurationMs={DEMO_SHUFFLE_MS}
+                  lineStaggerMs={0}
+                  lineClassName="block overflow-hidden text-ellipsis whitespace-nowrap"
+                />
               ) : (
                 <ShuffleDualLines
                   key={`${language}-${t("contact.title")}`}
@@ -229,6 +259,7 @@ export default function ContactPageContent() {
                     },
                   ]}
                   shuffleChars={SHUFFLE_CHARS}
+                  enableHover={!demoStory}
                 />
               )}
             </h1>

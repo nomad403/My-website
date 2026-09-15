@@ -81,8 +81,8 @@ export const PROJECT_ITEMS: ProjectItem[] = [
     url: "https://wearethemessage.fr",
     description: L("Site web expérience", "Experience website"),
     summary: L(
-      "Expérience web interactive centrée sur la direction artistique, l’animation et la mise en scène du contenu. Un projet davantage orienté creative development et expérimentation web.",
-      "Interactive web experience focused on art direction, animation, and content staging. A project oriented toward creative development and web experimentation.",
+      "Expérience web interactive en Next.js/React. Développement fullstack : interface, intégrations, logique applicative et mise en production.",
+      "Interactive web experience in Next.js/React. Fullstack build: UI, integrations, application logic, and production delivery.",
     ),
     stack: ["Next.js", "React"],
   },

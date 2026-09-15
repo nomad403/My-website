@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   pickLocalized,
@@ -7,6 +8,10 @@ import {
   type SpecialistService,
 } from "@/lib/specialist/specialist-catalog"
 import ShuffleText from "@/components/ascii/ShuffleText"
+import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
+import type { DemoVoice } from "@/lib/demo/script"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
+import { playSiteSfx } from "@/lib/ui/site-sfx"
 
 interface SpecialistServiceRowProps {
   service: SpecialistService
@@ -14,6 +19,11 @@ interface SpecialistServiceRowProps {
   isOpen: boolean
   onToggle: (id: string) => void
   reducedMotion: boolean
+  /** Mode démo : pas de hover. */
+  demoMode?: boolean
+  /** Sujet narré à la place du titre du service. */
+  demoFocusVoice?: DemoVoice | null
+  demoFocusVoiceToken?: number
 }
 
 export default function SpecialistServiceRow({
@@ -22,13 +32,23 @@ export default function SpecialistServiceRow({
   isOpen,
   onToggle,
   reducedMotion,
+  demoMode = false,
+  demoFocusVoice = null,
+  demoFocusVoiceToken = 0,
 }: SpecialistServiceRowProps) {
   const title = pickLocalized(service.title, lang)
   const description = pickLocalized(service.description, lang)
   const panelId = `specialist-service-${service.id}`
+  const rootRef = useRef<HTMLDivElement>(null)
+  const showDemoSubject = Boolean(demoMode && isOpen && demoFocusVoice)
+
+  useEffect(() => {
+    if (!isOpen || !demoMode) return
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [isOpen, demoMode])
 
   return (
-    <div className="border-t-2 border-black/30 first:border-t-0">
+    <div ref={rootRef} className="border-t-2 border-black/30 first:border-t-0">
       <div
         className={`px-2 transition-all duration-300 ${
           isOpen
@@ -43,18 +63,45 @@ export default function SpecialistServiceRow({
           }`}
           aria-expanded={isOpen}
           aria-controls={panelId}
-          onClick={() => onToggle(service.id)}
+          onClick={() => {
+            playSiteSfx(isOpen ? "panel.collapse" : "panel.expand")
+            onToggle(service.id)
+          }}
         >
-          <ShuffleText
-            className={`font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] group-hover:text-inherit md:text-[1.0625rem] ${
-              isOpen ? "text-cyan-600" : "text-black"
-            }`}
-            shuffleDuration={150}
-            letterDelay={12}
-            enableHover={!reducedMotion}
-          >
-            {title}
-          </ShuffleText>
+          {showDemoSubject && demoFocusVoice ? (
+            <ShuffleDualLines
+              className={`min-w-0 flex-1 font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] md:text-[1.0625rem] ${
+                isOpen ? "text-cyan-600" : "text-black"
+              }`}
+              lines={[
+                {
+                  primary: demoFocusVoice.lines[0] ?? title,
+                  alternate:
+                    demoFocusVoice.alternate[0] ??
+                    demoFocusVoice.lines[0] ??
+                    title,
+                },
+              ]}
+              playToken={demoFocusVoiceToken}
+              enableHover={false}
+              holdDurationMs={DEMO_HOLD_MS}
+              shuffleDurationMs={DEMO_SHUFFLE_MS}
+              lineStaggerMs={0}
+              lineClassName="demo-focus-label block whitespace-nowrap overflow-hidden"
+            />
+          ) : (
+            <ShuffleText
+              className={`font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] group-hover:text-inherit md:text-[1.0625rem] ${
+                isOpen ? "text-cyan-600" : "text-black"
+              }`}
+              shuffleDuration={150}
+              letterDelay={12}
+              enableHover={!reducedMotion && !demoMode}
+              totalDuration={800}
+            >
+              {title}
+            </ShuffleText>
+          )}
           <motion.span
             className={`font-enigma inline-block shrink-0 origin-center text-xl font-normal leading-none md:text-2xl ${
               isOpen

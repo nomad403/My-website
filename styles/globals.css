@@ -789,6 +789,21 @@ body {
   transform-origin: left center;
 }
 
+.projects-scroll-list__item-label--demo {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.demo-focus-label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
 .projects-scroll-list__item-trigger {
   display: inline-block;
   width: max-content;
@@ -1012,6 +1027,17 @@ body {
     opacity: 0.78;
     color: #0a0a0a;
     max-width: 36ch;
+  }
+
+  .project-detail-panel--demo .project-detail-panel__summary {
+    opacity: 0.92;
+    font-size: 1rem;
+    line-height: 1.48;
+    max-width: 38ch;
+  }
+
+  .project-detail-panel__name-tag {
+    opacity: 0.55;
   }
 
   .project-detail-panel__summary.font-home-title {

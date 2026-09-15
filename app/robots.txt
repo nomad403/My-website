@@ -3,9 +3,12 @@ Allow: /
 Allow: /favicon.ico
 Allow: /favicon-*.ico
 Allow: /favicon-*.png
+Allow: /signature
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+Disallow: /demo
+Disallow: /demo/
 
 # Sitemaps
 Sitemap: https://www.nomad403.com/sitemap.xml

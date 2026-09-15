@@ -9,6 +9,9 @@ import {
 } from "@/lib/specialist/specialist-catalog"
 import SpecialistServiceRow from "@/components/specialist/SpecialistServiceRow"
 import ShuffleText from "@/components/ascii/ShuffleText"
+import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
+import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 interface SpecialistCatalogProps {
   lang: SpecialistLang
@@ -16,6 +19,7 @@ interface SpecialistCatalogProps {
 
 export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
   const { t } = useLanguage()
+  const demoStory = useDemoStoryOptional()
   const [activeService, setActiveService] = useState<string | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
 
@@ -26,6 +30,11 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     mq.addEventListener("change", update)
     return () => mq.removeEventListener("change", update)
   }, [])
+
+  useEffect(() => {
+    if (!demoStory) return
+    setActiveService(demoStory.specialistServiceId)
+  }, [demoStory, demoStory?.specialistServiceId])
 
   const handleToggle = (serviceId: string) => {
     setActiveService((current) => (current === serviceId ? null : serviceId))
@@ -38,13 +47,29 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
           <section className="min-w-0 text-black lg:col-span-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-8 xl:col-span-5 xl:pr-12">
             <div className="specialist-catalog__intro-inner pb-6 md:pb-8 lg:pb-28">
               <h1 className="font-kode text-2xl font-normal uppercase leading-tight tracking-[0.08em] text-black md:text-3xl lg:text-4xl">
-                <ShuffleText
-                  shuffleDuration={150}
-                  letterDelay={12}
-                  enableHover={!reducedMotion}
-                >
-                  {t("specialist.title")}
-                </ShuffleText>
+                {demoStory?.playing && demoStory.voice ? (
+                  <ShuffleDualLines
+                    lines={demoStory.voice.lines.map((primary, index) => ({
+                      primary,
+                      alternate:
+                        demoStory.voice!.alternate[index] ?? primary,
+                    }))}
+                    playToken={demoStory.voiceToken}
+                    enableHover={false}
+                    holdDurationMs={DEMO_HOLD_MS}
+                    shuffleDurationMs={DEMO_SHUFFLE_MS}
+                    lineStaggerMs={0}
+                    lineClassName="block overflow-hidden text-ellipsis whitespace-nowrap"
+                  />
+                ) : (
+                  <ShuffleText
+                    shuffleDuration={150}
+                    letterDelay={12}
+                    enableHover={!reducedMotion && !demoStory?.playing}
+                  >
+                    {t("specialist.title")}
+                  </ShuffleText>
+                )}
               </h1>
               <p className="mt-2 font-kode text-xs uppercase tracking-[0.08em] text-black/45 md:text-sm">
                 {t("specialist.subtitle")}
@@ -95,6 +120,16 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                           isOpen={activeService === service.id}
                           onToggle={handleToggle}
                           reducedMotion={reducedMotion}
+                          demoMode={Boolean(demoStory?.playing)}
+                          demoFocusVoice={
+                            demoStory?.playing &&
+                            activeService === service.id
+                              ? demoStory.focusVoice
+                              : null
+                          }
+                          demoFocusVoiceToken={
+                            demoStory?.focusVoiceToken ?? 0
+                          }
                         />
                       ))}
                     </div>

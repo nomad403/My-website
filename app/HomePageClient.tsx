@@ -11,6 +11,7 @@ import HomeTitle from "@/components/home/HomeTitle"
 import HeaderLogo from "@/components/chrome/HeaderLogo"
 import DynamicHead from "@/components/seo/DynamicHead"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
+import SoundToggle from "@/components/chrome/SoundToggle"
 import JsonLdPerson from "@/components/seo/JsonLdPerson"
 import SiteChromeNav, {
   SiteChromeMobileMenu,
@@ -29,6 +30,8 @@ import {
   pageIdToPath,
   pathToPageId,
 } from "@/lib/home/page-config"
+import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
+import { playSiteSfx } from "@/lib/ui/site-sfx"
 
 const SpheresPacking = dynamic(() => import("@/components/ascii/SpheresPacking"), {
   ssr: false,
@@ -39,10 +42,19 @@ const AsciiOverlay = dynamic(() => import("@/components/ascii/AsciiOverlay"), {
 
 interface HomePageClientProps {
   initialPage?: string
+  /** Mode /demo : pas de pushState hors /demo, expose le navigateur. */
+  demoMode?: boolean
+  onDemoNavigatorReady?: (nav: DemoNavigator) => void
+}
+
+export type DemoNavigator = {
+  goTo: (page: string) => void
 }
 
 export default function HomePageClient({
   initialPage = "home",
+  demoMode = false,
+  onDemoNavigatorReady,
 }: HomePageClientProps) {
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -64,6 +76,7 @@ export default function HomePageClient({
     setSphereScale,
   } = useBackground()
   const { setCurrentPage: setRoutedPage } = usePage()
+  const demoStory = useDemoStoryOptional()
 
   const sphereCountRef = useRef<number | null>(null)
   if (profile && sphereCountRef.current === null) {
@@ -76,14 +89,17 @@ export default function HomePageClient({
 
   const showHomeTitle =
     isPreloaded && homeVisible && showAscii && isLanguageReady
-  const homeTitleLines = useMemo(
-    () => [t("home.titleLine1"), t("home.titleLine2")],
-    [t, language],
-  )
-  const homeTitleAltLines = useMemo(
-    () => [t("home.titleAltLine1"), t("home.titleAltLine2")],
-    [t, language],
-  )
+  const demoPlaying = Boolean(demoMode && demoStory?.playing)
+  const demoVoice = demoPlaying ? demoStory?.voice : null
+
+  const homeTitleLines = useMemo(() => {
+    if (demoVoice?.lines?.length) return [...demoVoice.lines]
+    return [t("home.titleLine1"), t("home.titleLine2")]
+  }, [demoVoice, t, language])
+  const homeTitleAltLines = useMemo(() => {
+    if (demoVoice?.alternate?.length) return [...demoVoice.alternate]
+    return [t("home.titleAltLine1"), t("home.titleAltLine2")]
+  }, [demoVoice, t, language])
   const homeBrandAltWords = useMemo(
     () => [t("home.brandAlt")],
     [t, language],
@@ -92,7 +108,8 @@ export default function HomePageClient({
     () => [t("home.rotateHintFr"), t("home.rotateHintEn")],
     [t, language],
   )
-  const rotateHintActive = useGyroRotateHint(currentPage, showHomeTitle)
+  const rotateHintActiveRaw = useGyroRotateHint(currentPage, showHomeTitle)
+  const rotateHintActive = rotateHintActiveRaw && !demoPlaying
   const displayedHomeLines = rotateHintActive
     ? rotateHintLines
     : homeTitleLines
@@ -135,8 +152,9 @@ export default function HomePageClient({
 
     setTransitioning(true)
     setIsMobileMenuOpen(false)
+    playSiteSfx("nav.page")
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !demoMode) {
       window.history.pushState({}, "", pageIdToPath(newPage))
     }
 
@@ -185,6 +203,18 @@ export default function HomePageClient({
       transitionTimerRef.current = null
     }, 700)
   }
+
+  const handlePageChangeRef = useRef(handlePageChange)
+  handlePageChangeRef.current = handlePageChange
+
+  useEffect(() => {
+    if (!demoMode || !onDemoNavigatorReady) return
+    onDemoNavigatorReady({
+      goTo: (page: string) => {
+        handlePageChangeRef.current(page)
+      },
+    })
+  }, [demoMode, onDemoNavigatorReady])
 
   const currentConfig = useMemo(
     () => getPageConfig(currentPage),
@@ -247,6 +277,7 @@ export default function HomePageClient({
           currentPage={currentPage}
           onCanvasReady={setBgCanvas}
           visible={true}
+          simulateTilt={demoPlaying}
         />
       )}
 
@@ -270,7 +301,12 @@ export default function HomePageClient({
         />
       )}
 
-      <div className="relative h-screen w-full overflow-hidden">
+      <div
+        className={`relative h-screen w-full overflow-hidden${
+          demoPlaying ? " pointer-events-none select-none" : ""
+        }`}
+        aria-hidden={demoPlaying ? true : undefined}
+      >
         {!isPreloaded && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
             <div className="text-center">
@@ -289,9 +325,12 @@ export default function HomePageClient({
         />
 
         <div
-          className="pointer-events-auto fixed bottom-6 right-6 hidden md:block"
+          className={`fixed bottom-6 right-6 hidden items-center gap-3 md:flex${
+            demoPlaying ? " pointer-events-none" : " pointer-events-auto"
+          }`}
           style={{ zIndex: 9999 }}
         >
+          <SoundToggle />
           <LanguageSwitcher />
         </div>
 
@@ -327,7 +366,8 @@ export default function HomePageClient({
                     ready={showHomeTitle}
                     mode={mode}
                     isMobile={isMobileViewport}
-                    enableHover={!rotateHintActive}
+                    enableHover={!rotateHintActive && !demoMode}
+                    playToken={demoStory?.voiceToken ?? 0}
                   />
                 </div>
               )}

@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { attachOrientationPermissionOnBackgroundGesture, notifyOrientationGranted } from "@/lib/ui/interaction";
 import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/ascii/viewport-bleed";
+import { subscribeDemoPointer } from "@/lib/demo/demo-pointer-store";
 
 /**
  * Typage minimal du module ESM exposé par le CDN.
@@ -49,6 +50,8 @@ export default function SpheresPacking({
   currentPage = "home",
   onCanvasReady,
   visible = true,
+  /** Force une trajectoire simulée (démo) : pas de souris, pas de gyro réel. */
+  simulateTilt = false,
 }: {
   count?: number;
   minSize?: number;
@@ -57,6 +60,7 @@ export default function SpheresPacking({
   currentPage?: string;
   onCanvasReady?: (c: HTMLCanvasElement) => void;
   visible?: boolean;
+  simulateTilt?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const instanceRef = useRef<ReturnType<Spheres2Ctor> | null>(null);
@@ -443,14 +447,19 @@ export default function SpheresPacking({
 
     const prefersCoarsePointer =
       window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+    const forceSimulated = simulateTilt
 
     const clampToUnit = (value: number) => Math.max(-1, Math.min(1, value))
     const state = tiltRef.current
-    const damping = prefersCoarsePointer ? 0.08 : 0.14
-    const strength = prefersCoarsePointer ? 0.55 : 0.5
+    const damping = prefersCoarsePointer || forceSimulated ? 0.08 : 0.14
+    const strength = prefersCoarsePointer || forceSimulated ? 0.55 : 0.5
     /** Idle sans gyro : follow plus marqué pour rester lisible à travers l’ASCII. */
-    const idleDamping = prefersCoarsePointer ? 0.12 : damping
-    const idleStrength = prefersCoarsePointer ? 0.92 : strength
+    const idleDamping = prefersCoarsePointer || forceSimulated ? 0.1 : damping
+    const idleStrength = forceSimulated
+      ? 0.62
+      : prefersCoarsePointer
+        ? 0.92
+        : strength
 
     const writePhysicsCenter = (
       motionDamping = damping,
@@ -469,8 +478,8 @@ export default function SpheresPacking({
       }
     }
 
-    // Desktop : le suivi souris pilote physics.center (donc l’ASCII), pas l’idle.
-    if (!prefersCoarsePointer) {
+    // Desktop hors démo : suivi souris. En démo / mobile : trajectoire simulée.
+    if (!prefersCoarsePointer && !forceSimulated) {
       let pointerTargetX = 0
       let pointerTargetY = 0
       let pointerHover = false
@@ -492,7 +501,6 @@ export default function SpheresPacking({
         const width = window.innerWidth || 1
         const height = window.innerHeight || 1
         pointerTargetX = clampToUnit((event.clientX / width) * 2 - 1)
-        // Inverser Y : le viewport croît vers le bas, le centre physique vers le haut
         pointerTargetY = clampToUnit(-((event.clientY / height) * 2 - 1))
         if (event.pointerType === "mouse" || event.pointerType === "pen") {
           pointerHover = true
@@ -529,7 +537,7 @@ export default function SpheresPacking({
       }
     }
 
-    // Mobile : gyro si autorisé, sinon trajectoire idle aléatoire fluide.
+    // Mobile / démo : gyro si dispo (sauf force simulé), sinon idle / pointeur démo.
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent
     const hasDeviceOrientation = !!deviceOrientationCtor
@@ -549,48 +557,85 @@ export default function SpheresPacking({
       notifyOrientationGranted()
     }
 
+    // Démo : suivre le curseur virtuel (même trajet que le cross cursor).
+    let demoNx = 0
+    let demoNy = 0
+    let demoPointerLive = false
+    const unsubDemoPointer = forceSimulated
+      ? subscribeDemoPointer((sample) => {
+          demoPointerLive = sample.active
+          if (sample.active) {
+            demoNx = sample.nx
+            demoNy = sample.ny
+          }
+        })
+      : null
+
     let phaseX = Math.random() * Math.PI * 2
     let phaseY = Math.random() * Math.PI * 2
-    let ampX = 0.72
-    let ampY = 0.66
-    let freqX = 0.28
-    let freqY = 0.24
+    let ampX = forceSimulated ? 0.38 : 0.72
+    let ampY = forceSimulated ? 0.34 : 0.66
+    let freqX = forceSimulated ? 0.16 : 0.28
+    let freqY = forceSimulated ? 0.14 : 0.24
     let reseedAt = 0
 
     const reseedIdle = (now: number) => {
-      phaseX += (Math.random() - 0.5) * 2.2
-      phaseY += (Math.random() - 0.5) * 2.2
-      ampX = 0.58 + Math.random() * 0.4
-      ampY = 0.52 + Math.random() * 0.4
-      freqX = 0.2 + Math.random() * 0.22
-      freqY = 0.18 + Math.random() * 0.2
-      reseedAt = now + 2200 + Math.random() * 3600
+      phaseX += (Math.random() - 0.5) * (forceSimulated ? 0.6 : 2.2)
+      phaseY += (Math.random() - 0.5) * (forceSimulated ? 0.6 : 2.2)
+      ampX = forceSimulated
+        ? 0.22 + Math.random() * 0.14
+        : 0.58 + Math.random() * 0.4
+      ampY = forceSimulated
+        ? 0.18 + Math.random() * 0.12
+        : 0.52 + Math.random() * 0.4
+      freqX = forceSimulated
+        ? 0.08 + Math.random() * 0.06
+        : 0.2 + Math.random() * 0.22
+      freqY = forceSimulated
+        ? 0.07 + Math.random() * 0.05
+        : 0.18 + Math.random() * 0.2
+      reseedAt =
+        now +
+        (forceSimulated ? 4800 : 2200) +
+        Math.random() * (forceSimulated ? 5200 : 3600)
     }
 
     const sampleIdleTarget = (now: number) => {
       if (now >= reseedAt) reseedIdle(now)
       const t = now * 0.001
+      const swirl = forceSimulated ? 0.35 : 0.72
+      const drift = forceSimulated ? 0.08 : 0.22
       return {
         x: clampToUnit(
           Math.sin(t * freqX + phaseX) * ampX +
-            Math.sin(t * (freqX * 1.85) + phaseY) * ampX * 0.72 +
-            Math.sin(t * 0.11 + phaseX * 0.45) * 0.22,
+            Math.sin(t * (freqX * 1.85) + phaseY) * ampX * swirl +
+            Math.sin(t * 0.11 + phaseX * 0.45) * drift,
         ),
         y: clampToUnit(
           Math.cos(t * freqY + phaseY) * ampY +
-            Math.sin(t * (freqY * 1.75) + phaseX) * ampY * 0.72 +
-            Math.cos(t * 0.13 + phaseY * 0.45) * 0.22,
+            Math.sin(t * (freqY * 1.75) + phaseX) * ampY * swirl +
+            Math.cos(t * 0.13 + phaseY * 0.45) * drift,
         ),
       }
     }
 
+    const DEMO_POINTER_SMOOTH = 0.12
+
     const applyTilt = (now = performance.now()) => {
-      const gyroActive = gyroLive && now - lastGyroAt < GYRO_STALE_MS
+      const gyroActive =
+        !forceSimulated && gyroLive && now - lastGyroAt < GYRO_STALE_MS
       if (!gyroActive) {
-        const idle = sampleIdleTarget(now)
-        state.targetX = idle.x
-        state.targetY = idle.y
-        writePhysicsCenter(idleDamping, idleStrength)
+        if (forceSimulated && demoPointerLive) {
+          // Suivi fluide du curseur virtuel — continu, sans saut.
+          state.targetX += (demoNx - state.targetX) * DEMO_POINTER_SMOOTH
+          state.targetY += (demoNy - state.targetY) * DEMO_POINTER_SMOOTH
+          writePhysicsCenter(idleDamping, idleStrength)
+        } else {
+          const idle = sampleIdleTarget(now)
+          state.targetX = idle.x
+          state.targetY = idle.y
+          writePhysicsCenter(idleDamping, idleStrength)
+        }
       } else {
         writePhysicsCenter(damping, strength)
       }
@@ -631,33 +676,36 @@ export default function SpheresPacking({
 
     let permissionCleanup: (() => void) | null = null
 
-    if (hasDeviceOrientation && needsPermission) {
-      const requestPermission = async () => {
-        try {
-          const result = await deviceOrientationCtor.requestPermission()
-          if (result === "granted") {
-            attachOrientation()
-            notifyGrantedOnce()
-          } else {
+    if (!forceSimulated) {
+      if (hasDeviceOrientation && needsPermission) {
+        const requestPermission = async () => {
+          try {
+            const result = await deviceOrientationCtor.requestPermission()
+            if (result === "granted") {
+              attachOrientation()
+              notifyGrantedOnce()
+            } else {
+              gyroLive = false
+            }
+          } catch (error) {
+            console.warn("SpheresPacking: orientation permission refusée", error)
             gyroLive = false
           }
-        } catch (error) {
-          console.warn("SpheresPacking: orientation permission refusée", error)
-          gyroLive = false
         }
-      }
 
-      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(
-        requestPermission,
-      )
-    } else if (hasDeviceOrientation) {
-      attachOrientation()
+        permissionCleanup = attachOrientationPermissionOnBackgroundGesture(
+          requestPermission,
+        )
+      } else if (hasDeviceOrientation) {
+        attachOrientation()
+      }
     }
 
     reseedIdle(performance.now())
     state.raf = requestAnimationFrame((t) => applyTilt(t))
 
     return () => {
+      unsubDemoPointer?.()
       permissionCleanup?.()
       detachOrientation()
       if (state.raf) {
@@ -671,7 +719,7 @@ export default function SpheresPacking({
       state.baseBeta = null
       state.baseGamma = null
     }
-  }, [])
+  }, [simulateTilt])
 
   // Déterminer si les spheres doivent être visibles visuellement
   // Sur les pages avec ASCII, le canvas est actif mais caché visuellement pour l'ASCII

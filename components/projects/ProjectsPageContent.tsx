@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import ProjectsScrollList, {
   type ProjectScrollItem,
 } from "@/components/projects/ProjectsScrollList"
@@ -13,6 +13,7 @@ import {
   type ProjectItem,
   type ProjectLang,
 } from "@/lib/projects/project-items"
+import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
 
 function toScrollItem(item: ProjectItem, lang: ProjectLang): ProjectScrollItem {
   return {
@@ -42,6 +43,21 @@ export default function ProjectsPageContent() {
     setActiveProject(full)
   }, [])
 
+  const demoStory = useDemoStoryOptional()
+  const demoPlaying = Boolean(demoStory?.playing)
+  const demoFocusVoice = demoPlaying ? demoStory?.focusVoice ?? null : null
+  const demoFocusIndex = demoPlaying
+    ? (demoStory?.projectFocusIndex ?? null)
+    : null
+
+  // Desktop : aligner immédiatement le panneau description sur le focus démo
+  // (sans attendre la fin du scroll de la liste).
+  useEffect(() => {
+    if (demoFocusIndex == null) return
+    const item = PROJECT_ITEMS[demoFocusIndex]
+    if (item) setActiveProject(item)
+  }, [demoFocusIndex, demoStory?.focusVoiceToken])
+
   return (
     <div className="absolute inset-0 h-full w-full overflow-x-clip overflow-y-hidden">
       <h1 className="sr-only">Projects — Nomad403 (Nomad 403)</h1>
@@ -51,12 +67,17 @@ export default function ProjectsPageContent() {
         isMobile={isMobile}
         viewLabel={t("projects.view")}
         onActiveChange={handleActiveChange}
+        demoFocusDataIndex={demoFocusIndex}
+        demoFocusVoice={demoFocusVoice}
+        demoFocusVoiceToken={demoStory?.focusVoiceToken ?? 0}
       />
       {!isMobile ? (
         <ProjectDetailPanel
           item={activeProject}
           lang={projectLang}
           viewLabel={t("projects.view")}
+          demoVoice={demoFocusVoice}
+          demoVoiceToken={demoStory?.focusVoiceToken ?? 0}
         />
       ) : null}
 

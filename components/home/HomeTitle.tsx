@@ -23,6 +23,7 @@ import {
   HOME_TITLE_WIDTH_RATIO,
   HOME_HOVER_HOLD_MS,
 } from "@/lib/home/home-title-style"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 import {
   readHeaderBandLayout,
   type HeaderBandLayout,
@@ -36,6 +37,8 @@ interface HomeTitleProps {
   isMobile: boolean
   ready: boolean
   enableHover?: boolean
+  /** Token démo : force le shuffle narratif du titre. */
+  playToken?: number
 }
 
 const BRAND_FONT_FAMILY = '"Electric Blue", ui-sans-serif, system-ui, sans-serif'
@@ -105,6 +108,7 @@ export default function HomeTitle({
   isMobile,
   ready,
   enableHover = true,
+  playToken = 0,
 }: HomeTitleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [fontSize, setFontSize] = useState(24)
@@ -231,17 +235,17 @@ export default function HomeTitle({
           }}
         >
           <ShuffleDualLines
-            key={[...dualLines.map((line) => line.primary), ...dualLines.map((line) => line.alternate)].join("|")}
             lines={dualLines}
             className="w-full max-w-full cursor-default"
             lineClassName={`${titleFontClass} block w-full max-w-full overflow-hidden text-left normal-case whitespace-nowrap ${titleColorClass}`}
             lineStyle={lineStyle}
             lineGapClassName=""
             enableHover={enableHover}
-            introShuffle={ready}
-            holdDurationMs={HOME_HOVER_HOLD_MS}
-            shuffleDurationMs={HOME_TITLE_SHUFFLE_MS}
-            lineStaggerMs={HOME_TITLE_STAGGER_MS}
+            introShuffle={ready && playToken === 0}
+            playToken={playToken}
+            holdDurationMs={playToken > 0 ? DEMO_HOLD_MS : HOME_HOVER_HOLD_MS}
+            shuffleDurationMs={playToken > 0 ? DEMO_SHUFFLE_MS : HOME_TITLE_SHUFFLE_MS}
+            lineStaggerMs={playToken > 0 ? 0 : HOME_TITLE_STAGGER_MS}
           />
         </div>
         <BrandAsciiTitle

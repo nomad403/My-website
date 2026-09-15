@@ -11,6 +11,10 @@ import {
 import { flushSync } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { useProjectsScrollPhysics } from "@/hooks/useProjectsScrollPhysics"
+import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
+import type { DemoVoice } from "@/lib/demo/script"
+import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
+import { playSiteSfx } from "@/lib/ui/site-sfx"
 import {
   EMPTY_METRICS,
   clamp,
@@ -39,6 +43,11 @@ interface ProjectsScrollListProps {
   isMobile?: boolean
   viewLabel: string
   onActiveChange?: (item: ProjectScrollItem) => void
+  /** Mode démo : centrer l’item à cet index de données. */
+  demoFocusDataIndex?: number | null
+  /** Mode démo : sujet narré à la place du nom du projet actif. */
+  demoFocusVoice?: DemoVoice | null
+  demoFocusVoiceToken?: number
 }
 
 interface PoolSlot {
@@ -57,6 +66,9 @@ export default function ProjectsScrollList({
   isMobile = false,
   viewLabel,
   onActiveChange,
+  demoFocusDataIndex = null,
+  demoFocusVoice = null,
+  demoFocusVoiceToken = 0,
 }: ProjectsScrollListProps) {
   const itemCount = items.length
 
@@ -400,17 +412,34 @@ export default function ProjectsScrollList({
   ) => {
     if (isMobile) {
       if (isActive) {
-        setDetailOpen((open) => !open)
+        setDetailOpen((open) => {
+          playSiteSfx(open ? "panel.collapse" : "panel.expand")
+          return !open
+        })
         return
       }
       animateToVirtualIndexRef.current?.(virtualIndex)
+      playSiteSfx("panel.slide")
       return
     }
 
     if (!isActive) {
       animateToVirtualIndexRef.current?.(virtualIndex)
+      playSiteSfx("panel.slide")
     }
   }
+
+  useEffect(() => {
+    if (demoFocusDataIndex == null || itemCount === 0) return
+    const metrics = metricsRef.current
+    if (metrics.itemHeight <= 0) return
+
+    const dataIndex = mod(demoFocusDataIndex, itemCount)
+    const virtualIndex = metrics.middleBlock * itemCount + dataIndex
+    animateToVirtualIndexRef.current?.(virtualIndex)
+    playSiteSfx("panel.slide", { durationMs: Math.round(DETAIL_DURATION * 1000) })
+    if (isMobile) setDetailOpen(true)
+  }, [demoFocusDataIndex, itemCount, isMobile, metrics])
 
   const trackHeight = (metrics?.trackHeight ?? 0) + expandExtra
   const titleHeight = metrics?.itemHeight
@@ -487,8 +516,34 @@ export default function ProjectsScrollList({
                           isMobile && isActive ? detailOpen : undefined
                         }
                       >
-                        <span className="projects-scroll-list__item-label">
-                          {item.name}
+                        <span
+                          className={`projects-scroll-list__item-label${
+                            isActive && demoFocusVoice
+                              ? " projects-scroll-list__item-label--demo"
+                              : ""
+                          }`}
+                        >
+                          {isActive && demoFocusVoice ? (
+                            <ShuffleDualLines
+                              lines={[
+                                {
+                                  primary: demoFocusVoice.lines[0] ?? item.name,
+                                  alternate:
+                                    demoFocusVoice.alternate[0] ??
+                                    demoFocusVoice.lines[0] ??
+                                    item.name,
+                                },
+                              ]}
+                              playToken={demoFocusVoiceToken}
+                              enableHover={false}
+                              holdDurationMs={DEMO_HOLD_MS}
+                              shuffleDurationMs={DEMO_SHUFFLE_MS}
+                              lineStaggerMs={0}
+                              lineClassName="block"
+                            />
+                          ) : (
+                            item.name
+                          )}
                         </span>
                       </button>
                     </div>
@@ -516,14 +571,16 @@ export default function ProjectsScrollList({
                           }}
                         >
                           <div className="projects-scroll-list__detail-inner">
-                            {item.description ? (
+                            {(demoFocusVoice?.detailEyebrow ??
+                              item.description) ? (
                               <p className="projects-scroll-list__detail-eyebrow font-kode uppercase tracking-[0.1em]">
-                                {item.description}
+                                {demoFocusVoice?.detailEyebrow ??
+                                  item.description}
                               </p>
                             ) : null}
-                            {item.summary ? (
+                            {(demoFocusVoice?.detailSummary ?? item.summary) ? (
                               <p className="projects-scroll-list__detail-summary font-home-title">
-                                {item.summary}
+                                {demoFocusVoice?.detailSummary ?? item.summary}
                               </p>
                             ) : null}
                             {item.stack && item.stack.length > 0 ? (
@@ -533,7 +590,7 @@ export default function ProjectsScrollList({
                                 ))}
                               </ul>
                             ) : null}
-                            {item.url ? (
+                            {item.url && !demoFocusVoice ? (
                               <a
                                 href={item.url}
                                 target="_blank"

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { playButtonSfx, preloadButtonSfx } from "@/lib/ui/button-sfx"
+import { unlockSiteSfx } from "@/lib/ui/site-sfx"
 
 const INTERACTIVE_SELECTOR = [
   "button:not(:disabled)",
@@ -27,15 +28,24 @@ function findInteractiveTarget(target: EventTarget | null) {
 
 export default function ButtonSfxListener() {
   useEffect(() => {
+    const unlock = () => {
+      void unlockSiteSfx()
+    }
     const handleClick = (event: MouseEvent) => {
       if (!findInteractiveTarget(event.target)) return
-      preloadButtonSfx()
-      playButtonSfx()
+      void unlockSiteSfx().then(() => {
+        preloadButtonSfx()
+        playButtonSfx()
+      })
     }
 
+    document.addEventListener("pointerdown", unlock, { passive: true })
+    document.addEventListener("keydown", unlock, { passive: true })
     document.addEventListener("click", handleClick, { passive: true })
 
     return () => {
+      document.removeEventListener("pointerdown", unlock)
+      document.removeEventListener("keydown", unlock)
       document.removeEventListener("click", handleClick)
     }
   }, [])

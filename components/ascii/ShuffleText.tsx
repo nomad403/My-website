@@ -106,17 +106,17 @@ export default function ShuffleText({
     rafRef.current = requestAnimationFrame(tick)
   }
 
-  useEffect(() => {
-    if (triggerShuffle && !isShufflingRef.current) {
-      startShuffleAnimation()
-    }
-  }, [triggerShuffle])
-
+  // Un seul déclencheur programmatique : shuffleKey (évite doublon avec triggerShuffle).
   useEffect(() => {
     if (shuffleKey > 0) {
       startShuffleAnimation()
+      return
     }
-  }, [shuffleKey, children])
+    if (triggerShuffle && !isShufflingRef.current) {
+      startShuffleAnimation()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- startShuffleAnimation est stable via refs
+  }, [shuffleKey, triggerShuffle])
 
   useEffect(() => {
     if (!isShuffling) setDisplayText(children)
