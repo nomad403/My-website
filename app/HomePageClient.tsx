@@ -302,7 +302,7 @@ export default function HomePageClient({
       )}
 
       <div
-        className={`relative h-screen w-full overflow-hidden${
+        className={`relative h-dvh min-h-0 w-full overflow-hidden${
           demoPlaying ? " pointer-events-none select-none" : ""
         }`}
         aria-hidden={demoPlaying ? true : undefined}
@@ -334,7 +334,7 @@ export default function HomePageClient({
           <LanguageSwitcher />
         </div>
 
-        <div className="relative z-20 h-screen w-full">
+        <div className="relative z-20 h-dvh min-h-0 w-full">
           <SiteChromeMobileMenu
             mode={mode}
             currentPage={currentPage}

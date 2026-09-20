@@ -10,12 +10,15 @@ import DynamicFavicon from "@/components/seo/DynamicFavicon"
 import DynamicSocialTags from "@/components/seo/DynamicSocialTags"
 import JsonLdWebsite from "@/components/seo/JsonLdWebsite"
 import ButtonSfxListener from "@/components/chrome/ButtonSfxListener"
+import { useLockMobileDocumentScroll } from "@/hooks/useLockMobileDocumentScroll"
 
 interface ClientLayoutProps {
   children: ReactNode
 }
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
+  useLockMobileDocumentScroll(true)
+
   return (
     <LanguageProvider>
       <BackgroundProvider>

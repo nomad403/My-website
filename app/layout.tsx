@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Additional SEO */}
         <meta name="robots" content="index, follow" />
         <meta name="author" content="NOMAD403" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="preload" href="/fonts/Geist/GeistMono-ExtraLight.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/Electric_blue/ElectricBlueTrial-STAT-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         
