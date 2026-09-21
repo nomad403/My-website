@@ -4,7 +4,6 @@ import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import HeaderLogo from "@/components/chrome/HeaderLogo"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
-import SoundToggle from "@/components/chrome/SoundToggle"
 import ShuffleText from "@/components/ascii/ShuffleText"
 import { useLanguage } from "@/contexts/LanguageContext"
 
@@ -208,7 +207,6 @@ export function SiteChromeMobileMenu({
             ))}
           </div>
           <div className="mt-10 flex flex-col items-start gap-4">
-            <SoundToggle />
             <LanguageSwitcher isMobile={true} />
           </div>
         </motion.nav>

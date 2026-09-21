@@ -10,8 +10,7 @@ import ContentPages from "@/components/seo/content-pages"
 import HomeTitle from "@/components/home/HomeTitle"
 import HeaderLogo from "@/components/chrome/HeaderLogo"
 import DynamicHead from "@/components/seo/DynamicHead"
-import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
-import SoundToggle from "@/components/chrome/SoundToggle"
+import { useAudioGate } from "@/components/chrome/AudioGate"
 import JsonLdPerson from "@/components/seo/JsonLdPerson"
 import SiteChromeNav, {
   SiteChromeMobileMenu,
@@ -64,6 +63,9 @@ export default function HomePageClient({
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
+  const { visible: isAudioGateVisible } = useAudioGate()
+  const shouldRenderSiteChrome = !isAudioGateVisible
+  const shouldRenderSiteFooter = shouldRenderSiteChrome
   const { stage, showSpheres, showAscii } = useProgressiveLoad(profile, {
     skipParticles: true,
   })
@@ -316,31 +318,25 @@ export default function HomePageClient({
           </div>
         )}
 
-        <SiteChromeNav
-          mode={mode}
-          currentPage={currentPage}
-          isMobileMenuOpen={isMobileMenuOpen}
-          onToggleMobileMenu={() => setIsMobileMenuOpen((open) => !open)}
-          onPageChange={handlePageChange}
-        />
-
-        <div
-          className={`fixed bottom-6 right-6 hidden items-center gap-3 md:flex${
-            demoPlaying ? " pointer-events-none" : " pointer-events-auto"
-          }`}
-          style={{ zIndex: 9999 }}
-        >
-          <SoundToggle />
-          <LanguageSwitcher />
-        </div>
-
-        <div className="relative z-20 h-dvh min-h-0 w-full">
-          <SiteChromeMobileMenu
+        {shouldRenderSiteChrome && (
+          <SiteChromeNav
             mode={mode}
             currentPage={currentPage}
-            isOpen={isMobileMenuOpen}
+            isMobileMenuOpen={isMobileMenuOpen}
+            onToggleMobileMenu={() => setIsMobileMenuOpen((open) => !open)}
             onPageChange={handlePageChange}
           />
+        )}
+
+        <div className="relative z-20 h-dvh min-h-0 w-full">
+          {shouldRenderSiteChrome && (
+            <SiteChromeMobileMenu
+              mode={mode}
+              currentPage={currentPage}
+              isOpen={isMobileMenuOpen}
+              onPageChange={handlePageChange}
+            />
+          )}
 
           <div
             className={`absolute inset-0 ${hidePageBody ? "pointer-events-none" : ""}`}
@@ -396,7 +392,7 @@ export default function HomePageClient({
         </div>
 
         <HomeSeoBlock currentPage={currentPage} />
-        <SiteSocialFooter mode={mode} />
+        {shouldRenderSiteFooter && <SiteSocialFooter mode={mode} />}
       </div>
     </>
   )

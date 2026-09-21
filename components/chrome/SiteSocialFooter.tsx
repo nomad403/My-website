@@ -1,5 +1,7 @@
 "use client"
 
+import SoundToggle from "@/components/chrome/SoundToggle"
+import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import ShuffleText from "@/components/ascii/ShuffleText"
 
 type FooterMode = "day" | "night"
@@ -53,6 +55,10 @@ export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
               </ShuffleText>
             </a>
           ))}
+        </div>
+        <div className="flex items-center justify-center gap-3 lg:absolute lg:right-8">
+          <SoundToggle />
+          <LanguageSwitcher />
         </div>
       </div>
     </div>

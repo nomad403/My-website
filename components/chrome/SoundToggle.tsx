@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react"
 import { useBackground } from "@/contexts/BackgroundContext"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { ORIENTATION_GRANTED_EVENT } from "@/lib/ui/interaction"
 import {
+  activateSiteSfx,
+  canUseSiteSfxOnThisDevice,
   isSiteSfxMuted,
   setSiteSfxMuted,
   subscribeSiteSfxMute,
@@ -14,11 +17,30 @@ export default function SoundToggle() {
   const { mode } = useBackground()
   const { language } = useLanguage()
   const [muted, setMuted] = useState(false)
+  const [available, setAvailable] = useState(() =>
+    canUseSiteSfxOnThisDevice(),
+  )
 
   useEffect(() => {
     setMuted(isSiteSfxMuted())
-    return subscribeSiteSfxMute(setMuted)
+    setAvailable(canUseSiteSfxOnThisDevice())
+
+    const syncAvailability = () => {
+      setAvailable(canUseSiteSfxOnThisDevice())
+    }
+
+    window.addEventListener(ORIENTATION_GRANTED_EVENT, syncAvailability)
+    window.addEventListener("pageshow", syncAvailability)
+    const unsubscribeMute = subscribeSiteSfxMute(setMuted)
+
+    return () => {
+      window.removeEventListener(ORIENTATION_GRANTED_EVENT, syncAvailability)
+      window.removeEventListener("pageshow", syncAvailability)
+      unsubscribeMute()
+    }
   }, [])
+
+  if (!available) return null
 
   const tone = mode === "night" ? "text-white" : "text-black"
   const inactive =
@@ -40,8 +62,10 @@ export default function SoundToggle() {
       type="button"
       data-no-sfx
       onClick={() => {
+        const nextMuted = !isSiteSfxMuted()
+        activateSiteSfx()
         void unlockSiteSfx().then(() => {
-          setSiteSfxMuted(!muted)
+          setSiteSfxMuted(nextMuted)
         })
       }}
       aria-pressed={muted}

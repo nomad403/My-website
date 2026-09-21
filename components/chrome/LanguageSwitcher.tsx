@@ -5,6 +5,7 @@ import { useBackground } from "@/contexts/BackgroundContext"
 
 interface LanguageSwitcherProps {
   isMobile?: boolean
+  mode?: "day" | "night"
 }
 
 const LANGUAGES = [
@@ -12,9 +13,10 @@ const LANGUAGES = [
   { code: "en" as const, label: "EN" },
 ]
 
-export default function LanguageSwitcher({ isMobile = false }: LanguageSwitcherProps) {
+export default function LanguageSwitcher({ isMobile = false, mode: modeOverride }: LanguageSwitcherProps) {
   const { language, setLanguage, t } = useLanguage()
-  const { mode } = useBackground()
+  const { mode: backgroundMode } = useBackground()
+  const mode = modeOverride ?? backgroundMode
 
   const tone =
     mode === "night"
