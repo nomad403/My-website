@@ -10,6 +10,7 @@ import DynamicFavicon from "@/components/seo/DynamicFavicon"
 import DynamicSocialTags from "@/components/seo/DynamicSocialTags"
 import JsonLdWebsite from "@/components/seo/JsonLdWebsite"
 import ButtonSfxListener from "@/components/chrome/ButtonSfxListener"
+import DvdScreensaver from "@/components/chrome/DvdScreensaver"
 import { useLockMobileDocumentScroll } from "@/hooks/useLockMobileDocumentScroll"
 
 interface ClientLayoutProps {
@@ -29,6 +30,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           <BackgroundLayers />
           <CustomCursor />
           <ButtonSfxListener />
+          <DvdScreensaver />
           {/* Forcer la présence de la fonte dans le DOM */}
           <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
             .

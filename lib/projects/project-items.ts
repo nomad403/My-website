@@ -86,6 +86,17 @@ export const PROJECT_ITEMS: ProjectItem[] = [
     ),
     stack: ["Next.js", "React"],
   },
+  {
+    id: 7,
+    name: "Saki",
+    url: "https://nefersaki-com.glennrichard-dev.workers.dev/",
+    description: L("Site web marque, e-commerce", "Brand website, e-commerce"),
+    summary: L(
+      "Site web pour la marque Saki, pensé pour présenter son univers, ses produits et son identité visuelle dans une expérience élégante et immersive.",
+      "Website for the Saki brand, designed to present its universe, products, and visual identity in an elegant and immersive experience.",
+    ),
+    stack: ["Next.js", "React", "TypeScript"],
+  },
 ]
 
 export function projectCopy(

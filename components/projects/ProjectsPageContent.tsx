@@ -96,9 +96,10 @@ export default function ProjectsPageContent() {
           interactions sociales), AutomatIA (automatisation e-mails et documents
           métier par IA), ras-energies (vitrine secteur énergie), Savage (site
           collectif Savage Block Party avec e-commerce), The Message (expérience
-          web interactive et creative development). Chaque projet démontre
-          l&apos;expertise technique et la créativité dans le développement
-          d&apos;expériences utilisateur exceptionnelles.
+          web interactive et creative development), Saki (marque et boutique en
+          ligne immersive). Chaque projet démontre l&apos;expertise technique et la
+          créativité dans le développement d&apos;expériences utilisateur
+          exceptionnelles.
         </p>
         <p>
           Technologies utilisées : Next.js, React, TypeScript, Tailwind CSS,
