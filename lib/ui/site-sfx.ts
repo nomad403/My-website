@@ -2,8 +2,6 @@
  * Sound design site — ticks de touche numérique, discrets / aigus / minimalistes.
  */
 
-import { wasOrientationGranted } from "@/lib/ui/interaction"
-
 export type SiteSfxId =
   | "ui.tap"
   | "text.shuffle"
@@ -38,13 +36,16 @@ const muteListeners = new Set<MuteListener>()
 const lastPlayedAt = new Map<SiteSfxId, number>()
 let activeShuffleStop: (() => void) | null = null
 
-function requiresOrientationForSfx() {
+function isMobileSfxDisabled() {
   if (typeof window === "undefined") return false
-  return window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+  return (
+    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
+    window.matchMedia?.("(pointer: coarse)")?.matches === true
+  )
 }
 
 export function canUseSiteSfxOnThisDevice() {
-  return !requiresOrientationForSfx() || wasOrientationGranted()
+  return !isMobileSfxDisabled()
 }
 
 export function activateSiteSfx() {

@@ -65,7 +65,7 @@ export default function ProjectDetailPanel({
           }}
         >
           {eyebrow ? (
-            <p className="project-detail-panel__eyebrow font-kode uppercase tracking-[0.1em]">
+            <p className="project-detail-panel__eyebrow font-kode uppercase tracking-[0.12em]">
               {isDemo ? (
                 <>
                   <span className="project-detail-panel__name-tag">
@@ -80,7 +80,7 @@ export default function ProjectDetailPanel({
             </p>
           ) : null}
 
-          <h2 className="project-detail-panel__title font-kode uppercase tracking-[0.1em]">
+          <h2 className="project-detail-panel__title font-kode uppercase tracking-[0.08em]">
             {isDemo && demoVoice ? (
               <ShuffleDualLines
                 lines={[
@@ -123,7 +123,7 @@ export default function ProjectDetailPanel({
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="project-detail-panel__link font-kode uppercase tracking-[0.1em]"
+              className="project-detail-panel__link font-kode uppercase tracking-[0.12em]"
             >
               {viewLabel}
             </a>

@@ -30,7 +30,7 @@ export default function LanguageSwitcher({ isMobile = false, mode: modeOverride 
 
   return (
     <div
-      className={`flex items-center gap-2.5 font-kode text-[0.7rem] font-normal uppercase tracking-[0.12em] ${tone} ${
+      className={`flex items-center gap-2.5 font-kode text-[0.625rem] font-normal uppercase tracking-[0.14em] ${tone} ${
         isMobile ? "justify-start" : ""
       }`}
       role="group"

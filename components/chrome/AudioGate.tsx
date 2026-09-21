@@ -33,6 +33,14 @@ function shouldForceGateOnReload() {
   return false
 }
 
+function shouldDisableGateOnMobile() {
+  if (typeof window === "undefined") return false
+  return (
+    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
+    window.matchMedia?.("(pointer: coarse)")?.matches === true
+  )
+}
+
 const AudioGateContext = createContext({
   visible: true,
   setVisible: (_visible: boolean) => {},
@@ -47,6 +55,11 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const syncVisibility = () => {
+      if (shouldDisableGateOnMobile()) {
+        setVisible(false)
+        return
+      }
+
       if (shouldForceGateOnReload()) {
         setVisible(true)
         return
@@ -58,6 +71,11 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
     syncVisibility()
 
     const onPageShow = () => {
+      if (shouldDisableGateOnMobile()) {
+        setVisible(false)
+        return
+      }
+
       if (shouldForceGateOnReload()) {
         setVisible(true)
         return
@@ -65,8 +83,18 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
       syncVisibility()
     }
 
+    const mobileGateQuery = window.matchMedia("(max-width: 767px)")
+    const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
+
     window.addEventListener("pageshow", onPageShow)
-    return () => window.removeEventListener("pageshow", onPageShow)
+    mobileGateQuery.addEventListener("change", syncVisibility)
+    coarsePointerQuery.addEventListener("change", syncVisibility)
+
+    return () => {
+      window.removeEventListener("pageshow", onPageShow)
+      mobileGateQuery.removeEventListener("change", syncVisibility)
+      coarsePointerQuery.removeEventListener("change", syncVisibility)
+    }
   }, [])
 
   return (
@@ -79,8 +107,13 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
 export default function AudioGate() {
   const { visible, setVisible } = useAudioGate()
   const { language } = useLanguage()
+  const [mounted, setMounted] = useState(false)
 
-  if (!visible) return null
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || !visible || shouldDisableGateOnMobile()) return null
 
   const copy =
     language === "en"
@@ -116,15 +149,15 @@ export default function AudioGate() {
 
       <div className="flex h-full items-center justify-center">
         <div className="w-full max-w-sm border border-black/10 bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02),0_20px_40px_rgba(0,0,0,0.08)] sm:p-6">
-          <div className="font-electric-blue mb-4 text-[0.8rem] font-normal tracking-[0.12em] text-black">
+          <div className="font-electric-blue mb-4 text-[0.8125rem] font-normal tracking-[0.08em] text-black">
             {copy.label}
           </div>
 
-          <h2 className="font-kode text-lg uppercase tracking-[0.14em] text-black sm:text-xl">
+          <h2 className="font-kode text-[1.625rem] font-normal uppercase leading-[1.08] tracking-[0.08em] text-black">
             {copy.title}
           </h2>
 
-          <p className="mt-3 text-[0.72rem] leading-6 tracking-[0.04em] text-black/65">
+          <p className="mt-3 text-[0.8125rem] leading-[1.62] tracking-[0.02em] text-black/65">
             {copy.intro}
           </p>
 
@@ -140,7 +173,7 @@ export default function AudioGate() {
                   ? "Enable sound and enter the site"
                   : "Activer le son et entrer sur le site"
               }
-              className="flex-1 border border-black/10 bg-black px-3 py-2.5 text-[0.62rem] font-medium uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-black/90"
+              className="flex-1 border border-black/10 bg-black px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-white transition-colors duration-300 hover:bg-black/90"
             >
               {copy.yes}
             </button>
@@ -155,7 +188,7 @@ export default function AudioGate() {
               aria-label={
                 language === "en" ? "Continue without sound" : "Continuer sans son"
               }
-              className="flex-1 border border-black/10 bg-white px-3 py-2.5 text-[0.62rem] font-medium uppercase tracking-[0.18em] text-black transition-colors duration-300 hover:bg-black/5"
+              className="flex-1 border border-black/10 bg-white px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-black transition-colors duration-300 hover:bg-black/5"
             >
               {copy.no}
             </button>

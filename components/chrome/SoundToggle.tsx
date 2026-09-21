@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useBackground } from "@/contexts/BackgroundContext"
 import { useLanguage } from "@/contexts/LanguageContext"
-import { ORIENTATION_GRANTED_EVENT } from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
   canUseSiteSfxOnThisDevice,
@@ -17,11 +16,11 @@ export default function SoundToggle() {
   const { mode } = useBackground()
   const { language } = useLanguage()
   const [muted, setMuted] = useState(false)
-  const [available, setAvailable] = useState(() =>
-    canUseSiteSfxOnThisDevice(),
-  )
+  const [available, setAvailable] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     setMuted(isSiteSfxMuted())
     setAvailable(canUseSiteSfxOnThisDevice())
 
@@ -29,18 +28,23 @@ export default function SoundToggle() {
       setAvailable(canUseSiteSfxOnThisDevice())
     }
 
-    window.addEventListener(ORIENTATION_GRANTED_EVENT, syncAvailability)
+    const mobileSfxQuery = window.matchMedia("(max-width: 767px)")
+    const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
+
+    mobileSfxQuery.addEventListener("change", syncAvailability)
+    coarsePointerQuery.addEventListener("change", syncAvailability)
     window.addEventListener("pageshow", syncAvailability)
     const unsubscribeMute = subscribeSiteSfxMute(setMuted)
 
     return () => {
-      window.removeEventListener(ORIENTATION_GRANTED_EVENT, syncAvailability)
+      mobileSfxQuery.removeEventListener("change", syncAvailability)
+      coarsePointerQuery.removeEventListener("change", syncAvailability)
       window.removeEventListener("pageshow", syncAvailability)
       unsubscribeMute()
     }
   }, [])
 
-  if (!available) return null
+  if (mounted && !available) return null
 
   const tone = mode === "night" ? "text-white" : "text-black"
   const inactive =
@@ -71,7 +75,7 @@ export default function SoundToggle() {
       aria-pressed={muted}
       aria-label={label}
       title={label}
-      className={`font-kode text-[0.7rem] font-normal uppercase tracking-[0.12em] transition-colors duration-300 ${
+      className={`font-kode text-[0.625rem] font-normal uppercase tracking-[0.14em] transition-colors duration-300 ${
         muted ? inactive : tone
       }`}
     >

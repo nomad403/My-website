@@ -315,7 +315,9 @@ export default function ShuffleDualLines({
         const lineNode = (
           <span
             key={`${index}-${lines[index]?.primary ?? index}`}
-            className={`block ${index > 0 ? lineGapClassName : ""} ${lineClassName}`}
+            className={`block ${
+              text.length === 0 ? "h-0 overflow-hidden" : index > 0 ? lineGapClassName : ""
+            } ${lineClassName}`}
             style={lineStyle}
           >
             {text}

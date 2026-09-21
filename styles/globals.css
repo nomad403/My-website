@@ -253,7 +253,7 @@ body {
 .liquidGlass-wrapper {
   position: relative;
   display: flex;
-  font-weight: 600;
+  font-weight: 400;
   overflow: hidden;
   color: black;
   cursor: pointer;
@@ -293,7 +293,8 @@ body {
 }
 .liquidGlass-text {
   z-index: 3;
-  font-size: 2rem;
+  font-size: 1.625rem;
+  line-height: 1.16;
   color: black;
 }
 
@@ -398,14 +399,14 @@ body {
 .tech-tag {
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 0.625rem;
   font-weight: 400;
   backdrop-filter: blur(8px);
   border: 1px solid;
   transition: all 0.2s ease;
   font-family: var(--font-enigma), ui-monospace, monospace;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .tech-tag.blue {
@@ -478,8 +479,8 @@ body {
 
 .hud-minimal {
   font-family: var(--font-enigma), ui-monospace, monospace;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.3125rem;
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #111;
@@ -509,7 +510,7 @@ body {
 .glass-container {
   position: relative;
   display: flex;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--lg-text);
   background: transparent;
   border-radius: 0.5rem;
@@ -601,7 +602,8 @@ body {
   hyphens: auto;
   max-width: 850px;
   margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  line-height: 1.62;
 }
 
 .site-chrome {
@@ -746,9 +748,9 @@ body {
   max-width: 100%;
   padding-right: var(--jump-max);
   box-sizing: border-box;
-  font-size: clamp(1.75rem, 7.5vmin, 4.25rem);
+  font-size: clamp(1.625rem, 7.25vmin, 4.25rem);
   font-weight: 400;
-  line-height: 0.92;
+  line-height: 0.96;
   color: inherit;
   opacity: 0.38;
   transition: opacity 0.35s ease;
@@ -865,7 +867,7 @@ body {
   letter-spacing: normal;
   font-size: 1rem;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.62;
   color: #0a0a0a;
 }
 
@@ -892,19 +894,19 @@ body {
 
 .projects-scroll-list__detail-eyebrow {
   margin: 0 0 0.28rem;
-  font-size: 0.72rem;
+  font-size: 0.625rem;
   font-weight: 400;
-  line-height: 1.35;
-  letter-spacing: 0.1em;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
   opacity: 1;
   color: #0a0a0a;
 }
 
 .projects-scroll-list__detail-summary {
   margin: 0 0 0.45rem;
-  font-size: 0.84rem;
+  font-size: 0.8125rem;
   font-weight: 300;
-  line-height: 1.48;
+  line-height: 1.62;
   opacity: 0.82;
   color: #0a0a0a;
 }
@@ -920,9 +922,9 @@ body {
   margin: 0 0 0.45rem;
   padding: 0;
   list-style: none;
-  font-size: 0.64rem;
+  font-size: 0.625rem;
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 1;
   color: #0a0a0a;
@@ -935,8 +937,9 @@ body {
 
 .projects-scroll-list__detail-link {
   display: inline-block;
-  font-size: 0.68rem;
+  font-size: 0.625rem;
   font-weight: 400;
+  letter-spacing: 0.12em;
   text-decoration: none;
   color: #000;
   border-bottom: 1px solid currentColor;
@@ -953,16 +956,16 @@ body {
 
   .projects-scroll-list__detail-eyebrow {
     margin: 0 0 0.4rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
     opacity: 1;
   }
 
   .projects-scroll-list__detail-summary {
     margin: 0 0 0.7rem;
-    font-size: 0.94rem;
+    font-size: 1rem;
     font-weight: 300;
-    line-height: 1.52;
+    line-height: 1.62;
     opacity: 0.82;
   }
 
@@ -973,13 +976,13 @@ body {
   .projects-scroll-list__detail-stack {
     margin: 0 0 0.7rem;
     gap: 0.3rem 0.55rem;
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
     opacity: 1;
   }
 
   .projects-scroll-list__detail-link {
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
     letter-spacing: 0.12em;
     opacity: 1;
     border-bottom-width: 1.5px;
@@ -1018,10 +1021,10 @@ body {
 
   .project-detail-panel__eyebrow {
     margin: 0 0 0.35rem;
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 400;
     line-height: 1.3;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     opacity: 1;
     color: #0a0a0a;
   }
@@ -1029,17 +1032,17 @@ body {
   .project-detail-panel__title {
     display: block;
     margin: 0 0 0.55rem;
-    font-size: clamp(1.25rem, 1.75vw, 1.7rem);
+    font-size: clamp(1.3125rem, 1.9vw, 1.625rem);
     font-weight: 400;
-    line-height: 1.1;
+    line-height: 1.08;
     color: #000;
   }
 
   .project-detail-panel__summary {
     margin: 0 0 0.85rem;
-    font-size: 0.94rem;
+    font-size: 1rem;
     font-weight: 300;
-    line-height: 1.52;
+    line-height: 1.62;
     opacity: 0.78;
     color: #0a0a0a;
     max-width: 36ch;
@@ -1048,7 +1051,7 @@ body {
   .project-detail-panel--demo .project-detail-panel__summary {
     opacity: 0.92;
     font-size: 1rem;
-    line-height: 1.48;
+    line-height: 1.62;
     max-width: 38ch;
   }
 
@@ -1067,9 +1070,9 @@ body {
     margin: 0 0 0.9rem;
     padding: 0;
     list-style: none;
-    font-size: 0.72rem;
+    font-size: 0.625rem;
     font-weight: 400;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     opacity: 1;
     color: #0a0a0a;
@@ -1082,8 +1085,9 @@ body {
 
   .project-detail-panel__link {
     display: inline-block;
-    font-size: 0.72rem;
+    font-size: 0.625rem;
     font-weight: 400;
+    letter-spacing: 0.12em;
     text-decoration: none;
     color: inherit;
     border-bottom: 1px solid currentColor;
@@ -1139,21 +1143,21 @@ body {
 }
 
 .specialist-catalog__body {
-  font-size: 0.875rem;
-  line-height: 1.65;
-  letter-spacing: -0.01em;
+  font-size: 0.8125rem;
+  line-height: 1.62;
+  letter-spacing: 0;
   font-weight: 300;
 }
 
 .specialist-catalog__lead {
   opacity: 1;
-  line-height: 1.5;
+  line-height: 1.54;
 }
 
 .specialist-catalog__service-body {
   font-size: 0.8125rem;
-  line-height: 1.6;
-  letter-spacing: -0.01em;
+  line-height: 1.62;
+  letter-spacing: 0;
   font-weight: 300;
 }
 
@@ -1192,35 +1196,35 @@ body {
 
 @media (min-width: 768px) {
   .specialist-catalog__body {
-    font-size: 0.9375rem;
-    line-height: 1.7;
+    font-size: 1rem;
+    line-height: 1.62;
   }
 
   .specialist-catalog__lead {
     font-size: 1rem;
-    line-height: 1.55;
+    line-height: 1.54;
   }
 
   .specialist-catalog__service-body {
-    font-size: 0.875rem;
-    line-height: 1.65;
+    font-size: 0.8125rem;
+    line-height: 1.62;
   }
 }
 
 @media (min-width: 1024px) {
   .specialist-catalog__body {
     font-size: 1rem;
-    line-height: 1.72;
+    line-height: 1.62;
   }
 
   .specialist-catalog__lead {
-    font-size: 1.0625rem;
-    line-height: 1.55;
+    font-size: 1.3125rem;
+    line-height: 1.42;
   }
 
   .specialist-catalog__service-body {
-    font-size: 0.9rem;
-    line-height: 1.65;
+    font-size: 1rem;
+    line-height: 1.62;
   }
 }
 
@@ -1315,5 +1319,3 @@ body {
 .custom-scrollbar:not(.scrollable)::-webkit-scrollbar {
   display: none;
 }
-
-

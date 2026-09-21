@@ -50,7 +50,7 @@ export default function DemoOverlay({
             exit={{ opacity: 0, transition: { duration: 0.35 } }}
           >
             <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
-              <p className="font-kode text-xs uppercase tracking-[0.14em] text-black/45">
+              <p className="font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/45">
                 /demo
               </p>
 
@@ -66,7 +66,7 @@ export default function DemoOverlay({
                       key={option}
                       type="button"
                       onClick={() => onScopeChange(option)}
-                      className={`font-kode rounded-full border px-3 py-1.5 text-[0.65rem] uppercase tracking-[0.1em] transition-colors ${
+                      className={`font-kode rounded-full border px-3 py-1.5 text-[0.625rem] uppercase tracking-[0.12em] transition-colors ${
                         active
                           ? "border-black bg-black text-white"
                           : "border-black/20 bg-white/70 text-black/70 hover:border-black/45"
@@ -78,7 +78,7 @@ export default function DemoOverlay({
                 })}
               </div>
 
-              <div className="flex items-center gap-2 font-kode text-[0.7rem] uppercase tracking-[0.12em]">
+              <div className="flex items-center gap-2 font-kode text-[0.625rem] uppercase tracking-[0.14em]">
                 {(["fr", "en"] as const).map((code) => (
                   <button
                     key={code}
@@ -99,16 +99,16 @@ export default function DemoOverlay({
                 type="button"
                 disabled={!canStart}
                 onClick={onStart}
-                className="font-kode min-w-[10rem] rounded-full border border-black bg-black px-8 py-3 text-sm uppercase tracking-[0.16em] text-white transition-opacity disabled:cursor-wait disabled:opacity-40"
+                className="font-kode min-w-[10rem] rounded-full border border-black bg-black px-8 py-3 text-[0.8125rem] uppercase tracking-[0.12em] text-white transition-opacity disabled:cursor-wait disabled:opacity-40"
               >
                 {copy.launch}
               </button>
 
-              <p className="max-w-xs font-home-title text-sm text-black/55">
+              <p className="max-w-xs font-home-title text-base leading-[1.62] text-black/55">
                 {copy.launchHint}
               </p>
 
-              <p className="font-kode text-[0.6rem] uppercase tracking-[0.12em] text-black/30">
+              <p className="font-kode text-[0.625rem] uppercase tracking-[0.12em] text-black/30">
                 {buildDemoHref(scope, lang)}
               </p>
             </div>
@@ -126,7 +126,7 @@ export default function DemoOverlay({
             exit={{ opacity: 0, scale: 1.06 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="font-kode text-6xl text-black/80 md:text-7xl">
+            <span className="font-kode text-[4.25rem] leading-none text-black/80 md:text-[5.5rem]">
               {countdownLabel}
             </span>
           </motion.div>

@@ -18,7 +18,7 @@ import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
 import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 const FIELD_CLASS =
-  "min-h-[48px] w-full rounded-xl border border-gray-300/50 bg-white/90 px-4 py-3 font-kode text-base text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-300 placeholder-gray-500 focus:border-cyan-400 focus:outline-none md:px-6"
+  "min-h-[48px] w-full rounded-xl border border-gray-300/50 bg-white/90 px-4 py-3 font-kode text-base leading-[1.62] text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-300 placeholder-gray-500 focus:border-cyan-400 focus:outline-none md:px-6"
 
 const SHUFFLE_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?!'"
@@ -209,7 +209,7 @@ export default function ContactPageContent() {
         <div className="mx-auto flex w-full max-w-[90vw] flex-col gap-4 sm:max-w-[600px]">
           <div className="mb-2 w-full md:mb-6">
             <h1
-              className={`w-full text-left font-kode text-2xl font-normal uppercase tracking-[0.08em] transition-colors duration-300 md:text-3xl lg:text-4xl ${
+              className={`w-full whitespace-nowrap text-left font-kode text-[clamp(1.3125rem,6vw,1.625rem)] font-normal uppercase leading-[1.08] tracking-[0.06em] transition-colors duration-300 md:text-[clamp(1.625rem,3.2vw,2.125rem)] lg:text-[clamp(2rem,2.5vw,2.25rem)] ${
                 sendStatus === "error" ? "text-red-600" : "text-gray-800"
               }`}
             >
@@ -337,7 +337,7 @@ export default function ContactPageContent() {
                     >
                       <polyline points="15 18 9 12 15 6" />
                     </svg>
-                    <span className="font-kode text-sm uppercase tracking-wide">
+                    <span className="font-kode text-[0.8125rem] uppercase tracking-[0.08em]">
                       {t("contact.actions.back")}
                     </span>
                   </motion.button>
@@ -365,7 +365,7 @@ export default function ContactPageContent() {
                     : "border-cyan-400 text-cyan-500 hover:scale-105 hover:text-cyan-600"
                 }`}
               >
-                <span className="font-kode text-sm uppercase tracking-wide">
+                <span className="font-kode text-[0.8125rem] uppercase tracking-[0.08em]">
                   {isSending
                     ? t("contact.actions.sending")
                     : isLastStep
@@ -417,10 +417,10 @@ export default function ContactPageContent() {
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
-                  <h4 className="mb-1 truncate font-kode text-xs uppercase tracking-wider text-current">
+                  <h4 className="mb-1 truncate font-kode text-[0.625rem] uppercase tracking-[0.12em] text-current">
                     {step.label}
                   </h4>
-                  <p className="line-clamp-2 font-home-title text-xs leading-relaxed text-current md:text-sm">
+                  <p className="line-clamp-2 font-home-title text-[0.8125rem] leading-[1.62] text-current md:text-base">
                     {formData[step.field]}
                   </p>
                 </div>

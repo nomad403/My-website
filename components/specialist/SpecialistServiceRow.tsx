@@ -70,7 +70,7 @@ export default function SpecialistServiceRow({
         >
           {showDemoSubject && demoFocusVoice ? (
             <ShuffleDualLines
-              className={`min-w-0 flex-1 font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] md:text-[1.0625rem] ${
+              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.06em] md:text-[1.3125rem] ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               lines={[
@@ -91,7 +91,7 @@ export default function SpecialistServiceRow({
             />
           ) : (
             <ShuffleText
-              className={`font-enigma text-[0.9375rem] font-normal uppercase tracking-[0.06em] group-hover:text-inherit md:text-[1.0625rem] ${
+              className={`font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.06em] group-hover:text-inherit md:text-[1.3125rem] ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               shuffleDuration={150}
@@ -103,7 +103,7 @@ export default function SpecialistServiceRow({
             </ShuffleText>
           )}
           <motion.span
-            className={`font-enigma inline-block shrink-0 origin-center text-xl font-normal leading-none md:text-2xl ${
+            className={`font-enigma inline-block shrink-0 origin-center text-[1.3125rem] font-normal leading-none md:text-[1.625rem] ${
               isOpen
                 ? "text-cyan-600"
                 : "text-black/55 group-hover:text-cyan-600"

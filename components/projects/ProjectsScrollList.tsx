@@ -464,7 +464,7 @@ export default function ProjectsScrollList({
             <li
               ref={measureRef}
               aria-hidden
-              className="projects-scroll-list__item projects-scroll-list__item--measure font-kode uppercase tracking-[0.14em]"
+              className="projects-scroll-list__item projects-scroll-list__item--measure font-kode uppercase tracking-[0.08em]"
             >
               <div className="projects-scroll-list__title-row">
                 <span className="projects-scroll-list__item-label">
@@ -483,7 +483,7 @@ export default function ProjectsScrollList({
                   <li
                     key={key}
                     data-virtual-index={virtualIndex}
-                    className={`projects-scroll-list__item font-kode uppercase tracking-[0.14em] ${
+                    className={`projects-scroll-list__item font-kode uppercase tracking-[0.08em] ${
                       isActive ? "projects-scroll-list__item--snapped" : ""
                     } ${
                       detailVisible
@@ -573,7 +573,7 @@ export default function ProjectsScrollList({
                           <div className="projects-scroll-list__detail-inner">
                             {(demoFocusVoice?.detailEyebrow ??
                               item.description) ? (
-                              <p className="projects-scroll-list__detail-eyebrow font-kode uppercase tracking-[0.1em]">
+                              <p className="projects-scroll-list__detail-eyebrow font-kode uppercase tracking-[0.12em]">
                                 {demoFocusVoice?.detailEyebrow ??
                                   item.description}
                               </p>
@@ -595,7 +595,7 @@ export default function ProjectsScrollList({
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="projects-scroll-list__detail-link font-kode uppercase tracking-[0.1em]"
+                                className="projects-scroll-list__detail-link font-kode uppercase tracking-[0.12em]"
                                 onClick={(event) => event.stopPropagation()}
                               >
                                 {viewLabel}

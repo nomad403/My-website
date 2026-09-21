@@ -14,8 +14,8 @@ interface HeaderLogoProps {
 }
 
 const LOGO_DUAL_LINES = [
-  { primary: "GLENN", alternate: "NOMAD" },
-  { primary: "RICHARD", alternate: "403" },
+  { primary: "GLENN", alternate: "nomad403" },
+  { primary: "RICHARD", alternate: "" },
 ] as const
 
 export default function HeaderLogo({
@@ -28,8 +28,8 @@ export default function HeaderLogo({
   // mais toujours au-dessus de la nav (0.95rem).
   const sizeClass =
     variant === "loader"
-      ? "text-[1.2rem] md:text-[1.28rem]"
-      : "text-[1.2rem]"
+      ? "text-[1.125rem] md:text-[1.25rem]"
+      : "text-[1rem] md:text-[1.125rem]"
 
   const alignClass =
     variant === "loader" ? "inline-block text-center" : "block w-fit text-left cursor-default"
@@ -45,7 +45,7 @@ export default function HeaderLogo({
   return (
     <ShuffleDualLines
       lines={lines}
-      className={`${alignClass} font-kode font-normal uppercase leading-[0.95] tracking-[0.06em] ${sizeClass} ${colorClass} ${className}`}
+      className={`${alignClass} font-kode font-normal leading-[1] tracking-[0.05em] ${sizeClass} ${colorClass} ${className}`}
       enableHover={variant === "header"}
       holdDurationMs={HOME_HOVER_HOLD_MS}
       shuffleDurationMs={HOME_TITLE_SHUFFLE_MS}

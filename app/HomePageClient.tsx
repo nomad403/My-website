@@ -64,7 +64,7 @@ export default function HomePageClient({
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
   const { visible: isAudioGateVisible } = useAudioGate()
-  const shouldRenderSiteChrome = !isAudioGateVisible
+  const shouldRenderSiteChrome = isMobileViewport || !isAudioGateVisible
   const shouldRenderSiteFooter = shouldRenderSiteChrome
   const { stage, showSpheres, showAscii } = useProgressiveLoad(profile, {
     skipParticles: true,
