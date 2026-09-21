@@ -39,7 +39,7 @@ const PAGE_COLORS = {
   home: [0xff0000, 0x0, 0xffffff], // Rouge, noir, blanc (couleurs actuelles)
   projects: [0x00e5ff, 0xff00aa, 0x00ff88], // Cyan, magenta, vert cyberpunk
   specialist: [0xff6b00, 0x00e5ff, 0xffffff], // Palette dédiée pour specialist
-  contact: [0xffffff, 0x00e5ff, 0xff6b00], // Palette dédiée pour contact (blanc, cyan, orange)
+  contact: [0x00d9ff, 0x7cf7ff, 0xffffff], // Palette contact : cyan digital, cyan clair, blanc
 };
 
 export default function SpheresPacking({

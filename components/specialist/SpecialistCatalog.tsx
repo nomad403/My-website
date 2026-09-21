@@ -91,12 +91,12 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
           <section className="specialist-catalog__list-pane relative min-h-0 min-w-0 lg:col-span-8 xl:col-span-7">
             <div className="specialist-catalog__scroller relative lg:absolute lg:inset-0 lg:overflow-y-auto lg:overscroll-contain">
               <div className="specialist-catalog__track space-y-14 pb-[max(7rem,18vh)] md:space-y-16 md:pb-[max(8rem,20vh)]">
-                {SPECIALIST_CATALOG.map((category) => (
+                {SPECIALIST_CATALOG.map((category, categoryIndex) => (
                   <div
                     key={category.id}
                     aria-labelledby={`specialist-cat-${category.id}`}
                   >
-                    <div className="mb-5 md:mb-6">
+                    <div className="mb-5 flex items-end justify-between gap-4 border-b border-black/15 pb-3 md:mb-6 md:pb-4">
                       <h2
                         id={`specialist-cat-${category.id}`}
                         className="font-kode text-[1rem] font-normal uppercase leading-[1.16] tracking-[0.1em] text-black md:text-[1.3125rem] lg:text-[1.625rem]"
@@ -109,14 +109,18 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                           {pickLocalized(category.title, lang)}
                         </ShuffleText>
                       </h2>
+                      <span className="font-kode text-[0.625rem] font-normal uppercase leading-none tracking-[0.14em] text-black/35 md:text-[0.8125rem]">
+                        {String(categoryIndex + 1).padStart(2, "0")}
+                      </span>
                     </div>
 
                     <div className="border-y-2 border-black/30">
-                      {category.services.map((service) => (
+                      {category.services.map((service, serviceIndex) => (
                         <SpecialistServiceRow
                           key={service.id}
                           service={service}
                           lang={lang}
+                          serviceIndex={serviceIndex}
                           isOpen={activeService === service.id}
                           onToggle={handleToggle}
                           reducedMotion={reducedMotion}

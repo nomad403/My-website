@@ -3,8 +3,8 @@
 import { useEffect } from "react"
 import { playButtonSfx, preloadButtonSfx } from "@/lib/ui/button-sfx"
 import {
-  hasSiteSfxPermission,
   activateSiteSfx,
+  isSiteSfxMuted,
   unlockSiteSfx,
   startAmbientLoop,
 } from "@/lib/ui/site-sfx"
@@ -34,14 +34,14 @@ function findInteractiveTarget(target: EventTarget | null) {
 export default function ButtonSfxListener() {
   useEffect(() => {
     const unlock = () => {
-      if (!hasSiteSfxPermission()) return
+      if (isSiteSfxMuted()) return
       activateSiteSfx()
       startAmbientLoop()
       void unlockSiteSfx()
     }
     const handleClick = (event: MouseEvent) => {
       if (!findInteractiveTarget(event.target)) return
-      if (!hasSiteSfxPermission()) return
+      if (isSiteSfxMuted()) return
       activateSiteSfx()
       startAmbientLoop()
       void unlockSiteSfx().then(() => {

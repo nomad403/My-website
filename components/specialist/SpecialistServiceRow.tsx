@@ -16,6 +16,7 @@ import { playSiteSfx } from "@/lib/ui/site-sfx"
 interface SpecialistServiceRowProps {
   service: SpecialistService
   lang: SpecialistLang
+  serviceIndex: number
   isOpen: boolean
   onToggle: (id: string) => void
   reducedMotion: boolean
@@ -29,6 +30,7 @@ interface SpecialistServiceRowProps {
 export default function SpecialistServiceRow({
   service,
   lang,
+  serviceIndex,
   isOpen,
   onToggle,
   reducedMotion,
@@ -68,9 +70,18 @@ export default function SpecialistServiceRow({
             onToggle(service.id)
           }}
         >
+          <span
+            className={`shrink-0 self-start pt-[0.1em] font-kode text-[0.625rem] font-normal leading-none tracking-[0.14em] md:text-[0.8125rem] ${
+              isOpen ? "text-cyan-600" : "text-black/35 group-hover:text-cyan-600"
+            }`}
+            aria-hidden="true"
+          >
+            {String(serviceIndex + 1).padStart(2, "0")}
+          </span>
+
           {showDemoSubject && demoFocusVoice ? (
             <ShuffleDualLines
-              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.06em] md:text-[1.3125rem] ${
+              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.055em] md:text-[1.3125rem] ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               lines={[
@@ -91,7 +102,7 @@ export default function SpecialistServiceRow({
             />
           ) : (
             <ShuffleText
-              className={`font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.06em] group-hover:text-inherit md:text-[1.3125rem] ${
+              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.055em] group-hover:text-inherit md:text-[1.3125rem] ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               shuffleDuration={150}
@@ -139,9 +150,11 @@ export default function SpecialistServiceRow({
               }}
               className="overflow-hidden"
             >
-              <p className="specialist-catalog__service-body max-w-xl pb-3.5 pr-10 pt-0 font-home-title text-black/70">
-                {description}
-              </p>
+              <div className="pb-4 pl-[2rem] pr-10 pt-0 md:pl-[2.75rem]">
+                <p className="specialist-catalog__service-body max-w-xl border-l border-cyan-500/35 pl-4 font-home-title text-black/70 md:pl-5">
+                  {description}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

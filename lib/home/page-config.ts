@@ -64,7 +64,7 @@ export const PAGE_CONFIG: Record<PageId, PageConfigEntry> = {
       mode: "sobel",
       invert: false,
       opacity: 0.7,
-      color: "#ffcc00",
+      color: "#00d9ff",
       fontPx: 7,
     },
   },

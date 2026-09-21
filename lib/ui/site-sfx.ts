@@ -36,7 +36,7 @@ const muteListeners = new Set<MuteListener>()
 const lastPlayedAt = new Map<SiteSfxId, number>()
 let activeShuffleStop: (() => void) | null = null
 
-function isMobileSfxDisabled() {
+function isMobileViewport() {
   if (typeof window === "undefined") return false
   return (
     window.matchMedia?.("(max-width: 767px)")?.matches === true ||
@@ -44,12 +44,15 @@ function isMobileSfxDisabled() {
   )
 }
 
+function canUseAmbientSfxOnThisDevice() {
+  return !isMobileViewport()
+}
+
 export function canUseSiteSfxOnThisDevice() {
-  return !isMobileSfxDisabled()
+  return true
 }
 
 export function activateSiteSfx() {
-  if (!canUseSiteSfxOnThisDevice()) return
   userGestureActivated = true
   if (ctx && (ctx.state === "suspended" || ctx.state === "interrupted")) {
     void ctx.resume().catch(() => undefined)
@@ -69,7 +72,6 @@ function ensureMuteFromStorage() {
 function ensureContext() {
   if (typeof window === "undefined") return null
   ensureMuteFromStorage()
-  if (!canUseSiteSfxOnThisDevice()) return null
   if (!userGestureActivated) return null
   if (!ctx) {
     const AC =
@@ -139,7 +141,7 @@ export function setAudioGateChoice(choice: AudioGateChoice) {
 
 export function hasSiteSfxPermission() {
   ensureMuteFromStorage()
-  return canUseSiteSfxOnThisDevice() && userGestureActivated && !muted
+  return userGestureActivated && !muted
 }
 
 export function setSiteSfxMuted(next: boolean) {
@@ -160,19 +162,7 @@ export function setSiteSfxMuted(next: boolean) {
   if (next) {
     stopAmbientMix()
   } else {
-    if (!canUseSiteSfxOnThisDevice()) {
-      muted = true
-      try {
-        window.localStorage.setItem(STORAGE_KEY, "1")
-      } catch {
-        /* ignore */
-      }
-      muteListeners.forEach((listener) => listener(muted))
-      return
-    }
-
     activateSiteSfx()
-    bindAmbientInteraction()
 
     if (backgroundMuted) {
       if (masterGain && ctx) {
@@ -180,40 +170,50 @@ export function setSiteSfxMuted(next: boolean) {
         masterGain.gain.cancelScheduledValues(now)
         masterGain.gain.setValueAtTime(0, now)
       }
-      return
-    }
-
-    if (!ambientRuntime) {
-      startAmbientMix()
     } else {
-      resumeAmbientMix()
-      if (!ambientLoopFrame) {
-        animateAmbientMix()
-      }
-    }
+      if (canUseAmbientSfxOnThisDevice()) {
+        bindAmbientInteraction()
 
-    if (ctx && ctx.state === "suspended") {
-      void unlockSiteSfx()
+        if (!ambientRuntime) {
+          startAmbientMix()
+        } else {
+          resumeAmbientMix()
+          if (!ambientLoopFrame) {
+            animateAmbientMix()
+          }
+        }
+      }
+
+      if (ctx && ctx.state === "suspended") {
+        void unlockSiteSfx()
+      }
     }
   }
 
   muteListeners.forEach((listener) => listener(muted))
 }
 
-function applyBackgroundMuteState() {
-  if (typeof document === "undefined") return
+function pauseForBackground() {
+  backgroundMuted = true
 
-  const isHidden = document.visibilityState !== "visible"
-  backgroundMuted = isHidden
+  if (masterGain && ctx) {
+    const now = ctx.currentTime
+    masterGain.gain.cancelScheduledValues(now)
+    masterGain.gain.setValueAtTime(0, now)
+  }
 
-  if (isHidden) {
-    if (masterGain && ctx) {
-      const now = ctx.currentTime
-      masterGain.gain.cancelScheduledValues(now)
-      masterGain.gain.setValueAtTime(0, now)
-    }
-    stopAmbientMix()
-    return
+  stopAmbientMix()
+
+  if (ctx?.state === "running") {
+    void ctx.suspend().catch(() => undefined)
+  }
+}
+
+function resumeFromBackground() {
+  backgroundMuted = false
+
+  if (!muted && userGestureActivated && ctx?.state === "suspended") {
+    void ctx.resume().catch(() => undefined)
   }
 
   if (!muted && userGestureActivated && masterGain && ctx) {
@@ -222,7 +222,7 @@ function applyBackgroundMuteState() {
     masterGain.gain.setValueAtTime(MASTER, now)
   }
 
-  if (!muted && userGestureActivated) {
+  if (!muted && userGestureActivated && canUseAmbientSfxOnThisDevice()) {
     bindAmbientInteraction()
     if (!ambientRuntime) {
       startAmbientMix()
@@ -233,6 +233,17 @@ function applyBackgroundMuteState() {
       }
     }
   }
+}
+
+function applyBackgroundMuteState() {
+  if (typeof document === "undefined") return
+
+  if (document.visibilityState !== "visible") {
+    pauseForBackground()
+    return
+  }
+
+  resumeFromBackground()
 }
 
 export function subscribeSiteSfxMute(listener: MuteListener) {
@@ -243,26 +254,21 @@ export function subscribeSiteSfxMute(listener: MuteListener) {
 }
 
 if (typeof document !== "undefined") {
-  document.addEventListener("visibilitychange", () => {
-    applyBackgroundMuteState()
-    if (document.visibilityState === "visible" && !muted && userGestureActivated) {
-      bindAmbientInteraction()
-      if (!ambientRuntime) {
-        startAmbientMix()
-      } else {
-        resumeAmbientMix()
-        if (!ambientLoopFrame) {
-          animateAmbientMix()
-        }
-      }
-    }
-  })
+  document.addEventListener("visibilitychange", applyBackgroundMuteState)
+  document.addEventListener("freeze", pauseForBackground)
+  document.addEventListener("resume", resumeFromBackground)
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", pauseForBackground)
+  window.addEventListener("pageshow", resumeFromBackground)
+  window.addEventListener("focus", resumeFromBackground)
 }
 
 function canPlay() {
   if (typeof window === "undefined") return false
   ensureMuteFromStorage()
-  if (muted || !userGestureActivated || !canUseSiteSfxOnThisDevice()) return false
+  if (muted || backgroundMuted || !userGestureActivated) return false
   return true
 }
 
@@ -580,7 +586,7 @@ function startAmbientMix() {
     ambientRuntime ||
     muted ||
     !userGestureActivated ||
-    !canUseSiteSfxOnThisDevice()
+    !canUseAmbientSfxOnThisDevice()
   ) {
     return
   }
@@ -658,7 +664,7 @@ function scheduleAmbientRetry() {
     typeof window === "undefined" ||
     muted ||
     ambientRetryTimer !== null ||
-    !canUseSiteSfxOnThisDevice()
+    !canUseAmbientSfxOnThisDevice()
   ) {
     return
   }
@@ -690,7 +696,7 @@ function attemptAmbientStart() {
     typeof window === "undefined" ||
     muted ||
     !userGestureActivated ||
-    !canUseSiteSfxOnThisDevice()
+    !canUseAmbientSfxOnThisDevice()
   ) {
     return
   }
@@ -713,7 +719,7 @@ export function startAmbientLoop() {
     typeof window === "undefined" ||
     muted ||
     ambientActivationBound ||
-    !canUseSiteSfxOnThisDevice()
+    !canUseAmbientSfxOnThisDevice()
   ) {
     return
   }
@@ -751,18 +757,22 @@ export function playSiteSfx(id: SiteSfxId, options?: SiteSfxOptions) {
       .resume()
       .then(() => {
         run()
-        bindAmbientInteraction()
-        startAmbientMix()
-        resumeAmbientMix()
+        if (canUseAmbientSfxOnThisDevice()) {
+          bindAmbientInteraction()
+          startAmbientMix()
+          resumeAmbientMix()
+        }
       })
       .catch(() => undefined)
     return
   }
 
-  bindAmbientInteraction()
-  if (userGestureActivated) {
-    startAmbientMix()
-    resumeAmbientMix()
+  if (canUseAmbientSfxOnThisDevice()) {
+    bindAmbientInteraction()
+    if (userGestureActivated) {
+      startAmbientMix()
+      resumeAmbientMix()
+    }
   }
   run()
 }
