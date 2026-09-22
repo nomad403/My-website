@@ -1,5 +1,7 @@
 "use client"
 
+import ProjectSummary from "@/components/projects/ProjectSummary"
+
 import {
   useCallback,
   useEffect,
@@ -579,9 +581,10 @@ export default function ProjectsScrollList({
                               </p>
                             ) : null}
                             {(demoFocusVoice?.detailSummary ?? item.summary) ? (
-                              <p className="projects-scroll-list__detail-summary font-home-title">
-                                {demoFocusVoice?.detailSummary ?? item.summary}
-                              </p>
+                              <ProjectSummary
+                                text={demoFocusVoice?.detailSummary ?? item.summary ?? ""}
+                                className="projects-scroll-list__detail-summary font-home-title"
+                              />
                             ) : null}
                             {item.stack && item.stack.length > 0 ? (
                               <ul className="projects-scroll-list__detail-stack font-kode">

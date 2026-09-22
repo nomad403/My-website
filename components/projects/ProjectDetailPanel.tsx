@@ -1,5 +1,7 @@
 "use client"
 
+import ProjectSummary from "@/components/projects/ProjectSummary"
+
 import { useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import type { ProjectItem, ProjectLang } from "@/lib/projects/project-items"
@@ -105,9 +107,10 @@ export default function ProjectDetailPanel({
           </h2>
 
           {summary ? (
-            <p className="project-detail-panel__summary font-home-title">
-              {summary}
-            </p>
+            <ProjectSummary
+              text={summary}
+              className="project-detail-panel__summary font-home-title"
+            />
           ) : null}
 
           {item.stack && item.stack.length > 0 ? (
