@@ -14,7 +14,7 @@ interface HeaderLogoProps {
 }
 
 const LOGO_DUAL_LINES = [
-  { primary: "GLENN", alternate: "nomad403" },
+  { primary: "GLENN", alternate: "NOMAD403" },
   { primary: "RICHARD", alternate: "" },
 ] as const
 

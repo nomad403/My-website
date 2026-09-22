@@ -36,6 +36,16 @@ const WAVE_AMP = 15
 const WAVE_LIFE_MS = 900
 const CELL_DRAW = 9
 
+type ScreensaverRenderConfig = {
+  fontSize: number
+  asciiCellPx: number
+  cellDraw: number
+  waveSpeed: number
+  waveSigma: number
+  waveAmp: number
+  waveLifeMs: number
+}
+
 type Ripple = {
   /** Origine locale dans le glyph (px). */
   ox: number
@@ -90,7 +100,42 @@ function easeOutCubic(t: number) {
   return 1 - (1 - t) ** 3
 }
 
-function buildBrandAscii(fontSize: number): AsciiLevelGrid | null {
+function isMobileViewport() {
+  if (typeof window === "undefined") return false
+  return (
+    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
+    window.matchMedia?.("(pointer: coarse)")?.matches === true
+  )
+}
+
+function getRenderConfig(): ScreensaverRenderConfig {
+  const mobile = isMobileViewport()
+  const width = window.visualViewport?.width ?? window.innerWidth
+
+  if (mobile) {
+    return {
+      fontSize: Math.min(34, Math.max(24, Math.round(width * 0.07))),
+      asciiCellPx: 4,
+      cellDraw: 6,
+      waveSpeed: 290,
+      waveSigma: 8,
+      waveAmp: 9,
+      waveLifeMs: 820,
+    }
+  }
+
+  return {
+    fontSize: Math.min(110, Math.max(44, Math.round(width * 0.09))),
+    asciiCellPx: ASCII_CELL_PX,
+    cellDraw: CELL_DRAW,
+    waveSpeed: WAVE_SPEED,
+    waveSigma: WAVE_SIGMA,
+    waveAmp: WAVE_AMP,
+    waveLifeMs: WAVE_LIFE_MS,
+  }
+}
+
+function buildBrandAscii(fontSize: number, cellPx = ASCII_CELL_PX): AsciiLevelGrid | null {
   const letterSpacingPx = Math.round(fontSize * -0.02)
   const widthPx = Math.ceil(fontSize * BRAND.length * 0.64 + fontSize * 0.45)
   const heightPx = Math.ceil(fontSize * 1.1)
@@ -104,13 +149,13 @@ function buildBrandAscii(fontSize: number): AsciiLevelGrid | null {
     heightPx,
     textOffsetX: Math.round(fontSize * 0.06),
     textOffsetY: Math.round(fontSize * 0.05),
-    cellPx: ASCII_CELL_PX,
+    cellPx,
   })
   if (!grid) return null
   return asciiGridToLevelGrid(grid)
 }
 
-function gridToInk(grid: AsciiLevelGrid): {
+function gridToInk(grid: AsciiLevelGrid, cellDraw = CELL_DRAW, waveAmp = WAVE_AMP): {
   cells: InkCell[]
   w: number
   h: number
@@ -133,7 +178,7 @@ function gridToInk(grid: AsciiLevelGrid): {
   }
 
   if (maxCol < minCol || maxRow < minRow) {
-    return { cells: [], w: CELL_DRAW, h: CELL_DRAW }
+    return { cells: [], w: cellDraw, h: cellDraw }
   }
 
   const cells: InkCell[] = []
@@ -147,16 +192,16 @@ function gridToInk(grid: AsciiLevelGrid): {
         col: localCol,
         row: localRow,
         level,
-        x: localCol * CELL_DRAW + CELL_DRAW * 0.5,
-        y: localRow * CELL_DRAW + CELL_DRAW * 0.5,
+        x: localCol * cellDraw + cellDraw * 0.5,
+        y: localRow * cellDraw + cellDraw * 0.5,
       })
     }
   }
 
   // Boîte serrée sur l’encre réelle (+ marge onde pour ne pas clipper).
-  const pad = WAVE_AMP + CELL_DRAW
-  const contentW = (maxCol - minCol + 1) * CELL_DRAW
-  const contentH = (maxRow - minRow + 1) * CELL_DRAW
+  const pad = waveAmp + cellDraw
+  const contentW = (maxCol - minCol + 1) * cellDraw
+  const contentH = (maxRow - minRow + 1) * cellDraw
   const originX = pad * 0.5
   const originY = pad * 0.5
 
@@ -181,6 +226,7 @@ function sampleRipples(
   y: number,
   ripples: Ripple[],
   now: number,
+  config: ScreensaverRenderConfig,
 ): { dx: number; dy: number; energy: number } {
   let dx = 0
   let dy = 0
@@ -188,10 +234,10 @@ function sampleRipples(
 
   for (const ripple of ripples) {
     const age = (now - ripple.born) / 1000
-    if (age < 0 || age * 1000 > WAVE_LIFE_MS) continue
+    if (age < 0 || age * 1000 > config.waveLifeMs) continue
 
-    const life = Math.exp(-age / (WAVE_LIFE_MS / 1000 / 2.1))
-    const radius = age * WAVE_SPEED
+    const life = Math.exp(-age / (config.waveLifeMs / 1000 / 2.1))
+    const radius = age * config.waveSpeed
     const vx = x - ripple.ox
     const vy = y - ripple.oy
     const dist = Math.hypot(vx, vy)
@@ -199,13 +245,13 @@ function sampleRipples(
     const ny = dist > 0.001 ? vy / dist : 0
 
     const front = dist - radius
-    const envelope = Math.exp(-(front * front) / (2 * WAVE_SIGMA * WAVE_SIGMA))
+    const envelope = Math.exp(-(front * front) / (2 * config.waveSigma * config.waveSigma))
     // Légère oscillation secondaire pour le grain ASCII, très contenue.
     const grain = 1 + Math.sin(dist * 0.22 - age * 14) * 0.12
     const impulse = envelope * life * grain
 
-    dx += nx * impulse * WAVE_AMP
-    dy += ny * impulse * WAVE_AMP
+    dx += nx * impulse * config.waveAmp
+    dy += ny * impulse * config.waveAmp
     energy += impulse
   }
 
@@ -302,10 +348,8 @@ export default function DvdScreensaver() {
     if (!ctx) return
 
     const boot = async () => {
-      const fontSize = Math.min(
-        110,
-        Math.max(44, Math.round(window.innerWidth * 0.09)),
-      )
+      const renderConfig = getRenderConfig()
+      const { fontSize } = renderConfig
       try {
         await document.fonts.load(
           `${HOME_BRAND_FONT_WEIGHT} ${fontSize}px "Electric Blue"`,
@@ -315,10 +359,14 @@ export default function DvdScreensaver() {
       }
       if (cancelled) return
 
-      const grid = buildBrandAscii(fontSize)
+      const grid = buildBrandAscii(fontSize, renderConfig.asciiCellPx)
       const packed = grid
-        ? gridToInk(grid)
-        : { cells: [] as InkCell[], w: CELL_DRAW * 8, h: CELL_DRAW * 3 }
+        ? gridToInk(grid, renderConfig.cellDraw, renderConfig.waveAmp)
+        : {
+            cells: [] as InkCell[],
+            w: renderConfig.cellDraw * 8,
+            h: renderConfig.cellDraw * 3,
+          }
       inkRef.current = packed.cells
       glyphSizeRef.current = { w: packed.w, h: packed.h }
 
@@ -393,7 +441,7 @@ export default function DvdScreensaver() {
         tickRef.current += dt * 60
 
         ripplesRef.current = ripplesRef.current.filter(
-          (r) => now - r.born < WAVE_LIFE_MS,
+          (r) => now - r.born < renderConfig.waveLifeMs,
         )
 
         const blend = blendRef.current
@@ -477,7 +525,7 @@ export default function DvdScreensaver() {
         ctx.fillStyle = "#ffffff"
         ctx.fillRect(0, 0, vw, vh)
 
-        ctx.font = `700 ${CELL_DRAW + 1}px "Geist Mono", ui-monospace, monospace`
+        ctx.font = `700 ${renderConfig.cellDraw + 1}px "Geist Mono", ui-monospace, monospace`
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
         ctx.fillStyle = colorRef.current
@@ -486,7 +534,13 @@ export default function DvdScreensaver() {
         const tick = tickRef.current
 
         for (const cell of inkRef.current) {
-          const { dx, dy, energy } = sampleRipples(cell.x, cell.y, ripples, now)
+          const { dx, dy, energy } = sampleRipples(
+            cell.x,
+            cell.y,
+            ripples,
+            now,
+            renderConfig,
+          )
           const px = x + cell.x + dx
           const py = y + cell.y + dy
           const ch = glyphChar(cell.level, cell.col, cell.row, tick, energy)
