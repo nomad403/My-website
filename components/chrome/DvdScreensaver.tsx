@@ -115,11 +115,11 @@ function getRenderConfig(): ScreensaverRenderConfig {
   if (mobile) {
     return {
       fontSize: Math.min(34, Math.max(24, Math.round(width * 0.07))),
-      asciiCellPx: 4,
-      cellDraw: 6,
-      waveSpeed: 290,
-      waveSigma: 8,
-      waveAmp: 9,
+      asciiCellPx: 3,
+      cellDraw: 5,
+      waveSpeed: 250,
+      waveSigma: 7,
+      waveAmp: 7,
       waveLifeMs: 820,
     }
   }
