@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-
-const MOBILE_QUERY = "(max-width: 767px)"
+import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 
 function isVerticallyScrollable(el: Element) {
   const style = window.getComputedStyle(el)
@@ -30,7 +29,7 @@ export function useLockMobileDocumentScroll(enabled = true) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return
 
-    const mq = window.matchMedia(MOBILE_QUERY)
+    const mq = window.matchMedia(MOBILE_VIEWPORT_QUERY)
     let attached = false
     let activeScroller: HTMLElement | null = null
     let touchStartY = 0

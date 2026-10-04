@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import {
   activateSiteSfx,
@@ -36,7 +37,7 @@ function shouldForceGateOnReload() {
 function shouldDisableGateOnMobile() {
   if (typeof window === "undefined") return false
   return (
-    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
+    window.matchMedia?.(MOBILE_VIEWPORT_QUERY)?.matches === true ||
     window.matchMedia?.("(pointer: coarse)")?.matches === true
   )
 }
@@ -50,10 +51,22 @@ export function useAudioGate() {
   return useContext(AudioGateContext)
 }
 
-export function AudioGateProvider({ children }: { children: ReactNode }) {
-  const [visible, setVisible] = useState(true)
+export function AudioGateProvider({
+  children,
+  disabled = false,
+}: {
+  children: ReactNode
+  /** Capture mode must not place an interaction gate in recorded footage. */
+  disabled?: boolean
+}) {
+  const [visible, setVisible] = useState(!disabled)
 
   useEffect(() => {
+    if (disabled) {
+      setVisible(false)
+      return
+    }
+
     const syncVisibility = () => {
       if (shouldDisableGateOnMobile()) {
         setVisible(false)
@@ -83,7 +96,7 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
       syncVisibility()
     }
 
-    const mobileGateQuery = window.matchMedia("(max-width: 767px)")
+    const mobileGateQuery = window.matchMedia(MOBILE_VIEWPORT_QUERY)
     const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
 
     window.addEventListener("pageshow", onPageShow)
@@ -95,7 +108,7 @@ export function AudioGateProvider({ children }: { children: ReactNode }) {
       mobileGateQuery.removeEventListener("change", syncVisibility)
       coarsePointerQuery.removeEventListener("change", syncVisibility)
     }
-  }, [])
+  }, [disabled])
 
   return (
     <AudioGateContext.Provider value={{ visible, setVisible }}>

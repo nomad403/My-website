@@ -1,15 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
-const MOBILE_QUERY = "(max-width: 767px)"
+import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 
 export function useMobileViewport() {
   // Toujours false au SSR + 1er rendu client → évite les mismatches d'hydratation.
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY)
+    const mq = window.matchMedia(MOBILE_VIEWPORT_QUERY)
     const update = () => setIsMobile(mq.matches)
     update()
     mq.addEventListener("change", update)

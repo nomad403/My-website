@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { attachOrientationPermissionOnBackgroundGesture, notifyOrientationGranted } from "@/lib/ui/interaction";
 import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/ascii/viewport-bleed";
 import { subscribeDemoPointer } from "@/lib/demo/demo-pointer-store";
+import { getCaptureMode, getCaptureScale } from "@/lib/capture/config";
 
 /**
  * Typage minimal du module ESM exposé par le CDN.
@@ -96,8 +97,18 @@ export default function SpheresPacking({
         onCanvasReady?.(canvas);
         const resize = () => {
           const bleed = VIEWPORT_BLEED_PX * 2;
-          canvas.width = window.innerWidth + bleed;
-          canvas.height = window.innerHeight + bleed;
+          const logicalWidth = window.innerWidth + bleed;
+          const logicalHeight = window.innerHeight + bleed;
+          // The iframe remains logically 1080 × 1920. In capture mode the
+          // backing buffer follows the host scale so WebGL is not enlarged as
+          // a low-resolution bitmap by the outer compositing transform.
+          const captureScale = getCaptureMode(window.location.search) === "frame"
+            ? getCaptureScale(window.location.search)
+            : 1;
+          canvas.width = Math.round(logicalWidth * captureScale);
+          canvas.height = Math.round(logicalHeight * captureScale);
+          canvas.style.width = `${logicalWidth}px`;
+          canvas.style.height = `${logicalHeight}px`;
         };
         resize();
         window.addEventListener("resize", resize);

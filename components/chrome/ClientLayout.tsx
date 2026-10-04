@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { BackgroundProvider } from "@/contexts/BackgroundContext"
 import { PageProvider } from "@/contexts/PageContext"
 import { LanguageProvider } from "@/contexts/LanguageContext"
@@ -13,26 +13,39 @@ import ButtonSfxListener from "@/components/chrome/ButtonSfxListener"
 import DvdScreensaver from "@/components/chrome/DvdScreensaver"
 import AudioGate, { AudioGateProvider } from "@/components/chrome/AudioGate"
 import { useLockMobileDocumentScroll } from "@/hooks/useLockMobileDocumentScroll"
+import CaptureViewport from "@/components/capture/CaptureViewport"
+import CaptureDocument from "@/components/capture/CaptureDocument"
+import { getCaptureMode } from "@/lib/capture/config"
 
 interface ClientLayoutProps {
   children: ReactNode
 }
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
-  useLockMobileDocumentScroll(true)
+  // Start in the SSR-safe state, then read the query string after hydration.
+  const [captureMode, setCaptureMode] = useState<"off" | "host" | "frame">("off")
+
+  useEffect(() => {
+    setCaptureMode(getCaptureMode(window.location.search))
+  }, [])
+
+  useLockMobileDocumentScroll(captureMode === "off")
+
+  if (captureMode === "host") return <CaptureViewport />
 
   return (
     <LanguageProvider>
       <BackgroundProvider>
+        {captureMode === "frame" && <CaptureDocument />}
         <DynamicFavicon />
-        <AudioGateProvider>
+        <AudioGateProvider disabled={captureMode === "frame"}>
           <PageProvider>
             <DynamicSocialTags />
             <JsonLdWebsite />
             <BackgroundLayers />
             <CustomCursor />
             <ButtonSfxListener />
-            <AudioGate />
+            {captureMode !== "frame" && <AudioGate />}
             <DvdScreensaver />
             {/* Forcer la présence de la fonte dans le DOM */}
             <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">

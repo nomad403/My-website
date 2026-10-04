@@ -157,7 +157,12 @@ export default function HomePageClient({
     playSiteSfx("nav.page")
 
     if (typeof window !== "undefined" && !demoMode) {
-      window.history.pushState({}, "", pageIdToPath(newPage))
+      const nextUrl = new URL(pageIdToPath(newPage), window.location.origin)
+      const capture = new URLSearchParams(window.location.search).get("capture")
+      const captureScale = new URLSearchParams(window.location.search).get("captureScale")
+      if (capture) nextUrl.searchParams.set("capture", capture)
+      if (captureScale) nextUrl.searchParams.set("captureScale", captureScale)
+      window.history.pushState({}, "", `${nextUrl.pathname}${nextUrl.search}`)
     }
 
     const newConfig = getPageConfig(newPage)

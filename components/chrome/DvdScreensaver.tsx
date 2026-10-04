@@ -10,6 +10,7 @@ import {
 import { rasterTextToAsciiGrid } from "@/lib/ascii/raster-text-ascii"
 import { HOME_BRAND_FONT_WEIGHT } from "@/lib/home/home-title-style"
 import { subscribeDemoPointer } from "@/lib/demo/demo-pointer-store"
+import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 
 /** Palette site — lisible sur fond blanc. */
 const SITE_COLORS = [
@@ -103,7 +104,7 @@ function easeOutCubic(t: number) {
 function isMobileViewport() {
   if (typeof window === "undefined") return false
   return (
-    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
+    window.matchMedia?.(MOBILE_VIEWPORT_QUERY)?.matches === true ||
     window.matchMedia?.("(pointer: coarse)")?.matches === true
   )
 }

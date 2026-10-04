@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useBackground } from "@/contexts/BackgroundContext"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 import {
   activateSiteSfx,
   canUseSiteSfxOnThisDevice,
@@ -28,7 +29,7 @@ export default function SoundToggle() {
       setAvailable(canUseSiteSfxOnThisDevice())
     }
 
-    const mobileSfxQuery = window.matchMedia("(max-width: 767px)")
+    const mobileSfxQuery = window.matchMedia(MOBILE_VIEWPORT_QUERY)
     const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
 
     mobileSfxQuery.addEventListener("change", syncAvailability)
