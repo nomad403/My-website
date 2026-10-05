@@ -3,7 +3,10 @@ import { useEffect, useRef } from "react";
 import { attachOrientationPermissionOnBackgroundGesture, notifyOrientationGranted } from "@/lib/ui/interaction";
 import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/ascii/viewport-bleed";
 import { subscribeDemoPointer } from "@/lib/demo/demo-pointer-store";
-import { getCaptureMode, getCaptureScale } from "@/lib/capture/config";
+import { isCaptureMode } from "@/lib/capture/mode";
+import type { AsciiGpuSource } from "@/lib/ascii/ascii-gpu-pass";
+import type { BufferGeometry, DirectionalLight } from "three";
+import { getPerformanceProfile, type PerformanceProfile } from "@/lib/ui/performance";
 
 /**
  * Typage minimal du module ESM exposé par le CDN.
@@ -17,9 +20,16 @@ type Spheres2Ctor = (
     maxSize?: number;
   }
 ) => {
+  three: AsciiGpuSource["three"] & {
+    maxPixelRatio?: number;
+    resize: () => void;
+    onAfterResize: () => void;
+  };
   dispose: () => void;
   togglePause: () => void;
   spheres: {
+    geometry: BufferGeometry;
+    directionalLight: DirectionalLight;
     setColors: (colors: number[]) => void;
     light1: { color: { set: (hex: number) => void } };
     physics?: {
@@ -34,6 +44,9 @@ type Spheres2Ctor = (
 
 const CDN_ESM =
   "https://cdn.jsdelivr.net/npm/threejs-components@0.0.8/build/backgrounds/spheres2.cdn.min.js";
+// Reuse the exact module already imported by the CDN component, not a second
+// bundled copy of Three.js.
+const THREE_ESM = "https://cdn.jsdelivr.net/npm/three@0.170.0/+esm";
 
 // Couleurs par page
 const PAGE_COLORS = {
@@ -50,6 +63,9 @@ export default function SpheresPacking({
   className,
   currentPage = "home",
   onCanvasReady,
+  onGpuReady,
+  gpuAsciiVisible = false,
+  renderQuality = getPerformanceProfile("high").spheres,
   visible = true,
   /** Force une trajectoire simulée (démo) : pas de souris, pas de gyro réel. */
   simulateTilt = false,
@@ -60,6 +76,9 @@ export default function SpheresPacking({
   className?: string;
   currentPage?: string;
   onCanvasReady?: (c: HTMLCanvasElement) => void;
+  onGpuReady?: (source: AsciiGpuSource | null) => void;
+  gpuAsciiVisible?: boolean;
+  renderQuality?: PerformanceProfile["spheres"];
   visible?: boolean;
   simulateTilt?: boolean;
 }) {
@@ -80,39 +99,28 @@ export default function SpheresPacking({
 
   useEffect(() => {
     let cancelled = false;
-    let removeResize: (() => void) | null = null;
 
     const init = async () => {
       if (typeof window === "undefined") return;
 
       try {
-        const mod: any = await import(
-          /* webpackIgnore: true */ /* @vite-ignore */ CDN_ESM
-        );
+        const [mod, api] = await Promise.all([
+          import(/* webpackIgnore: true */ /* @vite-ignore */ CDN_ESM),
+          import(/* webpackIgnore: true */ /* @vite-ignore */ THREE_ESM) as Promise<AsciiGpuSource["api"]>,
+        ]);
         const ctor: Spheres2Ctor = (mod?.default || mod) as Spheres2Ctor;
 
         if (cancelled) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
-        onCanvasReady?.(canvas);
-        const resize = () => {
+        const resizeCss = () => {
           const bleed = VIEWPORT_BLEED_PX * 2;
           const logicalWidth = window.innerWidth + bleed;
           const logicalHeight = window.innerHeight + bleed;
-          // The iframe remains logically 1080 × 1920. In capture mode the
-          // backing buffer follows the host scale so WebGL is not enlarged as
-          // a low-resolution bitmap by the outer compositing transform.
-          const captureScale = getCaptureMode(window.location.search) === "frame"
-            ? getCaptureScale(window.location.search)
-            : 1;
-          canvas.width = Math.round(logicalWidth * captureScale);
-          canvas.height = Math.round(logicalHeight * captureScale);
           canvas.style.width = `${logicalWidth}px`;
           canvas.style.height = `${logicalHeight}px`;
         };
-        resize();
-        window.addEventListener("resize", resize);
-        removeResize = () => window.removeEventListener("resize", resize);
+        resizeCss();
 
         const inst = ctor(canvas, {
           count,
@@ -128,6 +136,37 @@ export default function SpheresPacking({
         }
         instanceRef.current = inst;
         simPausedRef.current = false;
+        const renderOriginal = inst.three.render;
+        // Don't render an invisible full-resolution frame while React loads
+        // the ASCII pass. Physics continues; the pass enables drawing itself.
+        if (onGpuReady) inst.three.render = () => {};
+        // The library overwrites canvas dimensions in its own resize path.
+        // Apply the DPR limit to the actual renderer, not only the DOM canvas.
+        const configureRenderer = () => {
+          const pixelRatio = isCaptureMode(window.location.search)
+            ? Math.min(window.devicePixelRatio || 1, 3)
+            : Math.min(window.devicePixelRatio || 1, renderQuality.maxPixelRatio,
+              Math.sqrt(renderQuality.maxPixelCount / Math.max(1, window.innerWidth * window.innerHeight)));
+          inst.three.maxPixelRatio = pixelRatio;
+          if (inst.three.renderer.getPixelRatio() !== pixelRatio) {
+            inst.three.renderer.setPixelRatio(pixelRatio);
+          }
+          resizeCss();
+        };
+        inst.three.onAfterResize = configureRenderer;
+        configureRenderer();
+        inst.three.resize();
+        // At ASCII sampling resolution these extra polygons/shadow texels
+        // contribute no useful detail. Physics, count and materials stay intact.
+        const previousGeometry = inst.spheres.geometry;
+        inst.spheres.geometry = new api.SphereGeometry(1, renderQuality.widthSegments, renderQuality.heightSegments);
+        previousGeometry.dispose();
+        const shadow = inst.spheres.directionalLight.shadow;
+        shadow.mapSize.set(renderQuality.shadowMapSize, renderQuality.shadowMapSize);
+        shadow.map?.dispose();
+        shadow.map = null;
+        onCanvasReady?.(canvas);
+        onGpuReady?.({ api, three: inst.three, renderOriginal });
 
         // Si l’onglet est déjà masqué au montage, synchroniser la pause.
         if (document.hidden) {
@@ -145,7 +184,7 @@ export default function SpheresPacking({
 
     return () => {
       cancelled = true;
-      removeResize?.();
+      onGpuReady?.(null);
       if (instanceRef.current) {
         try {
           instanceRef.current.dispose();
@@ -154,7 +193,7 @@ export default function SpheresPacking({
       }
       simPausedRef.current = false;
     };
-  }, [count, minSize, maxSize, onCanvasReady]);
+  }, [count, minSize, maxSize, onCanvasReady, onGpuReady, renderQuality]);
 
   // Pause / reprise fiables (visibility + bfcache), sans détruire le WebGL.
   useEffect(() => {
@@ -736,7 +775,7 @@ export default function SpheresPacking({
   // Sur les pages avec ASCII, le canvas est actif mais caché visuellement pour l'ASCII
   const pagesWithAscii = ["home", "projects", "specialist", "contact"];
   const visuallyHidden = pagesWithAscii.includes(currentPage);
-  const shouldShowVisually = visible && !visuallyHidden;
+  const shouldShowVisually = visible && (!visuallyHidden || gpuAsciiVisible);
 
   const bleedStyle = viewportBleedInsets()
 

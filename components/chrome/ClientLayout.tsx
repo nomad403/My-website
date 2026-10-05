@@ -13,9 +13,7 @@ import ButtonSfxListener from "@/components/chrome/ButtonSfxListener"
 import DvdScreensaver from "@/components/chrome/DvdScreensaver"
 import AudioGate, { AudioGateProvider } from "@/components/chrome/AudioGate"
 import { useLockMobileDocumentScroll } from "@/hooks/useLockMobileDocumentScroll"
-import CaptureViewport from "@/components/capture/CaptureViewport"
-import CaptureDocument from "@/components/capture/CaptureDocument"
-import { getCaptureMode } from "@/lib/capture/config"
+import { isCaptureMode } from "@/lib/capture/mode"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -23,29 +21,26 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   // Start in the SSR-safe state, then read the query string after hydration.
-  const [captureMode, setCaptureMode] = useState<"off" | "host" | "frame">("off")
+  const [captureMode, setCaptureMode] = useState(false)
 
   useEffect(() => {
-    setCaptureMode(getCaptureMode(window.location.search))
+    setCaptureMode(isCaptureMode(window.location.search))
   }, [])
 
-  useLockMobileDocumentScroll(captureMode === "off")
-
-  if (captureMode === "host") return <CaptureViewport />
+  useLockMobileDocumentScroll(true)
 
   return (
     <LanguageProvider>
       <BackgroundProvider>
-        {captureMode === "frame" && <CaptureDocument />}
         <DynamicFavicon />
-        <AudioGateProvider disabled={captureMode === "frame"}>
+        <AudioGateProvider disabled={captureMode}>
           <PageProvider>
             <DynamicSocialTags />
             <JsonLdWebsite />
             <BackgroundLayers />
             <CustomCursor />
             <ButtonSfxListener />
-            {captureMode !== "frame" && <AudioGate />}
+            {!captureMode && <AudioGate />}
             <DvdScreensaver />
             {/* Forcer la présence de la fonte dans le DOM */}
             <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">

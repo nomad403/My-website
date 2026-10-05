@@ -389,7 +389,7 @@ export default function BrandAsciiTitle({
   }
 
   return (
-    <div className="mt-4 md:mt-6" style={{ marginLeft: `${marginLeft}px` }}>
+    <div data-capture="home-brand" className="mt-4 md:mt-6" style={{ marginLeft: `${marginLeft}px` }}>
       <div
         ref={hitRef}
         className={`relative select-none ${canHover ? "cursor-crosshair" : "cursor-default"}`}

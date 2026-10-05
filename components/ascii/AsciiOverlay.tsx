@@ -86,7 +86,8 @@ export default function AsciiOverlay({
       const charW = measureCharWidth(fontPx, family)
       const cols = fixedCols ?? Math.max(1, Math.ceil((vw + bleed) / charW))
       const rows = Math.max(1, Math.ceil((vh + bleed) / fontPx))
-      setGrid({ cols, rows });
+      setGrid(previous => previous.cols === cols && previous.rows === rows
+        ? previous : { cols, rows });
     };
     calc();
     if (typeof window !== 'undefined') {
@@ -128,7 +129,8 @@ export default function AsciiOverlay({
     const off = document.createElement("canvas");
     off.width = w;
     off.height = h;
-    const octx = off.getContext("2d", { willReadFrequently: true })!;
+    const octx = off.getContext("2d", { willReadFrequently: true });
+    if (!octx) return;
     const levels = gradient.length - 1;
 
     // Buffers réutilisables pour éviter les allocations
@@ -142,16 +144,20 @@ export default function AsciiOverlay({
 
     let raf = 0;
     let last = 0;
-    let frameCount = 0;
-    const frameDelay = 1000 / fps;
+    // Compute only frames that will be displayed. Keep the original visual
+    // refresh rate, rather than discarding expensive completed frames.
+    const frameDelay = 1000 * Math.max(1, domUpdateEvery) / Math.max(1, fps);
+    let adaptiveDelay = frameDelay;
+    let previousText = "";
 
     const draw = (t: number) => {
-      if (!runningRef.current) return;
-      if (t - last < frameDelay) {
+      if (!runningRef.current || document.hidden) return;
+      if (t - last < adaptiveDelay) {
         raf = requestAnimationFrame(draw);
         return;
       }
       last = t;
+      const startedAt = performance.now();
 
       // Nettoie la frame précédente et remplit un fond
       octx.globalCompositeOperation = "source-over"; // par sécurité
@@ -179,24 +185,17 @@ export default function AsciiOverlay({
             : (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
         }
         // Sobel optimisé : précalculer les indices
-        const kx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
-        const ky = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
         for (let y = 1; y < h - 1; y++) {
           const yw = y * w;
           for (let x = 1; x < w - 1; x++) {
             const idx = yw + x;
-            let gx = 0, gy = 0;
-            let p = 0;
-            // Boucle optimisée avec indices précalculés
-            for (let j = -1; j <= 1; j++) {
-              const jw = (y + j) * w;
-              for (let i = -1; i <= 1; i++) {
-                const v = g[jw + x + i];
-                gx += v * kx[p];
-                gy += v * ky[p];
-                p++;
-              }
-            }
+            const top = idx - w;
+            const bottom = idx + w;
+            const gx = -g[top - 1] + g[top + 1]
+              - 2 * g[idx - 1] + 2 * g[idx + 1]
+              - g[bottom - 1] + g[bottom + 1];
+            const gy = -g[top - 1] - 2 * g[top] - g[top + 1]
+              + g[bottom - 1] + 2 * g[bottom] + g[bottom + 1];
             // Math.hypot peut être remplacé par une approximation plus rapide
             out[idx] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
           }
@@ -222,12 +221,17 @@ export default function AsciiOverlay({
         lines[y] = row.join("");
       }
       
-      // Update du DOM une frame sur deux pour réduire les reflows
-      // Utiliser innerHTML peut être plus rapide que textContent pour de gros contenus
-      frameCount++;
-      if (frameCount % domUpdateEvery === 0 && preRef.current) {
-        preRef.current.textContent = lines.join("\n");
+      const text = lines.join("\n");
+      if (text !== previousText && preRef.current) {
+        preRef.current.textContent = text;
+        previousText = text;
       }
+
+      // Leave main-thread time for input and layout on slow devices and large
+      // capture viewports. Recover gradually when processing becomes cheaper.
+      const processingMs = performance.now() - startedAt;
+      const budgetDelay = Math.min(250, Math.max(frameDelay, processingMs * 4));
+      adaptiveDelay = Math.max(budgetDelay, adaptiveDelay * 0.95);
 
       raf = requestAnimationFrame(draw);
     };
@@ -239,7 +243,11 @@ export default function AsciiOverlay({
     };
 
     const onVisibility = () => {
-      if (!document.hidden) kick();
+      cancelAnimationFrame(raf);
+      if (!document.hidden) {
+        last = 0;
+        kick();
+      }
     };
     const onPageShow = () => {
       if (!document.hidden) kick();
@@ -255,7 +263,7 @@ export default function AsciiOverlay({
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [mounted, source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery, color, opacity]);
+  }, [mounted, source, grid.cols, grid.rows, fps, invert, mode, gradient, visible, domUpdateEvery]);
 
   // Ne rien rendre côté serveur
   if (!mounted) return null;
@@ -265,6 +273,7 @@ export default function AsciiOverlay({
   const pre = (
     <pre
       ref={preRef}
+      aria-hidden="true"
       style={{
         position: "fixed",
         ...bleedStyle,
@@ -281,7 +290,7 @@ export default function AsciiOverlay({
         fontSize: `${fontPx}px`,     // <<< important
         lineHeight: `${fontPx}px`,   // <<< important
         whiteSpace: "pre",
-        willChange: "contents", // Optimisation CSS pour les animations fréquentes
+        contain: "strict",
       }}
     />
   );
@@ -289,4 +298,4 @@ export default function AsciiOverlay({
   // Monte l'overlay au niveau du <body> seulement côté client
   if (typeof document === 'undefined') return null;
   return createPortal(pre, document.body);
-} 
+}

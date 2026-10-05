@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Match the audio gate's device predicate before client hydration. */
+@media (max-width: 767px), (pointer: coarse) {
+  .audio-gate {
+    display: none;
+  }
+}
+
 @font-face {
   font-family: "Geist Mono";
   src: url("/fonts/Geist/GeistMono-ExtraLight.woff2") format("woff2");
@@ -120,24 +127,6 @@ body {
   font-family: var(--font-home-title);
   overflow-x: hidden;
   cursor: none; /* Cache le curseur natif */
-}
-
-/* Capture mode: the outer page contains no UI. The iframe is the fixed
-   1080 × 1920 logical browser viewport and is scaled by its host. */
-.capture-viewport {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: white;
-}
-
-.capture-viewport__frame {
-  display: block;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border: 0;
-  transform-origin: center;
 }
 
 @layer utilities {
@@ -259,7 +248,7 @@ body {
 }
 
 /* Évite le zoom auto iOS/Android sur focus (police < 16px). */
-@media (max-width: 767px), (orientation: portrait) {
+@media (max-width: 767px) {
   input,
   textarea,
   select {
@@ -747,7 +736,7 @@ body {
   -webkit-mask-image: var(--mobile-edge-fade);
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1024px) {
   .projects-scroll-list__scroller {
     mask-image: var(--desktop-edge-fade);
     -webkit-mask-image: var(--desktop-edge-fade);
@@ -967,7 +956,7 @@ body {
 }
 
 /* Mobile : hiérarchie par taille / opacités (ProFont = une seule graisse). */
-@media (max-width: 767px), (orientation: portrait) {
+@media (max-width: 767px) {
   .projects-scroll-list__detail-inner {
     padding: 0.65rem 0.35rem 1.25rem 0;
   }
@@ -1013,7 +1002,7 @@ body {
   }
 }
 
-@media (min-width: 768px) and (orientation: landscape) {
+@media (min-width: 768px) {
   .projects-scroll-list-shell {
     --list-inline-end: max(22rem, 32vw);
   }
@@ -1122,7 +1111,7 @@ body {
   }
 }
 
-@media (max-width: 767px), (orientation: portrait) {
+@media (max-width: 767px) {
   .project-detail-panel {
     display: none;
   }
@@ -1134,13 +1123,13 @@ body {
   --specialist-titles-top: 8rem;
 }
 
-@media (min-width: 768px) and (orientation: landscape) {
+@media (min-width: 768px) {
   .specialist-catalog {
     --specialist-titles-top: 10rem;
   }
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1024px) {
   .specialist-catalog {
     --specialist-titles-top: clamp(10rem, 22vh, 14rem);
   }
@@ -1154,7 +1143,7 @@ body {
   padding-top: 0.5rem;
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1024px) {
   .specialist-catalog__track {
     padding-top: var(--specialist-titles-top);
   }
@@ -1212,7 +1201,7 @@ body {
   }
 }
 
-@media (min-width: 768px) and (orientation: landscape) {
+@media (min-width: 768px) {
   .specialist-catalog__body {
     font-size: 1rem;
     line-height: 1.62;
@@ -1229,7 +1218,7 @@ body {
   }
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1024px) {
   .specialist-catalog__body {
     font-size: 1rem;
     line-height: 1.62;
@@ -1255,14 +1244,14 @@ body {
   min-height: 0;
 }
 
-@media (max-width: 1023px), (orientation: portrait) {
+@media (max-width: 1023px) {
   .specialist-catalog {
     mask-image: var(--mobile-edge-fade);
     -webkit-mask-image: var(--mobile-edge-fade);
   }
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
+@media (min-width: 1024px) {
   .specialist-catalog__list-pane {
     height: 100%;
   }

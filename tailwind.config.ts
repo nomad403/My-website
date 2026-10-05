@@ -15,15 +15,6 @@ const config: Config = {
     "*.{js,ts,jsx,tsx,mdx}"
   ],
   theme: {
-	  // A vertical screen always uses the compact composition. This applies to
-	  // Tailwind's sm:/md:/lg: utilities as well as ordinary mobile devices.
-	  screens: {
-		  sm: { raw: "(min-width: 640px) and (orientation: landscape)" },
-		  md: { raw: "(min-width: 768px) and (orientation: landscape)" },
-		  lg: { raw: "(min-width: 1024px) and (orientation: landscape)" },
-		  xl: { raw: "(min-width: 1280px) and (orientation: landscape)" },
-		  "2xl": { raw: "(min-width: 1536px) and (orientation: landscape)" },
-	  },
   	extend: {
   		colors: {
   			background: 'hsl(var(--background))',

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useLanguage } from "@/contexts/LanguageContext"
-import { MOBILE_VIEWPORT_QUERY } from "@/lib/ui/viewport"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import {
   activateSiteSfx,
@@ -37,7 +36,7 @@ function shouldForceGateOnReload() {
 function shouldDisableGateOnMobile() {
   if (typeof window === "undefined") return false
   return (
-    window.matchMedia?.(MOBILE_VIEWPORT_QUERY)?.matches === true ||
+    window.matchMedia?.("(max-width: 767px)")?.matches === true ||
     window.matchMedia?.("(pointer: coarse)")?.matches === true
   )
 }
@@ -96,7 +95,7 @@ export function AudioGateProvider({
       syncVisibility()
     }
 
-    const mobileGateQuery = window.matchMedia(MOBILE_VIEWPORT_QUERY)
+    const mobileGateQuery = window.matchMedia("(max-width: 767px)")
     const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
 
     window.addEventListener("pageshow", onPageShow)
@@ -126,7 +125,9 @@ export default function AudioGate() {
     setMounted(true)
   }, [])
 
-  if (!mounted || !visible || shouldDisableGateOnMobile()) return null
+  // Render the entry copy in the server HTML instead of waiting for the entire
+  // client bundle to hydrate. CSS suppresses it on touch/mobile from first paint.
+  if (!visible || (mounted && shouldDisableGateOnMobile())) return null
 
   const copy =
     language === "en"
@@ -155,7 +156,7 @@ export default function AudioGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white px-4">
+    <div className="audio-gate fixed inset-0 z-[100] bg-white px-4">
       <div className="absolute bottom-4 right-4 z-10 md:bottom-8 md:right-8">
         <LanguageSwitcher mode="day" />
       </div>

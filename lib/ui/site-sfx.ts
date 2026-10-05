@@ -1,6 +1,7 @@
 /**
  * Sound design site — ticks de touche numérique, discrets / aigus / minimalistes.
  */
+import { matchesMobileViewport } from "@/lib/ui/viewport"
 
 export type SiteSfxId =
   | "ui.tap"
@@ -35,14 +36,10 @@ let userGestureActivated = false
 const muteListeners = new Set<MuteListener>()
 const lastPlayedAt = new Map<SiteSfxId, number>()
 let activeShuffleStop: (() => void) | null = null
-const MOBILE_VIEWPORT_QUERY = "(max-width: 767px), (orientation: portrait)"
 
 function isMobileViewport() {
   if (typeof window === "undefined") return false
-  return (
-    window.matchMedia?.(MOBILE_VIEWPORT_QUERY)?.matches === true ||
-    window.matchMedia?.("(pointer: coarse)")?.matches === true
-  )
+  return matchesMobileViewport() || window.matchMedia?.("(pointer: coarse)")?.matches === true
 }
 
 function canUseAmbientSfxOnThisDevice() {

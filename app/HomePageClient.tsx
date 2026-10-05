@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { AnimatePresence, motion } from "framer-motion"
 import { useBackground } from "@/contexts/BackgroundContext"
@@ -20,7 +20,6 @@ import HomeSeoBlock from "@/components/home/HomeSeoBlock"
 import { getPageMetadata } from "@/lib/seo/metadata"
 import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
-import { useSmartPreload } from "@/hooks/useSmartPreload"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
 import { useGyroRotateHint } from "@/hooks/useGyroRotateHint"
 import { resolveAsciiSettings } from "@/lib/ui/performance"
@@ -31,11 +30,15 @@ import {
 } from "@/lib/home/page-config"
 import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
 import { playSiteSfx } from "@/lib/ui/site-sfx"
+import type { AsciiGpuSource } from "@/lib/ascii/ascii-gpu-pass"
 
 const SpheresPacking = dynamic(() => import("@/components/ascii/SpheresPacking"), {
   ssr: false,
 })
 const AsciiOverlay = dynamic(() => import("@/components/ascii/AsciiOverlay"), {
+  ssr: false,
+})
+const AsciiGpuOverlay = dynamic(() => import("@/components/ascii/AsciiGpuOverlay"), {
   ssr: false,
 })
 
@@ -60,13 +63,21 @@ export default function HomePageClient({
   const [homeVisible, setHomeVisible] = useState(initialPage === "home")
   const [contentVisible, setContentVisible] = useState(initialPage !== "home")
   const [bgCanvas, setBgCanvas] = useState<HTMLCanvasElement | null>(null)
+  const [gpuSource, setGpuSource] = useState<AsciiGpuSource | null>(null)
+  const [gpuReady, setGpuReady] = useState(false)
+  const [gpuFailed, setGpuFailed] = useState(false)
+  const handleGpuError = useCallback(() => {
+    if (gpuSource) gpuSource.three.render = gpuSource.renderOriginal
+    setGpuFailed(true)
+    setGpuReady(false)
+  }, [gpuSource])
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
   const { visible: isAudioGateVisible } = useAudioGate()
   const shouldRenderSiteChrome = isMobileViewport || !isAudioGateVisible
   const shouldRenderSiteFooter = shouldRenderSiteChrome
-  const { stage, showSpheres, showAscii } = useProgressiveLoad(profile, {
+  const { showSpheres, showAscii } = useProgressiveLoad(profile, {
     skipParticles: true,
   })
   const { t, language, isLanguageReady } = useLanguage()
@@ -85,12 +96,8 @@ export default function HomePageClient({
     sphereCountRef.current = profile.spheres.count
   }
   const sphereCount = sphereCountRef.current ?? profile?.spheres.count ?? 80
-  const isPreloaded = useSmartPreload(profile, stage, bgCanvas, {
-    skipParticles: true,
-  })
-
   const showHomeTitle =
-    isPreloaded && homeVisible && showAscii && isLanguageReady
+    homeVisible && isLanguageReady && shouldRenderSiteChrome
   const demoPlaying = Boolean(demoMode && demoStory?.playing)
   const demoVoice = demoPlaying ? demoStory?.voice : null
 
@@ -159,9 +166,7 @@ export default function HomePageClient({
     if (typeof window !== "undefined" && !demoMode) {
       const nextUrl = new URL(pageIdToPath(newPage), window.location.origin)
       const capture = new URLSearchParams(window.location.search).get("capture")
-      const captureScale = new URLSearchParams(window.location.search).get("captureScale")
       if (capture) nextUrl.searchParams.set("capture", capture)
-      if (captureScale) nextUrl.searchParams.set("captureScale", captureScale)
       window.history.pushState({}, "", `${nextUrl.pathname}${nextUrl.search}`)
     }
 
@@ -276,19 +281,38 @@ export default function HomePageClient({
       />
       <JsonLdPerson />
 
-      {showSpheres && profile && (
+      {shouldRenderSiteChrome && showSpheres && profile && (
         <SpheresPacking
           count={sphereCount}
           minSize={0.5}
           maxSize={1.0}
           currentPage={currentPage}
           onCanvasReady={setBgCanvas}
+          onGpuReady={setGpuSource}
+          renderQuality={profile.spheres}
+          gpuAsciiVisible={gpuReady && currentConfig.ascii.visible}
           visible={true}
           simulateTilt={demoPlaying}
         />
       )}
 
-      {showAscii && asciiSettings && (
+      {shouldRenderSiteChrome && showAscii && asciiSettings && gpuSource && !gpuFailed && (
+        <AsciiGpuOverlay
+          source={gpuSource}
+          onReady={setGpuReady}
+          onError={handleGpuError}
+          visible={currentConfig.ascii.visible}
+          mode={asciiSettings.mode}
+          invert={currentConfig.ascii.invert}
+          opacity={isMobileViewport
+            ? Math.max(0.28, currentConfig.ascii.opacity * 0.7)
+            : currentConfig.ascii.opacity}
+          color={currentConfig.ascii.color}
+          fontPx={asciiSettings.fontPx}
+        />
+      )}
+
+      {shouldRenderSiteChrome && showAscii && asciiSettings && gpuFailed && (
         <AsciiOverlay
           source={bgCanvas}
           pageKey={currentPage}
@@ -314,7 +338,7 @@ export default function HomePageClient({
         }`}
         aria-hidden={demoPlaying ? true : undefined}
       >
-        {!isPreloaded && (
+        {!isLanguageReady && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
             <div className="text-center">
               <HeaderLogo mode="day" variant="loader" className="mb-4" />

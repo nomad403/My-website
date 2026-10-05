@@ -1,6 +1,9 @@
 /**
- * A tall viewport is intentionally treated as the compact layout even when its
- * pixel width is large (for example a 1080 × 1920 capture target).
+ * Layout follows CSS width. Large portrait viewports keep the desktop layout
+ * for vertical captures in DevTools.
  */
-export const MOBILE_VIEWPORT_QUERY =
-  "(max-width: 767px), (orientation: portrait)"
+export const MOBILE_VIEWPORT_QUERY = "(max-width: 767px)"
+
+export function matchesMobileViewport() {
+  return typeof window !== "undefined" && window.matchMedia(MOBILE_VIEWPORT_QUERY).matches
+}

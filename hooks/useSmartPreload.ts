@@ -13,32 +13,18 @@ export function useSmartPreload(
   const skipParticles = options?.skipParticles ?? false
   const readyStage: LoadStage = skipParticles ? "ascii" : "particles"
 
+  // One deadline per profile; stage/canvas changes must not restart it.
   useEffect(() => {
     if (!profile || isPreloaded) return
+    const timer = setTimeout(() => setIsPreloaded(true), profile.loading.maxPreloadMs)
+    return () => clearTimeout(timer)
+  }, [profile, isPreloaded])
 
-    let done = false
-    const finish = () => {
-      if (!done) {
-        done = true
-        setIsPreloaded(true)
-      }
-    }
-
-    // Mid/low: prefer waiting for the ready stage so the loader
-    // doesn't hide before the heavy particle burst starts.
-    const allowEarlyFinish = profile.tier === "high"
-    const maxTimer = setTimeout(finish, profile.loading.maxPreloadMs)
-
-    if (loadStage === readyStage && bgCanvas) {
-      const earlyDelay = allowEarlyFinish ? 120 : profile.tier === "mid" ? 280 : 200
-      const earlyTimer = setTimeout(finish, earlyDelay)
-      return () => {
-        clearTimeout(maxTimer)
-        clearTimeout(earlyTimer)
-      }
-    }
-
-    return () => clearTimeout(maxTimer)
+  useEffect(() => {
+    if (!profile || isPreloaded || loadStage !== readyStage || !bgCanvas) return
+    const delay = profile.tier === "high" ? 120 : profile.tier === "mid" ? 280 : 200
+    const timer = setTimeout(() => setIsPreloaded(true), delay)
+    return () => clearTimeout(timer)
   }, [profile, loadStage, bgCanvas, isPreloaded, readyStage])
 
   return isPreloaded

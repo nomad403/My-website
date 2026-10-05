@@ -5,6 +5,11 @@ export interface PerformanceProfile {
   tier: PerformanceTier
   spheres: {
     count: number
+    widthSegments: number
+    heightSegments: number
+    shadowMapSize: number
+    maxPixelRatio: number
+    maxPixelCount: number
   }
   ascii: {
     fps: number
@@ -31,7 +36,7 @@ export interface PerformanceProfile {
 
 const HIGH_PROFILE: PerformanceProfile = {
   tier: "high",
-  spheres: { count: 200 },
+  spheres: { count: 200, widthSegments: 24, heightSegments: 16, shadowMapSize: 512, maxPixelRatio: 1, maxPixelCount: 4_000_000 },
   ascii: {
     fps: 60,
     fontPxOverride: null,
@@ -53,7 +58,7 @@ const HIGH_PROFILE: PerformanceProfile = {
 
 const MID_PROFILE: PerformanceProfile = {
   tier: "mid",
-  spheres: { count: 120 },
+  spheres: { count: 120, widthSegments: 20, heightSegments: 12, shadowMapSize: 512, maxPixelRatio: 1, maxPixelCount: 2_000_000 },
   ascii: {
     fps: 60,
     fontPxOverride: 9,
@@ -75,7 +80,7 @@ const MID_PROFILE: PerformanceProfile = {
 
 const LOW_PROFILE: PerformanceProfile = {
   tier: "low",
-  spheres: { count: 80 },
+  spheres: { count: 80, widthSegments: 12, heightSegments: 8, shadowMapSize: 256, maxPixelRatio: 1, maxPixelCount: 360_000 },
   ascii: {
     fps: 60,
     fontPxOverride: 10,
@@ -143,12 +148,13 @@ function detectSoftwareGpu(): boolean {
       (canvas.getContext("experimental-webgl") as WebGLRenderingContext | null)
     if (!gl) return true
 
-    const ext = gl.getExtension("WEBGL_debug_renderer_info")
-    if (ext) {
-      const renderer = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) ?? "")
-      if (SOFT_GPU_RE.test(renderer)) return true
+    try {
+      const ext = gl.getExtension("WEBGL_debug_renderer_info")
+      const renderer = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) ?? "") : ""
+      return SOFT_GPU_RE.test(renderer)
+    } finally {
+      gl.getExtension("WEBGL_lose_context")?.loseContext()
     }
-    return false
   } catch {
     return true
   }
@@ -161,48 +167,6 @@ function measureRafFps(sampleMs: number): Promise<number> {
 
     const tick = (now: number) => {
       frames += 1
-      if (now - start >= sampleMs) {
-        resolve((frames * 1000) / Math.max(1, now - start))
-        return
-      }
-      requestAnimationFrame(tick)
-    }
-
-    requestAnimationFrame(tick)
-  })
-}
-
-/** Charge légère GPU pendant le splash pour affiner le tier. */
-function stressGpuWhileMeasuring(sampleMs: number): Promise<number> {
-  if (typeof document === "undefined") return measureRafFps(sampleMs)
-
-  const canvas = document.createElement("canvas")
-  canvas.width = 256
-  canvas.height = 256
-  const gl = canvas.getContext("webgl", {
-    antialias: false,
-    depth: false,
-    stencil: false,
-    powerPreference: "high-performance",
-  }) as WebGLRenderingContext | null
-
-  if (!gl) return measureRafFps(sampleMs)
-
-  return new Promise((resolve) => {
-    let frames = 0
-    const start = performance.now()
-
-    const tick = (now: number) => {
-      frames += 1
-      const t = (now - start) / sampleMs
-      gl.viewport(0, 0, 256, 256)
-      gl.clearColor(t % 1, 0.2, 1 - (t % 1), 1)
-      gl.clear(gl.COLOR_BUFFER_BIT)
-      // Quelques draw clear supplémentaires pour stresser sans bloquer le main thread trop fort
-      for (let i = 0; i < 8; i++) {
-        gl.clear(gl.COLOR_BUFFER_BIT)
-      }
-
       if (now - start >= sampleMs) {
         resolve((frames * 1000) / Math.max(1, now - start))
         return
@@ -235,7 +199,9 @@ export async function probePerformanceTier(): Promise<PerformanceTier> {
     return "low"
   }
 
-  const fps = await stressGpuWhileMeasuring(750)
+  // Sample scheduling without creating another GPU workload at startup.
+  // Runtime ASCII pacing adapts to the actual cost after effects are mounted.
+  const fps = await measureRafFps(200)
 
   let fpsTier: PerformanceTier = "high"
   if (fps < 32) fpsTier = "low"

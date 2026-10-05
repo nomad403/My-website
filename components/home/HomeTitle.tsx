@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
 import BrandAsciiTitle from "@/components/home/BrandAsciiTitle"
 import {
@@ -43,6 +43,7 @@ interface HomeTitleProps {
 
 const BRAND_FONT_FAMILY = '"Electric Blue", ui-sans-serif, system-ui, sans-serif'
 const TITLE_FONT_FAMILY = '"Geist Mono", ui-monospace, monospace'
+let measureContext: CanvasRenderingContext2D | null = null
 
 function measureTextWidth(
   text: string,
@@ -51,22 +52,10 @@ function measureTextWidth(
   fontWeight: number,
   letterSpacingEm: number,
 ) {
-  const probe = document.createElement("span")
-  probe.style.cssText = `
-    position: absolute;
-    visibility: hidden;
-    white-space: nowrap;
-    font-family: ${fontFamily};
-    font-weight: ${fontWeight};
-    font-synthesis: none;
-    letter-spacing: ${letterSpacingEm}em;
-    font-size: ${fontSize}px;
-  `
-  probe.textContent = text
-  document.body.appendChild(probe)
-  const width = probe.offsetWidth
-  document.body.removeChild(probe)
-  return width
+  measureContext ??= document.createElement("canvas").getContext("2d")
+  if (!measureContext) return text.length * fontSize * (0.6 + letterSpacingEm)
+  measureContext.font = `${fontWeight} ${fontSize}px ${fontFamily}`
+  return measureContext.measureText(text).width + text.length * letterSpacingEm * fontSize
 }
 
 function fitFontSize(
@@ -114,6 +103,7 @@ export default function HomeTitle({
   const [fontSize, setFontSize] = useState(24)
   const [brandFontSize, setBrandFontSize] = useState(48)
   const [brandScaleX, setBrandScaleX] = useState(1)
+  const [layoutReady, setLayoutReady] = useState(false)
   const [headerBand, setHeaderBand] = useState<HeaderBandLayout>({
     left: 0,
     width: 0,
@@ -147,7 +137,7 @@ export default function HomeTitle({
   const titleColorClass = mode === "night" ? "text-white" : "text-black"
   const titleFontClass = isMobile ? "font-home-title-mobile" : "font-home-title"
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current
     if (!container || lines.length === 0) return
 
@@ -210,19 +200,44 @@ export default function HomeTitle({
       setFontSize(Math.min(...sizes))
     }
 
-    update()
-    const ro = new ResizeObserver(update)
+    let cancelled = false
+    let fontsReady = false
+    const updateWhenReady = () => {
+      if (!cancelled && fontsReady) update()
+    }
+    // Fit using the actual fonts before revealing the title. Fallback-font
+    // measurements would otherwise move the bottom-aligned block later.
+    const fonts = [
+      document.fonts.load(`${titleFontWeight} 24px ${TITLE_FONT_FAMILY}`),
+      document.fonts.load(`${HOME_BRAND_FONT_WEIGHT} 48px ${BRAND_FONT_FAMILY}`),
+    ]
+    const reveal = () => {
+      if (cancelled) return
+      fontsReady = true
+      update()
+      setLayoutReady(true)
+    }
+    if (document.fonts.check(`${titleFontWeight} 24px ${TITLE_FONT_FAMILY}`)
+      && document.fonts.check(`${HOME_BRAND_FONT_WEIGHT} 48px ${BRAND_FONT_FAMILY}`)) {
+      reveal()
+    } else {
+      setLayoutReady(false)
+      void Promise.allSettled(fonts).then(reveal)
+    }
+    const ro = new ResizeObserver(updateWhenReady)
     ro.observe(container)
-    window.addEventListener("resize", update)
+    window.addEventListener("resize", updateWhenReady)
 
     return () => {
+      cancelled = true
       ro.disconnect()
-      window.removeEventListener("resize", update)
+      window.removeEventListener("resize", updateWhenReady)
     }
   }, [lines, alternateLines, maxFontPx, maxBrandFontPx, isMobile, titleFontWeight])
 
   return (
-    <div className="pointer-events-auto w-full min-w-0 px-4 md:px-8">
+    <div data-capture="home-title" className="pointer-events-auto w-full min-w-0 px-4 md:px-8"
+      style={{ visibility: layoutReady ? "visible" : "hidden" }}>
       <div ref={containerRef} className="mx-auto w-full max-w-7xl">
         <div
           className="flex min-w-0 flex-col overflow-hidden"
@@ -241,7 +256,7 @@ export default function HomeTitle({
             lineStyle={lineStyle}
             lineGapClassName=""
             enableHover={enableHover}
-            introShuffle={ready && playToken === 0}
+            introShuffle={ready && layoutReady && playToken === 0}
             playToken={playToken}
             holdDurationMs={playToken > 0 ? DEMO_HOLD_MS : HOME_HOVER_HOLD_MS}
             shuffleDurationMs={playToken > 0 ? DEMO_SHUFFLE_MS : HOME_TITLE_SHUFFLE_MS}
@@ -252,7 +267,7 @@ export default function HomeTitle({
           text={HOME_BRAND_TEXT}
           alternateTexts={alternateBrandTexts}
           mode={mode}
-          enabled={ready && !isMobile}
+          enabled={ready && layoutReady && !isMobile}
           marginLeft={headerBand.left}
           fontSize={brandFontSize}
           scaleX={brandScaleX}
