@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scale the desktop UI in portrait captures, without zooming the canvas or
+   changing CSS-pixel pointer coordinates. 720px is the reference UI width.
+   Keep the user's default font size as a minimum. */
+@media (min-width: 768px) and (orientation: portrait) {
+  html {
+    font-size: max(100%, 2.222222vw);
+  }
+}
+
+/* Leave enough room for enlarged expertise headings in the two-column view. */
+@media (min-width: 1024px) and (orientation: portrait) {
+  .specialist-catalog .specialist-catalog__intro-pane {
+    grid-column: span 5 / span 5;
+    padding-right: 1rem;
+  }
+
+  .specialist-catalog .specialist-catalog__list-pane {
+    grid-column: span 7 / span 7;
+  }
+}
+
 /* Match the audio gate's device predicate before client hydration. */
 @media (max-width: 767px), (pointer: coarse) {
   .audio-gate {

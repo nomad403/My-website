@@ -89,7 +89,7 @@ export const PROJECT_ITEMS: ProjectItem[] = [
   {
     id: 7,
     name: "Saki",
-    url: "https://nefersaki-com.glennrichard-dev.workers.dev/",
+    url: "https://nefersaki.com/",
     description: L("Site web marque, e-commerce", "Brand website, e-commerce"),
     summary: L(
       "Artiste et directrice artistique : 3D, graphisme, photo, motion design et vidéo.\nUn portfolio immersif pour réunir ses pratiques et mettre l’image au premier plan.",

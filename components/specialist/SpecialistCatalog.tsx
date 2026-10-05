@@ -44,7 +44,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     <div className="specialist-catalog absolute inset-0 z-10 w-full overflow-y-auto overscroll-contain lg:overflow-hidden">
       <div className="h-full min-h-full px-4 md:px-8">
         <div className="mx-auto grid min-h-full w-full max-w-7xl grid-cols-1 lg:h-full lg:grid-cols-12 lg:gap-x-10">
-          <section className="min-w-0 text-black lg:col-span-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-8 xl:col-span-5 xl:pr-12">
+          <section className="specialist-catalog__intro-pane min-w-0 text-black lg:col-span-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-8 xl:col-span-5 xl:pr-12">
             <div className="specialist-catalog__intro-inner pb-6 md:pb-8 lg:pb-28">
               <h1 className="font-kode text-[1.625rem] font-normal uppercase leading-[1.08] tracking-[0.08em] text-black md:text-[2.125rem] lg:text-[2.625rem]">
                 {demoStory?.playing && demoStory.voice ? (

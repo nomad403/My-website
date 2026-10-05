@@ -206,7 +206,7 @@ export default function ContactPageContent() {
   return (
     <div className="relative box-border flex h-full w-full items-center justify-center px-4 pb-28 pt-16 md:px-8 md:pb-32 md:pt-24">
       <div className="mx-auto w-full max-w-3xl">
-        <div className="mx-auto flex w-full max-w-[90vw] flex-col gap-4 sm:max-w-[600px]">
+        <div className="mx-auto flex w-full max-w-[90vw] flex-col gap-4 sm:max-w-[37.5rem]">
           <div className="mb-2 w-full md:mb-6">
             <h1
               className={`w-full whitespace-nowrap text-left font-kode text-[clamp(1.3125rem,6vw,1.625rem)] font-normal uppercase leading-[1.08] tracking-[0.06em] transition-colors duration-300 md:text-[clamp(1.625rem,3.2vw,2.125rem)] lg:text-[clamp(2rem,2.5vw,2.25rem)] ${
