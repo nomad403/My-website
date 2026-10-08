@@ -24,6 +24,9 @@ export default function JsonLdWebsite() {
             "Web Development",
             "Mobile Development", 
             "AI Integration",
+            "Application Security",
+            "Vulnerability Assessment",
+            "Security Hardening",
             "React",
             "Next.js",
             "TypeScript",
@@ -56,7 +59,7 @@ export default function JsonLdWebsite() {
           "@context": "https://schema.org",
           "@type": "AboutPage",
           "name": "NOMAD403 - Skills & Expertise",
-          "description": "Expertise in frontend, mobile development and AI integration",
+          "description": "Expertise in web, mobile, AI integration, technical consulting, and application security",
           "url": `${baseUrl}/specialist`,
           "mainEntity": {
             "@type": "Person",

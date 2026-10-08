@@ -28,8 +28,8 @@ export default function DynamicSocialTags() {
             image: '/preview.jpg'
           },
           specialist: {
-            title: 'NOMAD403 - Skills & Expertise | Web, Mobile & AI',
-            description: 'Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.',
+            title: 'NOMAD403 - Skills & Expertise | Web, Mobile, AI & Security',
+            description: 'Expertise in web, mobile, AI integration, technical consulting, and application security. Modern, scalable solutions tailored to your needs.',
             url: `${baseUrl}/specialist`,
             image: '/preview.jpg'
           },

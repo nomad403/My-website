@@ -505,4 +505,34 @@ export const SPECIALIST_CATALOG: SpecialistCategory[] = [
       },
     ],
   },
+  {
+    id: "security",
+    title: L("SÉCURITÉ & AUDIT", "SECURITY & AUDITING"),
+    services: [
+      {
+        id: "security-application",
+        title: L("Sécurité applicative", "Application Security"),
+        description: L(
+          "Évaluer la sécurité de sites web, applications et API pour identifier les risques techniques et renforcer la fiabilité des produits numériques.",
+          "Assess the security of websites, applications, and APIs to identify technical risks and strengthen the reliability of digital products."
+        ),
+      },
+      {
+        id: "security-vulnerability",
+        title: L("Évaluation de vulnérabilités", "Vulnerability Assessment"),
+        description: L(
+          "Repérer les faiblesses techniques exposées et prioriser les points à traiter. Il ne s'agit pas d'un pentest certifié ni d'une garantie d'absence de risque.",
+          "Identify exposed technical weaknesses and prioritize what to address. This is not a certified penetration test or a guarantee of zero risk."
+        ),
+      },
+      {
+        id: "security-hardening",
+        title: L("Durcissement de sécurité", "Security Hardening"),
+        description: L(
+          "Remédiation technique et renforcement des configurations pour réduire la surface d'attaque et améliorer la résilience du produit.",
+          "Technical remediation and configuration hardening to reduce the attack surface and improve product resilience."
+        ),
+      },
+    ],
+  },
 ]

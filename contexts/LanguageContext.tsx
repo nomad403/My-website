@@ -72,9 +72,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         
         // Specialist page
         'specialist.title': 'Offres & Expertise',
-        'specialist.subtitle': 'Web, Mobile, Automatisation, IA, Conseil',
+        'specialist.subtitle': 'Web, Mobile, Automatisation, IA, Conseil, Sécurité',
         'specialist.intro': 'Un projet ne devrait jamais être limité par une manière de faire.',
-        'specialist.text1': 'J’accompagne les entreprises sur des projets numériques aux périmètres variés, du web et du mobile à l’automatisation, l’intelligence artificielle et la conception d’outils métier.',
+        'specialist.text1': 'J’accompagne les entreprises sur des projets numériques aux périmètres variés, du web et du mobile à l’automatisation, l’intelligence artificielle, le conseil technique et la sécurité applicative.',
         'specialist.text2': 'Mon approche est nomade. Je croise les disciplines et les expertises pour m’adapter au contexte, considérer le projet dans sa globalité et construire une réponse en phase avec ses enjeux.',
         
         // Contact page
@@ -128,9 +128,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         
         // Specialist page
         'specialist.title': 'Services & Expertise',
-        'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting',
+        'specialist.subtitle': 'Web, Mobile, Automation, AI, Consulting, Security',
         'specialist.intro': 'A project should never be limited by a single way of doing things.',
-        'specialist.text1': 'I support companies on digital projects with varied scopes — from web and mobile to automation, artificial intelligence, and custom business tools.',
+        'specialist.text1': 'I support companies on digital projects with varied scopes — from web and mobile to automation, artificial intelligence, technical consulting, and application security.',
         'specialist.text2': 'My approach is nomadic. I cross disciplines and expertise to adapt to the context, consider the project as a whole, and build a response aligned with its stakes.',
         
         // Contact page

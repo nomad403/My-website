@@ -442,10 +442,10 @@ export default function ContactPageContent() {
           <p>
             Services proposés : développement d&apos;applications web et mobiles
             sur mesure, intégration d&apos;intelligence artificielle, consulting
-            technique, architecture de solutions, MVP et prototypage rapide,
-            refactoring et optimisation, maintenance et évolution. Approche
-            centrée sur l&apos;expérience utilisateur, la performance et la
-            scalabilité.
+            technique, sécurité applicative, architecture de solutions, MVP et
+            prototypage rapide, refactoring et optimisation, maintenance et
+            évolution. Approche centrée sur l&apos;expérience utilisateur, la
+            performance et la scalabilité.
           </p>
           <p>
             Technologies maîtrisées : Next.js, React, TypeScript, Tailwind CSS,

@@ -69,6 +69,11 @@ export default function HomeSeoBlock({ currentPage }: { currentPage: string }) {
                 Consulting technique développeur web mobile
               </a>
             </li>
+            <li>
+              <a href="https://www.nomad403.com/specialist">
+                Sécurité applicative et audit technique
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -94,10 +99,10 @@ export default function HomeSeoBlock({ currentPage }: { currentPage: string }) {
           <p>
             Services : développement web full-stack React Next.js, applications
             mobiles cross-platform Kotlin Swift, intégration IA et machine
-            learning, consulting technique, architecture de solutions, MVP et
-            prototypage rapide. Technologies : Next.js, React, TypeScript,
-            Tailwind CSS, Kotlin, Jetpack Compose, Swift, SwiftUI, Azure OpenAI,
-            Power Automate, Three.js.
+            learning, consulting technique, sécurité applicative, architecture
+            de solutions, MVP et prototypage rapide. Technologies : Next.js,
+            React, TypeScript, Tailwind CSS, Kotlin, Jetpack Compose, Swift,
+            SwiftUI, Azure OpenAI, Power Automate, Three.js.
           </p>
           <p>
             Portfolio créatif et technique démontrant l&apos;excellence dans le

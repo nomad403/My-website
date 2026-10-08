@@ -26,8 +26,8 @@ export const pageMetadata: Record<string, Record<string, Metadata>> = {
       keywords: BRAND_KEYWORDS,
     },
     specialist: {
-      title: "Offres Web, Mobile, IA & Consulting — Développeur Freelance | NOMAD403",
-      description: "Catalogue Nomad403 : sites web, applications mobiles, automatisation, intelligence artificielle et consulting technique pour projets ambitieux.",
+      title: "Offres Web, Mobile, IA, Consulting & Sécurité — Développeur Freelance | NOMAD403",
+      description: "Catalogue Nomad403 : sites web, applications mobiles, automatisation, intelligence artificielle, consulting technique et sécurité applicative pour projets ambitieux.",
       keywords: BRAND_KEYWORDS,
     },
     contact: {
@@ -48,8 +48,8 @@ export const pageMetadata: Record<string, Record<string, Metadata>> = {
       keywords: BRAND_KEYWORDS,
     },
     specialist: {
-      title: "Web, Mobile, AI & Consulting Services — Freelance Developer | NOMAD403",
-      description: "Nomad403 service catalog: websites, mobile apps, automation, artificial intelligence, and technical consulting for ambitious projects.",
+      title: "Web, Mobile, AI, Consulting & Security Services — Freelance Developer | NOMAD403",
+      description: "Nomad403 service catalog: websites, mobile apps, automation, artificial intelligence, technical consulting, and application security for ambitious projects.",
       keywords: BRAND_KEYWORDS,
     },
     contact: {

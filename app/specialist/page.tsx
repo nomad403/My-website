@@ -6,15 +6,15 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "NOMAD403 - Skills & Expertise | Web, Mobile & AI",
-  description: "Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.",
+  title: "NOMAD403 - Skills & Expertise | Web, Mobile, AI & Security",
+  description: "Expertise in web, mobile, AI integration, technical consulting, and application security. Modern, scalable solutions tailored to your needs.",
   keywords: BRAND_KEYWORDS,
   alternates: {
     canonical: 'https://www.nomad403.com/specialist'
   },
   openGraph: {
-    title: "NOMAD403 - Skills & Expertise | Web, Mobile & AI",
-    description: "Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.",
+    title: "NOMAD403 - Skills & Expertise | Web, Mobile, AI & Security",
+    description: "Expertise in web, mobile, AI integration, technical consulting, and application security. Modern, scalable solutions tailored to your needs.",
     url: 'https://www.nomad403.com/specialist',
     siteName: "NOMAD403",
     images: [
@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@nomad403',
     creator: '@nomad403',
-    title: "NOMAD403 - Skills & Expertise | Web, Mobile & AI",
-    description: "Expertise in frontend, mobile development (iOS & Android), and AI integration. Modern, scalable solutions tailored to your needs.",
+    title: "NOMAD403 - Skills & Expertise | Web, Mobile, AI & Security",
+    description: "Expertise in web, mobile, AI integration, technical consulting, and application security. Modern, scalable solutions tailored to your needs.",
     images: ['https://www.nomad403.com/preview.jpg'],
   }
 }

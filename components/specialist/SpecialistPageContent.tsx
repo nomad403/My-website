@@ -15,8 +15,9 @@ export default function SpecialistPageContent() {
       <div className="sr-only">
         <p>
           Catalogue d&apos;offres Nomad403 : développement web, applications
-          mobiles, automatisation, intelligence artificielle et conseil
-          technique pour startups, studios créatifs et entreprises.
+          mobiles, automatisation, intelligence artificielle, conseil
+          technique et sécurité applicative pour startups, studios créatifs et
+          entreprises.
         </p>
         <p>
           Univers WEB : site vitrine, page d&apos;atterrissage, e-commerce,
@@ -44,6 +45,12 @@ export default function SpecialistPageContent() {
           technologique, souveraineté numérique, maîtrise des données,
           confidentialité dès la conception, accompagnement RGPD technique,
           documentation et étude de faisabilité.
+        </p>
+        <p>
+          Univers SÉCURITÉ &amp; AUDIT : sécurité applicative, évaluation de
+          vulnérabilités et durcissement de sécurité pour sites web,
+          applications et API — sans promesse de sécurité absolue ni
+          certification de pentest.
         </p>
       </div>
     </div>
