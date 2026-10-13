@@ -21,6 +21,7 @@ import { getPageMetadata } from "@/lib/seo/metadata"
 import { usePerformanceProfile } from "@/hooks/usePerformanceProfile"
 import { useProgressiveLoad } from "@/hooks/useProgressiveLoad"
 import { useMobileViewport } from "@/hooks/useMobileViewport"
+import { useViewportSize } from "@/hooks/useViewportSize"
 import { useGyroRotateHint } from "@/hooks/useGyroRotateHint"
 import { resolveAsciiSettings } from "@/lib/ui/performance"
 import {
@@ -73,6 +74,7 @@ export default function HomePageClient({
 
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
+  const viewportSize = useViewportSize()
   const { visible: isAudioGateVisible } = useAudioGate()
   const shouldRenderSiteChrome = !isAudioGateVisible
   const shouldRenderSiteFooter = shouldRenderSiteChrome
@@ -244,8 +246,8 @@ export default function HomePageClient({
 
   const asciiSettings = useMemo(() => {
     if (!profile) return null
-    return resolveAsciiSettings(currentConfig.ascii, profile)
-  }, [currentConfig, profile])
+    return resolveAsciiSettings(currentConfig.ascii, profile, viewportSize)
+  }, [currentConfig, profile, viewportSize])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -314,7 +316,7 @@ export default function HomePageClient({
           mode={asciiSettings.mode}
           invert={currentConfig.ascii.invert}
           opacity={isMobileViewport
-            ? Math.max(0.28, currentConfig.ascii.opacity * 0.7)
+            ? Math.max(0.28, currentConfig.ascii.opacity * 0.85)
             : currentConfig.ascii.opacity}
           color={currentConfig.ascii.color}
           fontPx={asciiSettings.fontPx}
@@ -330,7 +332,7 @@ export default function HomePageClient({
           invert={currentConfig.ascii.invert}
           opacity={
             isMobileViewport
-              ? Math.max(0.28, currentConfig.ascii.opacity * 0.7)
+              ? Math.max(0.28, currentConfig.ascii.opacity * 0.85)
               : currentConfig.ascii.opacity
           }
           color={currentConfig.ascii.color}

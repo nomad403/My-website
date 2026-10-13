@@ -22,6 +22,18 @@ physics, pointer tracking, gyroscope and demo controls remain in place.
 | Mid | 120 | 20 × 12 | 512² | 2,000,000 |
 | Low | 80 | 12 × 8 | 256² | 360,000 |
 
+Profile selection uses hardware hints, software-GPU detection, reduced-motion
+and explicit data saving. A short startup FPS sample and connection-speed hints
+no longer choose visual quality: script loading or a busy first frame could
+previously change glyph size and the pixel budget between otherwise identical
+visits. The profile remains fixed for the document's lifetime.
+
+For screens with a short edge below 720 CSS pixels, glyph size scales with that
+edge, with a 4 px floor. A mid-profile 9 px desktop glyph becomes 4.875 px on a
+390 px phone: the grid preserves comparable detail relative to the scene.
+Portrait and landscape use the same rule, and GPU/CPU paths share the resolved
+size. Desktop density and the decorative pixel budgets remain unchanged.
+
 Normal decorative DPR is capped at 1 and reduced further only when the viewport
 exceeds the profile's pixel budget, including after resize. Small mobile
 viewports therefore keep their native resolution even on the low profile.
@@ -30,6 +42,9 @@ navigation and cursor coordinates are unaffected. `?capture=1` overrides the
 decorative DPR limit to the browser DPR, capped at 3, to preserve capture detail.
 The renderer's own DPR limit is configured because the CDN library overwrites
 manually assigned canvas dimensions during resize.
+Its original resize callback is also retained so physics bounds track the new
+viewport instead of keeping the previous scene scale. GPU canvases expose
+`data-ascii-grid` and `data-ascii-font-px` for resolution diagnostics.
 
 Render targets, glyph textures, shader materials and geometry are disposed on
 resize/unmount. Resize events are debounced. A CPU ASCII fallback is kept for
@@ -63,6 +78,8 @@ npm run start
 node scripts/performance-audit.mjs
 # Optional:
 AUDIT_URL=http://127.0.0.1:3000 AUDIT_CPU=1 node scripts/performance-audit.mjs
+# Repeated loads, delayed startup frames and portrait/landscape changes:
+node scripts/ascii-resolution-audit.mjs
 ```
 
 The audit measures the entry LCP and layout shifts, then actually enters the
@@ -71,6 +88,12 @@ at 1080 × 1920. It reports the GPU renderer. SwiftShader/software WebGL results
 must not be represented as hardware-GPU results, and a target of 60 fps is not
 proof of sustained 60 fps. Recheck on the actual capture machine with Desktop
 emulation and compare identical CPU/network/cache settings.
+
+The resolution audit simulates hardware hints and a delayed startup scheduler,
+then asserts identical canvas dimensions, glyph size and ASCII grid across six
+visits. It also checks the high/low profiles, software-GPU selection, retina
+capture and rapid viewport changes. These are resolution/lifecycle checks, not
+hardware-GPU frame-rate measurements.
 
 Observed in headless Chrome with SwiftShader, 1080 × 1920 CSS viewport,
 150 ms network latency and 200,000 bytes/s download throughput:

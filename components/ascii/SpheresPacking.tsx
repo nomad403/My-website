@@ -24,7 +24,7 @@ type Spheres2Ctor = (
   three: AsciiGpuSource["three"] & {
     maxPixelRatio?: number;
     resize: () => void;
-    onAfterResize: () => void;
+    onAfterResize: (size: { wWidth: number; wHeight: number }) => void;
   };
   dispose: () => void;
   togglePause: () => void;
@@ -145,7 +145,13 @@ export default function SpheresPacking({
           }
           resizeCss();
         };
-        inst.three.onAfterResize = configureRenderer;
+        const originalAfterResize = inst.three.onAfterResize;
+        inst.three.onAfterResize = (size) => {
+          // The library updates the physics bounds here. Keep that callback so
+          // viewport changes don't leave the scene at its previous scale.
+          originalAfterResize(size);
+          configureRenderer();
+        };
         configureRenderer();
         inst.three.resize();
         // At ASCII sampling resolution these extra polygons/shadow texels

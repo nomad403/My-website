@@ -18,7 +18,7 @@ function publishTier(tier: PerformanceTier) {
 }
 
 /**
- * Résout le profil UNE fois via sonde splash (hardware + FPS).
+ * Résout le profil UNE fois via sonde hardware + GPU.
  * Pas de downgrade mid-session : évite le flash high → low.
  */
 export function usePerformanceProfile() {

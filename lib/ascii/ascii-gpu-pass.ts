@@ -101,7 +101,11 @@ const PRESENT_SHADER = `
 export function createAsciiGpuPass(source: AsciiGpuSource, options: AsciiGpuOptions) {
   const { api, three } = source
   const { renderer } = three
-  const previousPipeline = renderer.domElement.dataset.asciiRenderer
+  const previousMetadata = {
+    asciiRenderer: renderer.domElement.dataset.asciiRenderer,
+    asciiGrid: renderer.domElement.dataset.asciiGrid,
+    asciiFontPx: renderer.domElement.dataset.asciiFontPx,
+  }
   const glyphs = ASCII_LUMINANCE_GRADIENT
   const atlas = document.createElement("canvas")
   // Oversample glyphs once so DPR captures stay sharp, without rendering the
@@ -228,14 +232,18 @@ export function createAsciiGpuPass(source: AsciiGpuSource, options: AsciiGpuOpti
       }
       if (!disposed) {
         renderer.domElement.dataset.asciiRenderer = "gpu"
+        renderer.domElement.dataset.asciiGrid = `${options.cols}x${options.rows}`
+        renderer.domElement.dataset.asciiFontPx = String(options.fontPx)
         three.render = render
       }
     },
     dispose() {
       disposed = true
       if (three.render === render || three.render === waitingRender) three.render = originalRender
-      if (previousPipeline === undefined) delete renderer.domElement.dataset.asciiRenderer
-      else renderer.domElement.dataset.asciiRenderer = previousPipeline
+      for (const [key, value] of Object.entries(previousMetadata)) {
+        if (value === undefined) delete renderer.domElement.dataset[key]
+        else renderer.domElement.dataset[key] = value
+      }
       target.dispose()
       levelsTarget.dispose()
       glyphTexture.dispose()

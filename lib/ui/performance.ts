@@ -160,27 +160,9 @@ function detectSoftwareGpu(): boolean {
   }
 }
 
-function measureRafFps(sampleMs: number): Promise<number> {
-  return new Promise((resolve) => {
-    let frames = 0
-    const start = performance.now()
-
-    const tick = (now: number) => {
-      frames += 1
-      if (now - start >= sampleMs) {
-        resolve((frames * 1000) / Math.max(1, now - start))
-        return
-      }
-      requestAnimationFrame(tick)
-    }
-
-    requestAnimationFrame(tick)
-  })
-}
-
 /**
- * Sonde hardware + FPS réel avant le montage des effets lourds.
- * Retourne le tier final avant de monter les effets lourds.
+ * Stable hardware/GPU profile before mounting the decorative effects.
+ * Startup scheduling and connection speed must not change ASCII definition.
  */
 export async function probePerformanceTier(): Promise<PerformanceTier> {
   const staticTier = detectPerformanceTier()
@@ -188,26 +170,15 @@ export async function probePerformanceTier(): Promise<PerformanceTier> {
 
   if (detectSoftwareGpu()) return "low"
 
-  // Connection lente / save-data → rester conservateur
+  // Respect an explicit data-saving preference, rather than the fluctuating
+  // effectiveType hint, which says nothing about local rendering capability.
   const connection = (navigator as Navigator & {
-    connection?: { saveData?: boolean; effectiveType?: string }
+    connection?: { saveData?: boolean }
   }).connection
   if (connection?.saveData) {
     return minPerformanceTier(staticTier, "mid")
   }
-  if (connection?.effectiveType === "2g" || connection?.effectiveType === "slow-2g") {
-    return "low"
-  }
-
-  // Sample scheduling without creating another GPU workload at startup.
-  // Runtime ASCII pacing adapts to the actual cost after effects are mounted.
-  const fps = await measureRafFps(200)
-
-  let fpsTier: PerformanceTier = "high"
-  if (fps < 32) fpsTier = "low"
-  else if (fps < 50) fpsTier = "mid"
-
-  return minPerformanceTier(staticTier, fpsTier)
+  return staticTier
 }
 
 let sharedProbePromise: Promise<PerformanceTier> | null = null
@@ -229,10 +200,17 @@ export function getPerformanceProfile(tier: PerformanceTier = "high"): Performan
 export function resolveAsciiSettings(
   pageAscii: { mode: AsciiMode; fontPx: number },
   profile: PerformanceProfile,
+  viewport?: { width: number; height: number } | null,
 ) {
+  const baseFontPx = profile.ascii.fontPxOverride ?? pageAscii.fontPx
+  // Match the detail relative to the scene on smaller screens, regardless of
+  // portrait/landscape orientation. Keep desktop size above a 720 px short edge.
+  const shortEdge = viewport ? Math.min(viewport.width, viewport.height) : 720
+  const densityScale = Math.min(1, Math.max(0, shortEdge) / 720)
+  const fontPx = Math.min(baseFontPx, Math.max(4, baseFontPx * densityScale))
   return {
     mode: profile.ascii.forceMode ?? pageAscii.mode,
-    fontPx: profile.ascii.fontPxOverride ?? pageAscii.fontPx,
+    fontPx,
     fps: profile.ascii.fps,
     domUpdateEvery: profile.ascii.domUpdateEvery,
   }
