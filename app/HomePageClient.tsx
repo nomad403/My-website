@@ -31,14 +31,13 @@ import {
 import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
 import { playSiteSfx } from "@/lib/ui/site-sfx"
 import type { AsciiGpuSource } from "@/lib/ascii/ascii-gpu-pass"
+import { loadSpheresModules } from "@/lib/ascii/spheres-modules"
+import AsciiGpuOverlay from "@/components/ascii/AsciiGpuOverlay"
 
 const SpheresPacking = dynamic(() => import("@/components/ascii/SpheresPacking"), {
   ssr: false,
 })
 const AsciiOverlay = dynamic(() => import("@/components/ascii/AsciiOverlay"), {
-  ssr: false,
-})
-const AsciiGpuOverlay = dynamic(() => import("@/components/ascii/AsciiGpuOverlay"), {
   ssr: false,
 })
 
@@ -75,11 +74,21 @@ export default function HomePageClient({
   const { profile } = usePerformanceProfile()
   const isMobileViewport = useMobileViewport()
   const { visible: isAudioGateVisible } = useAudioGate()
-  const shouldRenderSiteChrome = isMobileViewport || !isAudioGateVisible
+  const shouldRenderSiteChrome = !isAudioGateVisible
   const shouldRenderSiteFooter = shouldRenderSiteChrome
   const { showSpheres, showAscii } = useProgressiveLoad(profile, {
     skipParticles: true,
   })
+  useEffect(() => {
+    // Download in parallel with the entry gate and performance probe. The
+    // renderer still mounts only after entry, with the resolved quality profile.
+    void Promise.all([
+      import("@/components/ascii/SpheresPacking"),
+      loadSpheresModules(),
+    ]).catch(() => {
+      // The scene retries loading on mount and reports any persistent failure.
+    })
+  }, [])
   const { t, language, isLanguageReady } = useLanguage()
   const {
     mode,

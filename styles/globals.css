@@ -23,10 +23,17 @@
   }
 }
 
-/* Match the audio gate's device predicate before client hydration. */
+/* Select the experience copy before hydration, including on touch devices. */
+.experience-copy-motion {
+  display: none;
+}
+
 @media (max-width: 767px), (pointer: coarse) {
-  .audio-gate {
+  .experience-copy-desktop {
     display: none;
+  }
+  .experience-copy-motion {
+    display: inline;
   }
 }
 

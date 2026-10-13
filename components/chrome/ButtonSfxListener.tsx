@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { useAudioGate } from "@/components/chrome/AudioGate"
 import { playButtonSfx, preloadButtonSfx } from "@/lib/ui/button-sfx"
 import {
   activateSiteSfx,
@@ -32,7 +33,9 @@ function findInteractiveTarget(target: EventTarget | null) {
 }
 
 export default function ButtonSfxListener() {
+  const { visible: entryVisible } = useAudioGate()
   useEffect(() => {
+    if (entryVisible) return
     const unlock = () => {
       if (isSiteSfxMuted()) return
       activateSiteSfx()
@@ -59,7 +62,7 @@ export default function ButtonSfxListener() {
       document.removeEventListener("keydown", unlock)
       document.removeEventListener("click", handleClick)
     }
-  }, [])
+  }, [entryVisible])
 
   return null
 }

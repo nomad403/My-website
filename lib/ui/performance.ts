@@ -52,7 +52,7 @@ const HIGH_PROFILE: PerformanceProfile = {
   },
   loading: {
     maxPreloadMs: 900,
-    stageDelays: { spheres: 0, ascii: 200, particles: 700 },
+    stageDelays: { spheres: 0, ascii: 0, particles: 700 },
   },
 }
 
@@ -74,7 +74,7 @@ const MID_PROFILE: PerformanceProfile = {
   },
   loading: {
     maxPreloadMs: 1400,
-    stageDelays: { spheres: 0, ascii: 400, particles: 1000 },
+    stageDelays: { spheres: 0, ascii: 0, particles: 1000 },
   },
 }
 
@@ -96,7 +96,7 @@ const LOW_PROFILE: PerformanceProfile = {
   },
   loading: {
     maxPreloadMs: 1200,
-    stageDelays: { spheres: 0, ascii: 350, particles: 900 },
+    stageDelays: { spheres: 0, ascii: 0, particles: 900 },
   },
 }
 

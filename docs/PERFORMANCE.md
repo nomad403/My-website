@@ -40,8 +40,17 @@ Shaders are prepared with `compile` during setup. Three.js 0.170's non-cancellab
 during resize, unmount or HMR, so it is deliberately avoided. No asynchronous
 shader-readiness callbacks survive disposal.
 
-The audio-entry copy is present in the server HTML. Heavy effects wait until
-that gate is dismissed; mobile/touch devices hide it with CSS before hydration.
+The audio-entry copy is present in the server HTML. Scene modules and the spheres
+component download in parallel with the entry gate and performance probe; the
+renderer still waits until the gate is dismissed and the profile is resolved.
+The GPU ASCII pass is included in the client bundle and mounts as soon as the
+scene is ready, without an extra chunk request or a timed ASCII delay.
+The entry gate appears on every document load and bfcache restoration, including
+mobile/touch devices. Cached choices never bypass it. Mobile copy explains sound
+and motion sensors; only its affirmative click calls the system orientation
+permission API, before awaiting audio unlock. Sensor listeners attach only after
+that entry's consent. Declining, denial and unavailable sensors keep the idle
+animation available without another permission request.
 The main title never waits for the renderer or CDN. Its font fitting uses canvas
 text metrics with loaded fonts to prevent layout shifts.
 
@@ -78,6 +87,14 @@ remained 1080 × 1920. Capture mode bypasses this pixel budget. Entry CLS was ab
 failure, page navigation, and portrait/landscape resize were checked separately.
 
 ## References
+
+Entry behavior can be checked against the same production server with
+`node scripts/experience-gate-audit.mjs` (`AUDIT_URL` is supported). It checks
+cached acceptance/refusal, reloads and a simulated bfcache restoration, audio
+unlock, mobile consent/refusal, unavailable sensors, and capture mode. The
+orientation permission API is mocked to verify that requests originate from
+the affirmative click with active user activation; the native system dialog
+must still be checked on a physical iPhone.
 
 - [MDN WebGL best practices: avoid synchronous readbacks](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices)
 - [Three.js render targets](https://threejs.org/manual/pages/rendertargets.html)

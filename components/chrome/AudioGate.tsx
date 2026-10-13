@@ -3,37 +3,16 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useLanguage } from "@/contexts/LanguageContext"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
+import { requestOrientationPermission, resetOrientationPermission } from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
-  readAudioGateChoice,
   setAudioGateChoice,
   setSiteSfxMuted,
   startAmbientLoop,
   unlockSiteSfx,
 } from "@/lib/ui/site-sfx"
 
-function shouldForceGateOnReload() {
-  if (typeof window === "undefined") return false
-
-  try {
-    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[]
-    if (navEntries[0]?.type === "reload") return true
-  } catch {
-    // ignore
-  }
-
-  try {
-    if ((performance as Performance & { navigation?: { type?: number } }).navigation?.type === 1) {
-      return true
-    }
-  } catch {
-    // ignore
-  }
-
-  return false
-}
-
-function shouldDisableGateOnMobile() {
+function isMotionDevice() {
   if (typeof window === "undefined") return false
   return (
     window.matchMedia?.("(max-width: 767px)")?.matches === true ||
@@ -61,52 +40,22 @@ export function AudioGateProvider({
   const [visible, setVisible] = useState(!disabled)
 
   useEffect(() => {
-    if (disabled) {
-      setVisible(false)
-      return
+    setVisible(!disabled)
+    if (disabled) return
+
+    const resetEntry = () => {
+      resetOrientationPermission()
+      setSiteSfxMuted(true)
+      setVisible(true)
     }
+    resetEntry()
 
-    const syncVisibility = () => {
-      if (shouldDisableGateOnMobile()) {
-        setVisible(false)
-        return
-      }
-
-      if (shouldForceGateOnReload()) {
-        setVisible(true)
-        return
-      }
-
-      setVisible(readAudioGateChoice() === "pending")
+    // A restored document also needs a fresh, explicit entry gesture.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) resetEntry()
     }
-
-    syncVisibility()
-
-    const onPageShow = () => {
-      if (shouldDisableGateOnMobile()) {
-        setVisible(false)
-        return
-      }
-
-      if (shouldForceGateOnReload()) {
-        setVisible(true)
-        return
-      }
-      syncVisibility()
-    }
-
-    const mobileGateQuery = window.matchMedia("(max-width: 767px)")
-    const coarsePointerQuery = window.matchMedia("(pointer: coarse)")
-
     window.addEventListener("pageshow", onPageShow)
-    mobileGateQuery.addEventListener("change", syncVisibility)
-    coarsePointerQuery.addEventListener("change", syncVisibility)
-
-    return () => {
-      window.removeEventListener("pageshow", onPageShow)
-      mobileGateQuery.removeEventListener("change", syncVisibility)
-      coarsePointerQuery.removeEventListener("change", syncVisibility)
-    }
+    return () => window.removeEventListener("pageshow", onPageShow)
   }, [disabled])
 
   return (
@@ -119,15 +68,10 @@ export function AudioGateProvider({
 export default function AudioGate() {
   const { visible, setVisible } = useAudioGate()
   const { language } = useLanguage()
-  const [mounted, setMounted] = useState(false)
+  const [entering, setEntering] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Render the entry copy in the server HTML instead of waiting for the entire
-  // client bundle to hydrate. CSS suppresses it on touch/mobile from first paint.
-  if (!visible || (mounted && shouldDisableGateOnMobile())) return null
+  // Both device variants are present in server HTML; CSS selects the copy.
+  if (!visible) return null
 
   const copy =
     language === "en"
@@ -135,6 +79,7 @@ export default function AudioGate() {
           label: "nomad403",
           title: "Enter",
           intro: "Enable sound to enjoy the full experience of the site.",
+          motionIntro: "Enable sound and motion sensitivity for the full experience. On compatible devices, your browser may ask for access to motion sensors.",
           yes: "Yes",
           no: "No",
         }
@@ -142,21 +87,30 @@ export default function AudioGate() {
           label: "nomad403",
           title: "Entrer",
           intro: "Activer le son pour profiter de l’expérience complète du site.",
+          motionIntro: "Activer le son et la sensibilité aux mouvements pour profiter de l’expérience complète. Sur les appareils compatibles, le navigateur pourra demander l’accès aux capteurs de mouvement.",
           yes: "Oui",
           no: "Non",
         }
 
   const handleEnter = async () => {
+    if (entering) return
+    setEntering(true)
+    // Start the system request directly in the click handler, before awaiting
+    // audio unlock, so Safari retains the required user activation.
+    const motionPermission = isMotionDevice()
+      ? requestOrientationPermission()
+      : Promise.resolve(false)
     setAudioGateChoice("accepted")
     setSiteSfxMuted(false)
     activateSiteSfx()
-    await unlockSiteSfx()
+    await Promise.all([motionPermission, unlockSiteSfx().catch(() => undefined)])
     startAmbientLoop()
     setVisible(false)
+    setEntering(false)
   }
 
   return (
-    <div className="audio-gate fixed inset-0 z-[100] bg-white px-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="experience-gate-title" className="audio-gate fixed inset-0 z-[100] bg-white px-4">
       <div className="absolute bottom-4 right-4 z-10 md:bottom-8 md:right-8">
         <LanguageSwitcher mode="day" />
       </div>
@@ -167,25 +121,27 @@ export default function AudioGate() {
             {copy.label}
           </div>
 
-          <h2 className="font-kode text-[1.625rem] font-normal uppercase leading-[1.08] tracking-[0.08em] text-black">
+          <h2 id="experience-gate-title" className="font-kode text-[1.625rem] font-normal uppercase leading-[1.08] tracking-[0.08em] text-black">
             {copy.title}
           </h2>
 
           <p className="mt-3 text-[0.8125rem] leading-[1.62] tracking-[0.02em] text-black/65">
-            {copy.intro}
+            <span className="experience-copy-desktop">{copy.intro}</span>
+            <span className="experience-copy-motion">{copy.motionIntro}</span>
           </p>
 
           <div className="mt-6 flex gap-3">
             <button
               type="button"
               data-no-sfx
+              disabled={entering}
               onClick={() => {
                 void handleEnter()
               }}
               aria-label={
                 language === "en"
-                  ? "Enable sound and enter the site"
-                  : "Activer le son et entrer sur le site"
+                  ? "Enable the full experience and enter the site"
+                  : "Activer l’expérience complète et entrer sur le site"
               }
               className="flex-1 border border-black/10 bg-black px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-white transition-colors duration-300 hover:bg-black/90"
             >
@@ -194,13 +150,14 @@ export default function AudioGate() {
             <button
               type="button"
               data-no-sfx
+              disabled={entering}
               onClick={() => {
                 setAudioGateChoice("declined")
                 setSiteSfxMuted(true)
                 setVisible(false)
               }}
               aria-label={
-                language === "en" ? "Continue without sound" : "Continuer sans son"
+                language === "en" ? "Continue without sound or motion sensors" : "Continuer sans son ni capteurs de mouvement"
               }
               className="flex-1 border border-black/10 bg-white px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-black transition-colors duration-300 hover:bg-black/5"
             >

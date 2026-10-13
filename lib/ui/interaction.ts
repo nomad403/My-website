@@ -6,47 +6,37 @@ export function isInteractiveClickTarget(target: EventTarget | null) {
 }
 
 export const ORIENTATION_GRANTED_EVENT = "nomad403:orientation-granted"
-const ORIENTATION_GRANTED_KEY = "nomad403:orientation-granted"
+// Consent belongs to this entry, never to a cached/localStorage choice.
+let orientationGranted = false
 
 export function wasOrientationGranted() {
-  if (typeof window === "undefined") return false
+  return orientationGranted
+}
 
+export function resetOrientationPermission() {
+  orientationGranted = false
+}
+
+/** Call only from the explained experience gate's affirmative click. */
+export async function requestOrientationPermission(): Promise<boolean> {
+  if (typeof window === "undefined") return false
+  const orientation = (window as unknown as {
+    DeviceOrientationEvent?: typeof DeviceOrientationEvent & {
+      requestPermission?: () => Promise<PermissionState>
+    }
+  }).DeviceOrientationEvent
+  if (!orientation) return false
   try {
-    return window.localStorage.getItem(ORIENTATION_GRANTED_KEY) === "1"
+    orientationGranted = typeof orientation.requestPermission === "function"
+      ? await orientation.requestPermission() === "granted"
+      : true
   } catch {
-    return false
+    orientationGranted = false
   }
+  return orientationGranted
 }
 
 export function notifyOrientationGranted() {
-  if (typeof window === "undefined") return
-
-  try {
-    window.localStorage.setItem(ORIENTATION_GRANTED_KEY, "1")
-  } catch {
-    // ignore
-  }
-
+  if (typeof window === "undefined" || !orientationGranted) return
   window.dispatchEvent(new CustomEvent(ORIENTATION_GRANTED_EVENT))
-}
-
-export function attachOrientationPermissionOnBackgroundGesture(
-  requestPermission: () => void | Promise<void>
-) {
-  if (typeof window === "undefined") return () => {}
-
-  const handleGesture = (event: Event) => {
-    if (isInteractiveClickTarget(event.target)) return
-    window.removeEventListener("touchend", handleGesture)
-    window.removeEventListener("click", handleGesture)
-    void requestPermission()
-  }
-
-  window.addEventListener("touchend", handleGesture, { passive: true })
-  window.addEventListener("click", handleGesture, { passive: true })
-
-  return () => {
-    window.removeEventListener("touchend", handleGesture)
-    window.removeEventListener("click", handleGesture)
-  }
 }

@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { attachOrientationPermissionOnBackgroundGesture, notifyOrientationGranted } from "@/lib/ui/interaction";
+import { wasOrientationGranted, notifyOrientationGranted } from "@/lib/ui/interaction";
 import { VIEWPORT_BLEED_PX, viewportBleedInsets } from "@/lib/ascii/viewport-bleed";
 import { subscribeDemoPointer } from "@/lib/demo/demo-pointer-store";
 import { isCaptureMode } from "@/lib/capture/mode";
 import type { AsciiGpuSource } from "@/lib/ascii/ascii-gpu-pass";
+import { loadSpheresModules } from "@/lib/ascii/spheres-modules";
 import type { BufferGeometry, DirectionalLight } from "three";
 import { getPerformanceProfile, type PerformanceProfile } from "@/lib/ui/performance";
 
@@ -41,12 +42,6 @@ type Spheres2Ctor = (
     };
   };
 };
-
-const CDN_ESM =
-  "https://cdn.jsdelivr.net/npm/threejs-components@0.0.8/build/backgrounds/spheres2.cdn.min.js";
-// Reuse the exact module already imported by the CDN component, not a second
-// bundled copy of Three.js.
-const THREE_ESM = "https://cdn.jsdelivr.net/npm/three@0.170.0/+esm";
 
 // Couleurs par page
 const PAGE_COLORS = {
@@ -104,10 +99,7 @@ export default function SpheresPacking({
       if (typeof window === "undefined") return;
 
       try {
-        const [mod, api] = await Promise.all([
-          import(/* webpackIgnore: true */ /* @vite-ignore */ CDN_ESM),
-          import(/* webpackIgnore: true */ /* @vite-ignore */ THREE_ESM) as Promise<AsciiGpuSource["api"]>,
-        ]);
+        const [mod, api] = await loadSpheresModules();
         const ctor: Spheres2Ctor = (mod?.default || mod) as Spheres2Ctor;
 
         if (cancelled) return;
@@ -308,8 +300,6 @@ export default function SpheresPacking({
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent;
     const hasDeviceOrientation = !!deviceOrientationCtor;
-    const needsPermission =
-      typeof deviceOrientationCtor?.requestPermission === "function";
 
     const state = {
       currentX: 0,
@@ -397,26 +387,7 @@ export default function SpheresPacking({
       orientationAttached = false;
     };
 
-    let permissionCleanup: (() => void) | null = null;
-
-    if (hasDeviceOrientation && needsPermission) {
-      const requestPermission = async () => {
-        try {
-          const result = await deviceOrientationCtor.requestPermission();
-          if (result === "granted") {
-            attachOrientation();
-          }
-        } catch (error) {
-          console.warn("SpheresPacking: erreur permission device orientation", error);
-        }
-      };
-
-      const handleFirstGesture = () => {
-        requestPermission();
-      };
-
-      permissionCleanup = attachOrientationPermissionOnBackgroundGesture(handleFirstGesture);
-    } else if (hasDeviceOrientation) {
+    if (hasDeviceOrientation && wasOrientationGranted()) {
       attachOrientation();
     }
 
@@ -477,7 +448,6 @@ export default function SpheresPacking({
     window.addEventListener("pointerleave", handlePointerLeave, { passive: true });
 
     return () => {
-      permissionCleanup?.();
       detachOrientation();
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerdown", handlePointerDown);
@@ -591,8 +561,6 @@ export default function SpheresPacking({
     const deviceOrientationCtor = (window as Record<string, any>)
       .DeviceOrientationEvent
     const hasDeviceOrientation = !!deviceOrientationCtor
-    const needsPermission =
-      typeof deviceOrientationCtor?.requestPermission === "function"
 
     const GYRO_STALE_MS = 1800
 
@@ -724,31 +692,8 @@ export default function SpheresPacking({
       orientationAttached = false
     }
 
-    let permissionCleanup: (() => void) | null = null
-
-    if (!forceSimulated) {
-      if (hasDeviceOrientation && needsPermission) {
-        const requestPermission = async () => {
-          try {
-            const result = await deviceOrientationCtor.requestPermission()
-            if (result === "granted") {
-              attachOrientation()
-              notifyGrantedOnce()
-            } else {
-              gyroLive = false
-            }
-          } catch (error) {
-            console.warn("SpheresPacking: orientation permission refusée", error)
-            gyroLive = false
-          }
-        }
-
-        permissionCleanup = attachOrientationPermissionOnBackgroundGesture(
-          requestPermission,
-        )
-      } else if (hasDeviceOrientation) {
-        attachOrientation()
-      }
+    if (!forceSimulated && hasDeviceOrientation && wasOrientationGranted()) {
+      attachOrientation()
     }
 
     reseedIdle(performance.now())
@@ -756,7 +701,6 @@ export default function SpheresPacking({
 
     return () => {
       unsubDemoPointer?.()
-      permissionCleanup?.()
       detachOrientation()
       if (state.raf) {
         cancelAnimationFrame(state.raf)
@@ -791,7 +735,6 @@ export default function SpheresPacking({
         pointerEvents: "none",
         display: "block",
         opacity: shouldShowVisually ? 1 : 0,   // Caché visuellement si ASCII actif, mais canvas reste actif
-        transition: "opacity 0.5s ease-in-out",
         visibility: visible ? "visible" : "hidden", // Toujours visible si visible=true pour que le canvas soit rendu
       }}
     />
