@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, type ReactNode } from "react"
+import { usePathname } from "next/navigation"
 import { BackgroundProvider } from "@/contexts/BackgroundContext"
 import { PageProvider } from "@/contexts/PageContext"
 import { LanguageProvider } from "@/contexts/LanguageContext"
@@ -20,6 +21,7 @@ interface ClientLayoutProps {
 }
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
+  const isContactCard = usePathname() === "/card"
   // Start in the SSR-safe state, then read the query string after hydration.
   const [captureMode, setCaptureMode] = useState(false)
 
@@ -27,7 +29,11 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     setCaptureMode(isCaptureMode(window.location.search))
   }, [])
 
-  useLockMobileDocumentScroll(true)
+  useLockMobileDocumentScroll(!isContactCard)
+
+  // NFC visitors need immediate access to contact actions, without portfolio
+  // permission gates, dynamic SEO overrides or decorative WebGL effects.
+  if (isContactCard) return <>{children}</>
 
   return (
     <LanguageProvider>
