@@ -114,7 +114,10 @@ failure, page navigation, and portrait/landscape resize were checked separately.
 Entry behavior can be checked against the same production server with
 `node scripts/experience-gate-audit.mjs` (`AUDIT_URL` is supported). It checks
 cached acceptance/refusal, reloads and a simulated bfcache restoration, audio
-unlock, mobile consent/refusal, unavailable sensors, and capture mode. The
+unlock, mobile consent/refusal, unavailable sensors, and capture mode. It also
+checks that accepted sensitivity shows “Tournez votre téléphone” in French or
+“Rotate your phone” in English at each home arrival, even without sensor readings or
+when consent was granted on another page. The
 orientation permission API is mocked to verify that requests originate from
 the affirmative click with active user activation; the native system dialog
 must still be checked on a physical iPhone.

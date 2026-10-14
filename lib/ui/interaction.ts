@@ -33,6 +33,7 @@ export async function requestOrientationPermission(): Promise<boolean> {
   } catch {
     orientationGranted = false
   }
+  if (orientationGranted) notifyOrientationGranted()
   return orientationGranted
 }
 

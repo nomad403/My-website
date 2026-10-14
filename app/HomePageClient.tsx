@@ -125,10 +125,10 @@ export default function HomePageClient({
     [t, language],
   )
   const rotateHintLines = useMemo(
-    () => [t("home.rotateHintFr"), t("home.rotateHintEn")],
+    () => [t(language === "en" ? "home.rotateHintEn" : "home.rotateHintFr")],
     [t, language],
   )
-  const rotateHintActiveRaw = useGyroRotateHint(currentPage, showHomeTitle)
+  const rotateHintActiveRaw = useGyroRotateHint(currentPage, showHomeTitle && !demoMode)
   const rotateHintActive = rotateHintActiveRaw && !demoPlaying
   const displayedHomeLines = rotateHintActive
     ? rotateHintLines
@@ -396,6 +396,7 @@ export default function HomePageClient({
               {showHomeTitle && (
                 <div className="absolute inset-0 flex w-full items-end pb-[calc(9rem+env(safe-area-inset-bottom,0px))] sm:pb-32 md:pb-32">
                   <HomeTitle
+                    key={rotateHintActive ? `gyro-hint-${language}` : "home-title"}
                     lines={displayedHomeLines}
                     alternateLines={displayedHomeAltLines}
                     alternateBrandTexts={homeBrandAltWords}

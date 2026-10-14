@@ -64,7 +64,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'home.titleAltLine1': 'Web, mobile,',
         'home.titleAltLine2': 'IA, automatisation.',
         'home.brandAlt': 'explorez',
-        'home.rotateHintFr': 'Inclinez votre téléphone',
+        'home.rotateHintFr': 'Tournez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
         
         // Projects page
@@ -120,7 +120,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         'home.titleAltLine1': 'Web, mobile,',
         'home.titleAltLine2': 'AI, automation.',
         'home.brandAlt': 'explore',
-        'home.rotateHintFr': 'Inclinez votre téléphone',
+        'home.rotateHintFr': 'Tournez votre téléphone',
         'home.rotateHintEn': 'Rotate your phone',
         
         // Projects page

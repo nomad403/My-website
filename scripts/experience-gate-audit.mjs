@@ -7,6 +7,7 @@ const cases = [
   { name: "desktop cached acceptance", mobile: false, choice: "accepted", yes: true },
   { name: "desktop cached refusal", mobile: false, choice: "declined", yes: false },
   { name: "mobile accepted permission", mobile: true, permission: "granted", yes: true },
+  { name: "mobile consent before home arrival", mobile: true, permission: "granted", yes: true, fromContact: true, language: "en" },
   { name: "mobile declined experience", mobile: true, permission: "granted", yes: false },
   { name: "mobile denied permission", mobile: true, permission: "denied", yes: true },
   { name: "mobile permission error", mobile: true, permission: "error", yes: true },
@@ -21,7 +22,10 @@ try {
       isMobile: test.mobile,
       hasTouch: test.mobile,
     })
-    await context.addInitScript(({ choice, permission }) => {
+    await context.addInitScript(({ choice, permission, language }) => {
+      localStorage.setItem("nomad403-language", language ?? "fr")
+      // A previous visit's hint marker must not suppress the new home arrival.
+      sessionStorage.setItem("nomad403-gyro-hint-shown", "1")
       localStorage.setItem("nomad403:audio-gate-choice", choice ?? "accepted")
       localStorage.setItem("nomad403:sfx-muted", "0")
       localStorage.setItem("nomad403:orientation-granted", "1")
@@ -57,7 +61,7 @@ try {
     const page = await context.newPage()
     const errors = []
     page.on("pageerror", error => errors.push(error.message))
-    await page.goto(baseUrl, { waitUntil: "networkidle" })
+    await page.goto(`${baseUrl}${test.fromContact ? "/contact" : ""}`, { waitUntil: "networkidle" })
     const gate = page.getByRole("dialog")
     await gate.waitFor({ state: "visible" })
     const intro = gate.locator(test.mobile ? ".experience-copy-motion" : ".experience-copy-desktop")
@@ -72,6 +76,18 @@ try {
     })), { requests: 0, audio: 0, listeners: 0 })
     await gate.getByRole("button", { name: test.yes ? /Activer l’expérience|Enable the full/ : /Continuer sans son|Continue without/ }).click()
     await gate.waitFor({ state: "hidden" })
+    const sensorsAllowed = test.mobile && test.yes && ["granted", "automatic"].includes(test.permission)
+    const assertLocalizedHint = async () => {
+      const title = page.locator('[data-capture="home-title"]')
+      // No deviceorientation events are emitted by this fixture: acceptance
+      // alone must show the hint in the selected language.
+      const english = test.language === "en"
+      const expected = english ? "Rotate your phone" : "Tournez votre téléphone"
+      const other = english ? "Tournez votre téléphone" : "Rotate your phone"
+      await title.getByText(expected, { exact: true }).waitFor({ state: "visible", timeout: 5000 })
+      assert.equal(await title.getByText(other, { exact: true }).count(), 0)
+    }
+    if (sensorsAllowed && !test.fromContact) await assertLocalizedHint()
     await page.locator('[data-ascii-renderer="gpu"]').waitFor({ state: "visible", timeout: 30000 })
     const state = await page.evaluate(() => ({
       requests: window.__entryAudit.requests,
@@ -84,8 +100,30 @@ try {
     assert.ok(state.requests.every(request => request.activeGesture))
     assert.equal(state.audioRunning, test.yes)
     assert.equal(state.muted, test.yes ? "0" : "1")
-    const sensorsAllowed = test.mobile && test.yes && ["granted", "automatic"].includes(test.permission)
     assert.equal(state.listeners > 0, sensorsAllowed)
+    if (!sensorsAllowed) {
+      assert.equal(await page.getByText("Rotate your phone", { exact: true }).count(), 0)
+      assert.equal(await page.getByText("Tournez votre téléphone", { exact: true }).count(), 0)
+    }
+    if (test.fromContact) {
+      assert.equal(await page.getByText("Rotate your phone", { exact: true }).count(), 0)
+      await page.getByRole("button", { name: "Accueil — Glenn Richard", exact: true }).click()
+      await assertLocalizedHint()
+    }
+    if (test.name === "mobile accepted permission") {
+      await page.getByRole("button", { name: "Menu", exact: true }).click()
+      await page.getByRole("link", { name: /^Portfolio projets/ }).filter({ visible: true }).click()
+      await page.waitForURL("**/projects")
+      await page.getByRole("button", { name: "Accueil — Glenn Richard", exact: true }).click()
+      await assertLocalizedHint()
+      await page.getByRole("button", { name: /Anglais|English/, exact: true }).filter({ visible: true }).click()
+      const title = page.locator('[data-capture="home-title"]')
+      await title.getByText("Rotate your phone", { exact: true }).waitFor({ state: "visible", timeout: 3000 })
+      assert.equal(await title.getByText("Tournez votre téléphone", { exact: true }).count(), 0)
+      await page.getByRole("button", { name: /Français|French/, exact: true }).filter({ visible: true }).click()
+      await assertLocalizedHint()
+      await page.waitForFunction(() => !document.querySelector('[data-capture="home-title"]')?.textContent.includes("Tournez votre téléphone"), null, { timeout: 8000 })
+    }
     // A background click must never trigger another system permission request.
     await page.mouse.click(5, 300)
     assert.equal(await page.evaluate(() => window.__entryAudit.requests.length), needsRequest ? 1 : 0)
