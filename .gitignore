@@ -18,6 +18,11 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.strix.example
+
+# local security tooling and audit reports
+/.tools/strix/
+/strix_runs/
 
 # vercel
 .vercel

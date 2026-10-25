@@ -9,6 +9,10 @@
     "start": "next start",
     "capture": "node scripts/capture.mjs",
     "capture:browser": "node scripts/capture.mjs --headed",
+    "security:install": "node scripts/install-strix.mjs",
+    "security:check": "node scripts/strix.mjs doctor",
+    "security:scan": "node scripts/strix.mjs scan",
+    "security:strix": "node scripts/strix.mjs",
     "postbuild": "next-sitemap"
   },
   "dependencies": {

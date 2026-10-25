@@ -1,0 +1,87 @@
+name: Strix security audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strix-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-audit:
+    name: Strix audit
+    # Fork PRs and Dependabot do not receive the LLM API secret.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Install verified Strix release
+        run: |
+          node scripts/install-strix.mjs
+          .tools/strix/strix --version
+          docker info
+
+      - name: Check AI configuration
+        env:
+          STRIX_LLM: ${{ vars.STRIX_LLM || secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          missing=0
+          if [ -z "$STRIX_LLM" ]; then
+            echo '::error::Set the Actions variable STRIX_LLM to your provider/model identifier.'
+            missing=1
+          fi
+          if [ -z "$LLM_API_KEY" ]; then
+            echo '::error::Set the Actions secret LLM_API_KEY to your provider API key.'
+            missing=1
+          fi
+          exit "$missing"
+
+      - name: Run Strix audit
+        env:
+          STRIX_LLM: ${{ vars.STRIX_LLM || secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_API_BASE: ${{ vars.LLM_API_BASE }}
+        run: >-
+          .tools/strix/strix --non-interactive
+          --target .
+          --scan-mode quick
+          --scope-mode full
+          --max-budget 5
+          --max-turns 100
+          --instruction-file docs/STRIX-SCOPE.md
+
+      - name: Save audit reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: strix-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            strix_runs/**/penetration_test_report.md
+            strix_runs/**/vulnerabilities.json
+            strix_runs/**/vulnerabilities/*.md
+            strix_runs/**/*.sarif
+          if-no-files-found: ignore
+          retention-days: 7
