@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
+import { reserveContactEmail } from "@/lib/contact/contact-abuse"
 import {
   escapeHtml,
   sanitizeContactPayload,
@@ -9,14 +10,52 @@ import {
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-type Body = { nom?: string; contact?: string; message?: string }
+type Body = { nom?: string; contact?: string; message?: string; website?: string }
+
+const MAX_BODY_BYTES = 8192
+const UNAVAILABLE = { ok: false, error: "Service temporarily unavailable" }
+
+async function readBody(req: Request): Promise<Body | null> {
+  if (!req.body) return null
+  const reader = req.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      size += value.byteLength
+      if (size > MAX_BODY_BYTES) {
+        await reader.cancel()
+        throw new RangeError("Payload too large")
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Body
+}
 
 export async function POST(req: Request) {
   try {
+    if (req.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
+      return NextResponse.json({ ok: false, error: "Unsupported media type" }, { status: 415 })
+    }
+    const origin = req.headers.get("origin")
+    if (origin && origin !== new URL(req.url).origin) {
+      return NextResponse.json({ ok: false, error: "Invalid origin" }, { status: 403 })
+    }
+    if (Number(req.headers.get("content-length")) > MAX_BODY_BYTES) {
+      return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 })
+    }
     let data: Body | null = null
     try {
-      data = (await req.json()) as Body
-    } catch {
+      data = await readBody(req)
+    } catch (error) {
+      if (error instanceof RangeError) {
+        return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 })
+      }
       return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 })
     }
 
@@ -25,6 +64,11 @@ export async function POST(req: Request) {
       typeof data?.contact !== "string" ||
       typeof data?.message !== "string"
     ) {
+      return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 })
+    }
+
+    // A honeypot catches simple form-filling bots; Redis limits also cover direct API scripts.
+    if (data.website !== undefined && (typeof data.website !== "string" || data.website !== "")) {
       return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 })
     }
 
@@ -48,14 +92,21 @@ export async function POST(req: Request) {
     const from = process.env.RESEND_FROM
     const to = process.env.RESEND_TO
 
-    if (!apiKey) {
-      return NextResponse.json({ ok: false, error: "RESEND_API_KEY missing" }, { status: 500 })
+    if (!apiKey || !from || !to) {
+      return NextResponse.json(UNAVAILABLE, { status: 503 })
     }
-    if (!from) {
-      return NextResponse.json({ ok: false, error: "RESEND_FROM missing" }, { status: 500 })
-    }
-    if (!to) {
-      return NextResponse.json({ ok: false, error: "RESEND_TO missing" }, { status: 500 })
+
+    try {
+      const reservation = await reserveContactEmail(req, payload)
+      if (!reservation.allowed) {
+        return NextResponse.json({ ok: false, error: "Too many requests" }, {
+          status: 429,
+          headers: { "Retry-After": String(reservation.retryAfter) },
+        })
+      }
+    } catch {
+      console.error("[contact] abuse protection unavailable")
+      return NextResponse.json(UNAVAILABLE, { status: 503, headers: { "Retry-After": "60" } })
     }
 
     const resend = new Resend(apiKey)
@@ -81,21 +132,13 @@ export async function POST(req: Request) {
 
     const { data: sendData, error } = result
     if (error) {
-      console.error("[Resend] error:", error)
-      return NextResponse.json(
-        {
-          ok: false,
-          name: error.name,
-          message: error.message,
-        },
-        { status: 502 },
-      )
+      console.error("[contact] email provider rejected request")
+      return NextResponse.json(UNAVAILABLE, { status: 502 })
     }
 
     return NextResponse.json({ ok: true, id: sendData?.id ?? null })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Server error"
-    console.error("[contact] fatal:", e)
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+  } catch {
+    console.error("[contact] unexpected error")
+    return NextResponse.json(UNAVAILABLE, { status: 500 })
   }
 }

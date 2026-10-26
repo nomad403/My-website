@@ -42,6 +42,7 @@ export default function ContactPageContent() {
     null,
   )
   const [isSending, setIsSending] = useState(false)
+  const [website, setWebsite] = useState("")
   const [sendStatus, setSendStatus] = useState<"idle" | "success" | "error">(
     "idle",
   )
@@ -156,6 +157,7 @@ export default function ContactPageContent() {
       nom: formData.nom.trim(),
       contact: formData.contact.trim(),
       message: formData.message.trim(),
+      website,
     }
 
     try {
@@ -167,6 +169,10 @@ export default function ContactPageContent() {
 
       const text = await res.text()
       if (!res.ok) {
+        if (res.status === 429) {
+          showTitleFeedback(t("contact.rateLimited"), "error", 5000)
+          return
+        }
         let validationCode: ContactValidationCode | null = null
         try {
           const json = JSON.parse(text) as {
@@ -266,6 +272,11 @@ export default function ContactPageContent() {
           </div>
 
           <div className="w-full">
+            <div className="absolute -left-[10000px]" aria-hidden="true">
+              <label htmlFor="contact-website">Website</label>
+              <input id="contact-website" name="website" type="text" tabIndex={-1}
+                autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
+            </div>
             {activeField === "message" ? (
               <textarea
                 placeholder={steps[currentStep].placeholder}
