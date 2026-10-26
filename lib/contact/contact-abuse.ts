@@ -34,22 +34,24 @@ export async function reserveContactEmail(
     throw new Error("Contact abuse protection is not configured")
   }
 
-  // Only trust the header overwritten by Vercel when running on Vercel.
-  // Other deployments share a conservative bucket instead of trusting spoofable headers.
-  const forwarded = process.env.VERCEL === "1"
-    ? request.headers.get("x-vercel-forwarded-for")?.trim()
-    : null
-  const client = forwarded && isIP(forwarded) ? forwarded : "shared-client"
+  // Outside Vercel the operator must explicitly configure a header that their
+  // reverse proxy overwrites. Never combine unidentified visitors in one bucket.
+  const header = process.env.VERCEL === "1"
+    ? "x-vercel-forwarded-for"
+    : process.env.CONTACT_TRUSTED_IP_HEADER
+  const client = header ? request.headers.get(header)?.trim() : null
+  if (!client || !isIP(client)) throw new Error("Trusted client identity unavailable")
   const hash = (value: string) => createHmac("sha256", token).update(value).digest("hex")
   // Hash tags keep the four keys in the same slot on a Redis cluster.
   const prefix = `contact:{${process.env.VERCEL_ENV || process.env.NODE_ENV || "development"}}`
+  const clientPrefix = `${prefix}:client:${hash(client)}`
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify([
       "EVAL", CONTACT_RESERVATION_SCRIPT, "4",
-      `${prefix}:ip:${hash(client)}`, `${prefix}:hour`, `${prefix}:day`,
-      `${prefix}:duplicate:${hash(JSON.stringify([payload.contact.toLowerCase(), payload.message]))}`,
+      `${clientPrefix}:short`, `${clientPrefix}:hour`, `${clientPrefix}:day`,
+      `${clientPrefix}:duplicate:${hash(JSON.stringify([payload.contact.toLowerCase(), payload.message]))}`,
     ]),
     cache: "no-store",
     signal: AbortSignal.timeout(3000),

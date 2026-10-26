@@ -11,7 +11,7 @@ const payload = { nom: "Test Person", contact: "test@example.com", message: "A l
 
 // Run the real TypeScript handler and limiter with isolated environment and mocked outbound mail/HTTP.
 function fixture(options = {}) {
-  const calls = { emails: 0, redis: [] }
+  const calls = { emails: 0, sent: [], redis: [] }
   const env = {
     RESEND_API_KEY: "test-mail-key", RESEND_FROM: "from@example.com", RESEND_TO: "owner@example.com",
     UPSTASH_REDIS_REST_URL: "https://redis.example.com", UPSTASH_REDIS_REST_TOKEN: "test-redis-key",
@@ -29,14 +29,16 @@ function fixture(options = {}) {
       fetch: async (url, init) => {
         calls.redis.push({ url, init, command: JSON.parse(init.body) })
         if (options.redisThrows) throw new Error("private redis failure")
+        if (options.redisExecute) return Response.json({ result: await redisCommand(JSON.parse(init.body)) })
         return Response.json(options.redisBody ?? { result: [1, 0] }, { status: options.redisStatus ?? 200 })
       },
       require: (name) => {
         if (name.startsWith("@/")) return load(name.slice(2))
         if (name === "next/server") return { NextResponse: { json: (body, init) => Response.json(body, init) } }
         if (name === "resend") return { Resend: class {
-          emails = { send: async () => {
+          emails = { send: async (message) => {
             calls.emails++
+            calls.sent.push(message)
             if (options.mailThrows) throw new Error("private provider exception")
             return options.mailResult ?? { data: { id: "test-id" }, error: null }
           } }
@@ -61,6 +63,8 @@ test("a valid request reserves a slot before sending one email", async () => {
   assert.equal(f.calls.redis.length, 1)
   assert.equal(f.calls.redis[0].command[0], "EVAL")
   assert.equal(f.calls.redis[0].init.headers.Authorization, "Bearer test-redis-key")
+  assert.equal(f.calls.sent[0].replyTo, payload.contact)
+  assert.ok(!("reply_to" in f.calls.sent[0]))
 })
 
 test("200 throttled submissions never reach the email provider", async () => {
@@ -98,11 +102,28 @@ test("spoofed proxy headers cannot change the client bucket", async () => {
   assert.ok(!keys.includes("192.0.2.1") && !keys.includes(payload.contact) && !keys.includes(payload.message))
 })
 
-test("outside Vercel even x-vercel-forwarded-for is not trusted", async () => {
+test("unidentified visitors fail closed without sharing a quota", async () => {
   const f = fixture({ env: { VERCEL: "" } })
-  await f.post(payload, { "x-vercel-forwarded-for": "192.0.2.1" })
-  await f.post(payload, { "x-vercel-forwarded-for": "192.0.2.2" })
-  assert.equal(f.calls.redis[0].command[3], f.calls.redis[1].command[3])
+  assert.equal((await f.post(payload, { "x-vercel-forwarded-for": "192.0.2.1" })).status, 503)
+  assert.equal((await f.post(payload, { "x-vercel-forwarded-for": "192.0.2.2" })).status, 503)
+  assert.equal(f.calls.redis.length, 0)
+  assert.equal(f.calls.emails, 0)
+})
+
+test("self-hosted deployments use only the explicitly trusted proxy header", async () => {
+  const f = fixture({ env: { VERCEL: "", CONTACT_TRUSTED_IP_HEADER: "x-real-ip" } })
+  assert.equal((await f.post(payload, { "x-real-ip": "192.0.2.1" })).status, 200)
+  assert.equal((await f.post(payload, { "x-real-ip": "192.0.2.2" })).status, 200)
+  for (let key = 3; key <= 6; key++) assert.notEqual(f.calls.redis[0].command[key], f.calls.redis[1].command[key])
+})
+
+test("invalid trusted client addresses cannot select a shared fallback bucket", async () => {
+  const f = fixture()
+  for (const address of ["", "unknown", "192.0.2.1, 192.0.2.2"]) {
+    assert.equal((await f.post(payload, { "x-vercel-forwarded-for": address })).status, 503)
+  }
+  assert.equal(f.calls.emails, 0)
+  assert.equal(f.calls.redis.length, 0)
 })
 
 test("honeypots, invalid inputs and foreign origins never reserve a slot", async () => {
@@ -178,26 +199,33 @@ function redisCommand(args) {
   })
 }
 
-test("real Redis: concurrent quotas, distributed cap, duplicates and expiry", {
+test("real Redis: concurrency, per-client isolation, hourly/daily quotas and expiry", {
   skip: !process.env.REDIS_TEST_PORT && "Set REDIS_TEST_PORT to run the Redis integration test",
 }, async () => {
-  const { CONTACT_RESERVATION_SCRIPT: script } = fixture().load("lib/contact/contact-abuse")
-  const prefix = `test:${Date.now()}:${process.pid}`
-  const reserve = (ip, message, scope = "a") => redisCommand(["EVAL", script, 4,
-    `${prefix}:${scope}:ip:${ip}`, `${prefix}:${scope}:hour`, `${prefix}:${scope}:day`, `${prefix}:${scope}:dup:${message}`])
-  const concurrent = await Promise.all(Array.from({ length: 30 }, (_, i) => reserve("same", `message-${i}`)))
-  assert.equal(concurrent.filter(([allowed]) => allowed === 1).length, 3)
-  assert.ok(concurrent.filter(([allowed]) => allowed === 0).every(([, ttl]) => ttl > 0 && ttl <= 600))
-  assert.deepEqual(await reserve("first", "duplicate", "dups"), [1, 0])
-  assert.equal((await reserve("second", "duplicate", "dups"))[0], 0)
-  const distributed = await Promise.all(Array.from({ length: 30 }, (_, i) => reserve(`ip-${i}`, `msg-${i}`, "global")))
-  assert.equal(distributed.filter(([allowed]) => allowed === 1).length, 20)
-  await redisCommand(["SET", `${prefix}:daycap:day`, 50, "EX", 86400])
-  assert.equal((await reserve("new", "new", "daycap"))[0], 0)
-  for (const key of ["ip:expiring", "hour", "day", "dup:expiring"]) {
-    await redisCommand(["SET", `${prefix}:expiry:${key}`, 100, "PX", 50])
+  const f = fixture({ redisExecute: true, env: { VERCEL_ENV: `test-${Date.now()}-${process.pid}` } })
+  const headers = ip => ({ "x-vercel-forwarded-for": ip })
+  const post = (ip, message) => f.post({ ...payload, message }, headers(ip))
+  const concurrent = await Promise.all(Array.from({ length: 30 }, (_, i) => post("192.0.2.1", `Unique valid message ${i}`)))
+  assert.equal(concurrent.filter(r => r.status === 200).length, 3)
+  assert.equal(concurrent.filter(r => r.status === 429).length, 27)
+  // The exhausted visitor cannot block an unrelated client, including the same message.
+  assert.equal((await post("192.0.2.2", "Unique valid message 0")).status, 200)
+  assert.equal((await post("192.0.2.2", "Unique valid message 0")).status, 429)
+  // 25 distinct clients all succeed: there is no shared hourly bucket.
+  const independent = await Promise.all(Array.from({ length: 25 }, (_, i) => post(`198.51.100.${i + 1}`, `Independent enquiry ${i}`)))
+  assert.ok(independent.every(r => r.status === 200))
+  const command = f.calls.redis[0].command
+  for (const [keyIndex, limit, expiry] of [[4, 20, 3600], [5, 50, 86400]]) {
+    const ip = keyIndex === 4 ? "203.0.113.1" : "203.0.113.2"
+    await post(ip, "Initial valid test message")
+    const keys = f.calls.redis.at(-1).command
+    await redisCommand(["SET", keys[keyIndex], limit, "EX", expiry])
+    assert.equal((await post(ip, "Another valid test message")).status, 429)
+    assert.equal((await post("203.0.113.3", `Another visitor message ${keyIndex}`)).status, 200)
   }
-  assert.equal((await reserve("expiring", "expiring", "expiry"))[0], 0)
+  // Expiring a single client's counters permits that client to submit again.
+  for (const key of command.slice(3)) await redisCommand(["SET", key, 100, "PX", 50])
+  assert.equal((await post("192.0.2.1", "Unique valid message 0")).status, 429)
   await new Promise(resolve => setTimeout(resolve, 100))
-  assert.deepEqual(await reserve("expiring", "expiring", "expiry"), [1, 0])
+  assert.equal((await post("192.0.2.1", "Unique valid message 0")).status, 200)
 })

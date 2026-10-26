@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     const result = await resend.emails.send({
       from,
       to,
-      reply_to: isEmail ? contact : undefined,
+      replyTo: isEmail ? contact : undefined,
       subject: `Contact — ${nom.slice(0, 80)}`,
       text: `Nom / Structure: ${nom}\nContact: ${contact}\n\n${message}`,
       html: `

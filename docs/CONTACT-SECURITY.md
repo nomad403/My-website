@@ -21,8 +21,11 @@ n'est envoyé. Préparer les variables avant de fusionner/déployer ce correctif
 ## Limites appliquées avant chaque envoi
 
 - 3 messages maximum par client sur une fenêtre de 10 minutes.
-- 20 messages par heure et 50 par jour pour l'ensemble du site.
-- Même contact et même message : un seul envoi sur 10 minutes.
+- 20 messages par heure et 50 par jour pour chaque client.
+- Même client, même contact et même message : un seul envoi sur 10 minutes.
+
+Tous les compteurs sont propres au client. L'épuisement du quota d'un visiteur
+n'entraîne pas le refus des messages des autres visiteurs.
 
 Une commande Redis Lua atomique vérifie et réserve tous les quotas ensemble,
 y compris lors d'envois simultanés depuis plusieurs instances. Les fenêtres
@@ -33,17 +36,20 @@ définies dans `lib/contact/contact-abuse.ts`.
 
 Sur Vercel, seule l'adresse du header `x-vercel-forwarded-for` fourni par la
 plateforme est utilisée ; les headers arbitraires envoyés par le client sont
-ignorés. Hors Vercel, les visiteurs partagent un même quota conservateur : adapter
-l'identification uniquement à un proxy qui écrase et garantit l'adresse source
-avant un déploiement sur un autre hébergeur. Les clés utilisent des HMAC ; ni les
+ignorés. Hors Vercel, définir `CONTACT_TRUSTED_IP_HEADER` uniquement pour un
+header écrasé par votre reverse proxy de confiance, par exemple `x-real-ip`.
+Le serveur applicatif doit être inaccessible en contournant ce proxy. Sans
+adresse IP valide provenant du proxy configuré, l'envoi est refusé avec 503 ;
+aucun quota commun de repli n'est utilisé. Les clés utilisent des HMAC ; ni les
 adresses IP ni le texte des messages ne sont enregistrés dans Redis.
 
 Un dépassement ou un doublon renvoie `429` avec `Retry-After`. Une panne Redis
 ou une réponse invalide interrompt l'envoi avec `503`, sans repli sur un compteur
 en mémoire. Un champ piège filtre les robots simples ; il ne remplace pas les
-quotas et ne prétend pas bloquer tous les robots. Un attaquant distribué peut
-encore consommer le quota global : surveiller les refus et ajuster les seuils
-selon le trafic légitime. Aucun système d'alerte externe n'est connecté.
+quotas et ne prétend pas bloquer tous les robots. Les quotas par client ne
+constituent pas un plafond de facturation global : une attaque distribuée sur
+de nombreuses adresses nécessite une protection complémentaire chez l'hébergeur
+ou un CAPTCHA. Surveiller l'usage Resend. Aucun système d'alerte externe n'est connecté.
 
 Les corps JSON sont limités à 8 Kio, même sans Content-Length ; les origines
 différentes sont refusées pour les requêtes de navigateur. Les détails internes
@@ -56,7 +62,7 @@ notamment les refus sans envoi et l'absence de divulgation d'erreurs internes.
 Le workflow de tests ne reçoit aucune clé Resend réelle. Le pentest Strix doit
 être relancé après les changements ; sa portée reste une instance isolée.
 Le workflow de régression démarre un Redis local éphémère pour tester le script
-Lua réel (concurrence, plafond global, doublons et expiration). Pour lancer aussi
+Lua réel (concurrence, isolation des visiteurs, doublons et expiration). Pour lancer aussi
 ce test en local, démarrer Redis et définir `REDIS_TEST_PORT` avant la commande.
 
 Références : [API REST Upstash](https://upstash.com/docs/redis/features/restapi),
