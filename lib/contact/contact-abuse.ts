@@ -34,12 +34,10 @@ export async function reserveContactEmail(
     throw new Error("Contact abuse protection is not configured")
   }
 
-  // Outside Vercel the operator must explicitly configure a header that their
-  // reverse proxy overwrites. Never combine unidentified visitors in one bucket.
-  const header = process.env.VERCEL === "1"
-    ? "x-vercel-forwarded-for"
-    : process.env.CONTACT_TRUSTED_IP_HEADER
-  const client = header ? request.headers.get(header)?.trim() : null
+  // This deployment uses Vercel, which overwrites this header at its edge.
+  // Outside that platform no arbitrary client-supplied header is accepted.
+  if (process.env.VERCEL !== "1") throw new Error("Trusted platform identity unavailable")
+  const client = request.headers.get("x-vercel-forwarded-for")?.trim()
   if (!client || !isIP(client)) throw new Error("Trusted client identity unavailable")
   const hash = (value: string) => createHmac("sha256", token).update(value).digest("hex")
   // Hash tags keep the four keys in the same slot on a Redis cluster.

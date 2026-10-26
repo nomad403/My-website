@@ -110,11 +110,15 @@ test("unidentified visitors fail closed without sharing a quota", async () => {
   assert.equal(f.calls.emails, 0)
 })
 
-test("self-hosted deployments use only the explicitly trusted proxy header", async () => {
+test("rotating headers outside Vercel cannot bypass protection, even with legacy configuration", async () => {
   const f = fixture({ env: { VERCEL: "", CONTACT_TRUSTED_IP_HEADER: "x-real-ip" } })
-  assert.equal((await f.post(payload, { "x-real-ip": "192.0.2.1" })).status, 200)
-  assert.equal((await f.post(payload, { "x-real-ip": "192.0.2.2" })).status, 200)
-  for (let key = 3; key <= 6; key++) assert.notEqual(f.calls.redis[0].command[key], f.calls.redis[1].command[key])
+  for (let i = 1; i <= 6; i++) {
+    assert.equal((await f.post(payload, {
+      "x-real-ip": `192.0.2.${i}`, "x-vercel-forwarded-for": `192.0.2.${i}`,
+    })).status, 503)
+  }
+  assert.equal(f.calls.emails, 0)
+  assert.equal(f.calls.redis.length, 0)
 })
 
 test("invalid trusted client addresses cannot select a shared fallback bucket", async () => {

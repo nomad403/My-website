@@ -36,11 +36,12 @@ définies dans `lib/contact/contact-abuse.ts`.
 
 Sur Vercel, seule l'adresse du header `x-vercel-forwarded-for` fourni par la
 plateforme est utilisée ; les headers arbitraires envoyés par le client sont
-ignorés. Hors Vercel, définir `CONTACT_TRUSTED_IP_HEADER` uniquement pour un
-header écrasé par votre reverse proxy de confiance, par exemple `x-real-ip`.
-Le serveur applicatif doit être inaccessible en contournant ce proxy. Sans
-adresse IP valide provenant du proxy configuré, l'envoi est refusé avec 503 ;
-aucun quota commun de repli n'est utilisé. Les clés utilisent des HMAC ; ni les
+ignorés. Le formulaire d'envoi sécurisé prend en charge le déploiement Vercel.
+Hors Vercel, ou sans adresse IP valide fournie par la plateforme, l'envoi est
+refusé avec 503. Aucun header configurable ni quota commun de repli n'est utilisé.
+Un futur changement d'hébergeur nécessitera une identification du client garantie
+par cette nouvelle plateforme ; ne pas définir manuellement `VERCEL=1`.
+Les clés utilisent des HMAC ; ni les
 adresses IP ni le texte des messages ne sont enregistrés dans Redis.
 
 Un dépassement ou un doublon renvoie `429` avec `Retry-After`. Une panne Redis
