@@ -13,16 +13,17 @@
     "security:check": "node scripts/strix.mjs doctor",
     "security:scan": "node scripts/strix.mjs scan",
     "security:strix": "node scripts/strix.mjs",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap",
+    "test:security": "node tests/contact-security.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "framer-motion": "^12.23.3",
-    "next": "^15.5.19",
+    "next": "^15.5.28",
     "next-sitemap": "^4.2.3",
     "qrcode": "^1.5.4",
-    "react": "19.2.1",
-    "react-dom": "19.2.1",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
     "resend": "^6.0.2",
     "three": "^0.170.0"
   },
@@ -34,9 +35,16 @@
     "@types/three": "^0.181.0",
     "jsqr": "^1.4.0",
     "playwright": "^1.63.0",
-    "postcss": "^8.5",
+    "postcss": "^8.5.31",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "browserslist": "^4.29.4",
+    "nanoid": "^3.3.20",
+    "source-map-js": "^1.2.2",
+    "postcss-selector-parser": "^7.1.7"
   }
 }
