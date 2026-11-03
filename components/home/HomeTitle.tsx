@@ -142,8 +142,6 @@ export default function HomeTitle({
     if (!container || lines.length === 0) return
 
     const update = () => {
-      // The fitted title uses pixels; follow the rem-based UI scale as well.
-      const uiScale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16
       const containerWidth = container.clientWidth
       const layout = readHeaderBandLayout(container, isMobile)
       const logoLeft = layout?.left ?? 0
@@ -156,8 +154,8 @@ export default function HomeTitle({
       const nextBrandFontSize = fitFontSize(
         HOME_BRAND_TEXT,
         brandWidth,
-        Math.floor(maxBrandFontPx * uiScale),
-        Math.floor(HOME_BRAND_MIN_FONT_PX * uiScale),
+        maxBrandFontPx,
+        HOME_BRAND_MIN_FONT_PX,
         BRAND_FONT_FAMILY,
         HOME_BRAND_FONT_WEIGHT,
         HOME_BRAND_LETTER_SPACING_EM,
@@ -174,7 +172,7 @@ export default function HomeTitle({
         ? HOME_TITLE_BRAND_SIZE_RATIO_MOBILE
         : HOME_TITLE_BRAND_SIZE_RATIO_DESKTOP
       const titleMaxPx = Math.min(
-        Math.floor(maxFontPx * uiScale),
+        maxFontPx,
         Math.floor(nextBrandFontSize * brandRatio),
       )
 
@@ -183,7 +181,7 @@ export default function HomeTitle({
           line,
           welcomeWidth,
           titleMaxPx,
-          Math.floor(HOME_TITLE_MIN_FONT_PX * uiScale),
+          HOME_TITLE_MIN_FONT_PX,
           TITLE_FONT_FAMILY,
           titleFontWeight,
           HOME_TITLE_LETTER_SPACING_EM,

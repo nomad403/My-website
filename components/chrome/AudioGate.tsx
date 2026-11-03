@@ -78,16 +78,16 @@ export default function AudioGate() {
       ? {
           label: "nomad403",
           title: "Enter",
-          intro: "Enable sound to enjoy the full experience of the site.",
-          motionIntro: "Enable sound and motion sensitivity for the full experience. On compatible devices, your browser may ask for access to motion sensors.",
+          intro: "Enable sound for the full experience.",
+          motionIntro: "Enable motion sensitivity for the full experience. Your browser may ask for sensor access.",
           yes: "Yes",
           no: "No",
         }
       : {
           label: "nomad403",
           title: "Entrer",
-          intro: "Activer le son pour profiter de l’expérience complète du site.",
-          motionIntro: "Activer le son et la sensibilité aux mouvements pour profiter de l’expérience complète. Sur les appareils compatibles, le navigateur pourra demander l’accès aux capteurs de mouvement.",
+          intro: "Activez le son pour l’expérience complète.",
+          motionIntro: "Activez la sensibilité aux mouvements pour l’expérience complète. Le navigateur pourra demander l’accès aux capteurs.",
           yes: "Oui",
           no: "Non",
         }
@@ -157,7 +157,7 @@ export default function AudioGate() {
                 setVisible(false)
               }}
               aria-label={
-                language === "en" ? "Continue without sound or motion sensors" : "Continuer sans son ni capteurs de mouvement"
+                language === "en" ? "Continue without the full experience" : "Continuer sans l’expérience complète"
               }
               className="flex-1 border border-black/10 bg-white px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-black transition-colors duration-300 hover:bg-black/5"
             >

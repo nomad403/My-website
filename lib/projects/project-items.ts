@@ -97,6 +97,17 @@ export const PROJECT_ITEMS: ProjectItem[] = [
     ),
     stack: ["Next.js", "React", "TypeScript"],
   },
+  {
+    id: 8,
+    name: "Ismaël Bah",
+    url: "https://ismaelbah.com/",
+    description: L("Site web portfolio", "Portfolio website"),
+    summary: L(
+      "Movement director et chorégraphe à Paris, pour la mode, l’image et le film.\nUn portfolio pour présenter sa direction de mouvement, ses collaborations et son univers.",
+      "Paris-based movement director and choreographer for fashion, image, and film.\nA portfolio showcasing his movement direction, collaborations, and artistic world.",
+    ),
+    stack: ["HTML", "CSS", "JavaScript"],
+  },
 ]
 
 export function projectCopy(
