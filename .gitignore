@@ -20,6 +20,7 @@ yarn-error.log*
 .env*
 !.env.strix.example
 !.env.contact.example
+!.env.auth.example
 
 # local security tooling and audit reports
 /.tools/strix/

@@ -1,43 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import type { MouseEvent } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import HeaderLogo from "@/components/chrome/HeaderLogo"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import ShuffleText from "@/components/ascii/ShuffleText"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { leavesPortfolioShell, NAV_ITEMS } from "@/lib/chrome/nav-items"
 
 type NavMode = "day" | "night"
-
-const NAV_ITEMS = [
-  {
-    id: "home",
-    href: "/",
-    labelKey: "nav.home",
-    ariaLabel: "Accueil - Développeur web mobile freelance Paris NOMAD403",
-  },
-  {
-    id: "projects",
-    href: "/projects",
-    labelKey: "nav.projects",
-    ariaLabel:
-      "Portfolio projets - Développement web React Next.js mobile Kotlin Swift",
-  },
-  {
-    id: "specialist",
-    href: "/specialist",
-    labelKey: "nav.specialist",
-    ariaLabel: "Compétences techniques - Expert React Next.js Kotlin Swift IA",
-  },
-  {
-    id: "contact",
-    href: "/contact",
-    labelKey: "nav.contact",
-    ariaLabel:
-      "Contact développeur freelance - Devis gratuit projet web mobile",
-    alignEnd: true,
-  },
-] as const
 
 interface SiteChromeNavProps {
   mode: NavMode
@@ -45,6 +17,22 @@ interface SiteChromeNavProps {
   isMobileMenuOpen: boolean
   onToggleMobileMenu: () => void
   onPageChange: (page: string) => void
+  /** Page document : les liens du portfolio sont de vraies navigations. */
+  documentNavigation?: boolean
+}
+
+function followNavLink(
+  event: MouseEvent<HTMLAnchorElement>,
+  itemId: string,
+  documentNavigation: boolean,
+  onPageChange: (page: string) => void,
+) {
+  if (documentNavigation || leavesPortfolioShell(itemId)) {
+    if (documentNavigation) onPageChange(itemId)
+    return
+  }
+  event.preventDefault()
+  onPageChange(itemId)
 }
 
 function navLinkClass(mode: NavMode, isActive: boolean) {
@@ -72,32 +60,49 @@ export default function SiteChromeNav({
   isMobileMenuOpen,
   onToggleMobileMenu,
   onPageChange,
+  documentNavigation = false,
 }: SiteChromeNavProps) {
   const { t } = useLanguage()
+  const logo = <HeaderLogo mode={mode} />
 
   return (
-    <nav className="site-chrome absolute top-0 left-0 right-0 z-50 p-4 md:p-8">
-      <div className="mx-auto flex max-w-7xl items-start justify-between">
-        <button
-          type="button"
-          onClick={() => onPageChange("home")}
-          aria-label="Accueil — Glenn Richard"
-          data-header-align="logo"
-          className="py-2 text-left transition-colors duration-300"
-        >
-          <HeaderLogo mode={mode} />
-        </button>
+    <nav
+      className={`site-chrome top-0 left-0 right-0 z-50 p-4 md:p-8 ${
+        documentNavigation ? "sticky bg-white" : "absolute"
+      }`}
+    >
+      <div className="mx-auto flex max-w-7xl items-start justify-between gap-4">
+        {documentNavigation ? (
+          <Link
+            href="/"
+            onClick={() => onPageChange("home")}
+            aria-label="Accueil — Glenn Richard"
+            data-header-align="logo"
+            className="py-2 text-left transition-colors duration-300"
+          >
+            {logo}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onPageChange("home")}
+            aria-label="Accueil — Glenn Richard"
+            data-header-align="logo"
+            className="py-2 text-left transition-colors duration-300"
+          >
+            {logo}
+          </button>
+        )}
 
-        <div className="hidden items-center space-x-8 font-kode text-[0.8125rem] font-normal uppercase tracking-[0.08em] md:flex">
+        <div className="flex items-start gap-3 md:gap-5">
+        <div className="hidden items-center gap-x-4 font-kode text-[0.75rem] font-normal uppercase tracking-[0.08em] md:flex lg:gap-x-8 lg:text-[0.8125rem]">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.id}
               href={item.href}
-              onClick={(e) => {
-                e.preventDefault()
-                onPageChange(item.id)
-              }}
+              onClick={(e) => followNavLink(e, item.id, documentNavigation, onPageChange)}
               aria-label={item.ariaLabel}
+              aria-current={currentPage === item.id ? "page" : undefined}
               data-header-align={
                 "alignEnd" in item && item.alignEnd ? "nav-end" : undefined
               }
@@ -109,6 +114,11 @@ export default function SiteChromeNav({
             </Link>
           ))}
         </div>
+        {documentNavigation ? (
+          <div className="pt-2">
+            <LanguageSwitcher mode={mode} />
+          </div>
+        ) : null}
 
         <button
           type="button"
@@ -151,6 +161,7 @@ export default function SiteChromeNav({
             />
           </div>
         </button>
+        </div>
       </div>
     </nav>
   )
@@ -161,6 +172,7 @@ interface SiteChromeMobileMenuProps {
   currentPage: string
   isOpen: boolean
   onPageChange: (page: string) => void
+  documentNavigation?: boolean
 }
 
 export function SiteChromeMobileMenu({
@@ -168,6 +180,7 @@ export function SiteChromeMobileMenu({
   currentPage,
   isOpen,
   onPageChange,
+  documentNavigation = false,
 }: SiteChromeMobileMenuProps) {
   const { t } = useLanguage()
 
@@ -181,7 +194,7 @@ export function SiteChromeMobileMenu({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.28, ease: "easeOut" }}
           aria-label="Navigation mobile"
-          className={`absolute inset-0 z-30 flex flex-col justify-center px-6 pb-24 pt-24 md:hidden ${
+          className={`${documentNavigation ? "fixed z-40 bg-white" : "absolute z-30"} inset-0 flex flex-col justify-center overflow-y-auto px-6 pb-24 pt-24 md:hidden ${
             mode === "night" ? "text-white" : "text-black"
           }`}
         >
@@ -190,11 +203,9 @@ export function SiteChromeMobileMenu({
               <Link
                 key={item.id}
                 href={item.href}
-                onClick={(e) => {
-                  e.preventDefault()
-                  onPageChange(item.id)
-                }}
+                onClick={(e) => followNavLink(e, item.id, documentNavigation, onPageChange)}
                 aria-label={item.ariaLabel}
+                aria-current={currentPage === item.id ? "page" : undefined}
                 className={`w-fit text-left transition-colors duration-300 ${mobileLinkClass(
                   mode,
                   currentPage === item.id,
