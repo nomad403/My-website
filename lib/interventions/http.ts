@@ -23,7 +23,7 @@ export async function interventionHttp(request: Request, admin: boolean, operati
   if (operation === "action") {
    if (!input || typeof input !== "object" || Array.isArray(input)) return NextResponse.json({ok:false,code:"invalid"},{status:400})
    const { action, ...body } = input as Record<string,unknown>
-   if (action !== "message" && action !== "transition" && action !== "complete") return NextResponse.json({ok:false,code:"invalid"},{status:400,headers:{"Cache-Control":"no-store"}})
+   if (action !== "message" && action !== "transition" && action !== "complete" && action !== "priority") return NextResponse.json({ok:false,code:"invalid"},{status:400,headers:{"Cache-Control":"no-store"}})
    operation = action
    input = body
   }

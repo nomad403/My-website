@@ -1,8 +1,5 @@
-import AdminInterventions from "@/components/auth/AdminInterventions"
-import AdminPromotions from "@/components/auth/AdminPromotions"
+import AdminConsole from "@/components/auth/AdminConsole"
 import type { Metadata } from "next"
-import AdminBillingLists from "@/components/auth/AdminBillingLists"
-import AdminSummary from "@/components/auth/AdminSummary"
 import AuthFrame, { AuthNote } from "@/components/auth/AuthFrame"
 import { productionPlatform, readRequestCookie } from "@/lib/auth/runtime"
 
@@ -23,8 +20,8 @@ export default async function AdminPage() {
     )
   }
 
-  const result = await auth.service.adminSummary(await readRequestCookie())
-  if (result.status !== 200 || typeof result.body.accounts !== "number") {
+  const result = await auth.service.adminIdentity(await readRequestCookie())
+  if (result.status !== 200) {
     const code = typeof result.body.code === "string" ? result.body.code : "unavailable"
     return (
       <AuthFrame titleKey="auth.admin.title">
@@ -35,20 +32,7 @@ export default async function AdminPage() {
 
   return (
     <AuthFrame titleKey="auth.admin.title" wide>
-      <AdminSummary
-        data={{
-          accounts: Number(result.body.accounts),
-          theoreticalMrrCents: Number(result.body.theoreticalMrrCents),
-          theoreticalArrCents: Number(result.body.theoreticalArrCents),
-          issuedCents: Number(result.body.issuedCents),
-          collectedCents: Number(result.body.collectedCents),
-          refundedCents: Number(result.body.refundedCents),
-          unpaidCents: Number(result.body.unpaidCents),
-        }}
-      />
-      <AdminBillingLists data={await auth.billing.adminSnapshot()} />
-      <AdminPromotions />
-      <AdminInterventions />
+      <AdminConsole />
     </AuthFrame>
   )
 }

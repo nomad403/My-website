@@ -413,7 +413,7 @@ test("new MFA-less admin sessions cannot read or mutate intervention administrat
  const fixture=setup(),client=await signIn(fixture,"client@example.com"),admin=await signIn(fixture,"admin@example.com")
  let accesses=0
  const deps={authorize:cookie=>fixture.service.adminIdentity(cookie),admin:true,limiter:new MemoryRateLimiter(),now:fixture.now,store:new Proxy({},{get:()=>async()=>{accesses++;return []}})}
- for(const operation of["list","detail","message","transition","complete"]){
+ for(const operation of["list","detail","message","transition","complete","priority"]){
   assert.equal((await interventionOperation(deps,null,operation,{})).status,401)
   assert.equal((await interventionOperation(deps,client.cookie.value,operation,{})).status,403)
   assert.equal((await interventionOperation(deps,admin.cookie.value,operation,{})).body.code,"mfa_enrollment_required")
@@ -424,4 +424,23 @@ test("new MFA-less admin sessions cannot read or mutate intervention administrat
  const fresh=await signIn(fixture,"admin@example.com")
  assert.equal((await interventionOperation(deps,fresh.cookie.value,"list",{})).body.code,"mfa_required")
  assert.equal(accesses,1)
+})
+
+test("Lot 6 reads and priority mutations require current admin MFA and reject revoked sessions",async()=>{
+ const {administer}=await import("../lib/admin/service.ts")
+ const fixture=setup(),client=await signIn(fixture,"client@example.com"),admin=await signIn(fixture,"admin@example.com")
+ let reads=0
+ const deps={authorize:c=>fixture.service.adminIdentity(c),store:new Proxy({},{get:()=>async()=>{reads++;return {}}}),limiter:new MemoryRateLimiter(),now:fixture.now}
+ for(const operation of["overview","records","client"]){
+  assert.equal((await administer(deps,null,operation)).status,401)
+  assert.equal((await administer(deps,client.cookie.value,operation)).status,403)
+  assert.equal((await administer(deps,admin.cookie.value,operation)).body.code,"mfa_enrollment_required")
+ }
+ assert.equal(reads,0)
+ const enrolled=await fixture.service.enrollMfa(admin.cookie.value),verified=await fixture.service.verifyMfa({cookieValue:admin.cookie.value,code:enrolled.body.recoveryCodes[0]})
+ for(const operation of["overview","records","client"])assert.equal((await administer(deps,verified.cookie.value,operation,{},"11111111-1111-4111-8111-111111111111")).status,200)
+ const fresh=await signIn(fixture,"admin@example.com")
+ assert.equal((await administer(deps,fresh.cookie.value,"records")).body.code,"mfa_required")
+ await fixture.service.logout(verified.cookie.value)
+ assert.equal((await administer(deps,verified.cookie.value,"records")).status,401);assert.equal(reads,3)
 })

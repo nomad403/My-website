@@ -438,6 +438,7 @@ export function createAuthService(deps: AuthDeps) {
     async adminSummary(cookieValue: string | null): Promise<ServiceResult> {
       const gate = await requireSession(cookieValue, "admin")
       if (!gate.ok) return gate.error
+      if (!(await deps.limiter.consume("admin-summary:" + gate.session.user.id, 60, 3600)).allowed) return { status:429, body:{ok:false,code:"rate_limited"} }
       const [counts, billing] = await Promise.all([
         deps.store.countAccounts(),
         deps.store.loadBillingInputs().then(summarizeBilling),

@@ -175,6 +175,7 @@ export const invoices = pgTable(
     servicePeriodEnd: timestamp("service_period_end", { withTimezone: true }),
     serviceSubscriptionId: text("service_subscription_id"),
     status: invoiceStatus("status").notNull(),
+    totalCents: integer("total_cents"),
     amountDueCents: integer("amount_due_cents").notNull(),
     amountPaidCents: integer("amount_paid_cents").notNull(),
     amountRemainingCents: integer("amount_remaining_cents").notNull(),
@@ -225,6 +226,7 @@ export const refunds = pgTable(
       .notNull()
       .references(() => payments.id, { onDelete: "restrict" }),
     stripeRefundId: text("stripe_refund_id").unique(),
+    succeededEventAt: timestamp("succeeded_event_at", { withTimezone: true }),
     status: refundStatus("status").notNull(),
     amountCents: integer("amount_cents").notNull(),
     currency: text("currency").notNull().default("EUR"),
@@ -399,6 +401,7 @@ export const interventionRequests = pgTable("intervention_requests", {
  additionalInfo: text("additional_info").notNull().default(""),
  status: text("status").notNull().default("submitted"),
  coverage: text("coverage").notNull().default("unreviewed"),
+ internalPriority: text("internal_priority").notNull().default("normal"),
  minorScopeConfirmed: boolean("minor_scope_confirmed").notNull().default(false),
  createdAt: createdAt(), updatedAt: updatedAt(),
 }, table => [
@@ -444,4 +447,12 @@ export const interventionOutbox = pgTable("intervention_outbox", {
  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "restrict" }),
  audience: text("audience").notNull(), status: text("status").notNull().default("pending"),
  createdAt: createdAt(),
+})
+
+export const subscriptionObservations = pgTable("subscription_observations", {
+ id: bigserial("id",{mode:"number"}).primaryKey(),
+ subscriptionId: uuid("subscription_id").notNull().references(()=>subscriptions.id,{onDelete:"restrict"}),
+ status:text("status").notNull(),amountCents:integer("amount_cents").notNull(),billingInterval:text("billing_interval").notNull(),
+ currentPeriodStart:timestamp("current_period_start",{withTimezone:true}),currentPeriodEnd:timestamp("current_period_end",{withTimezone:true}),cancelRequestedAt:timestamp("cancel_requested_at",{withTimezone:true}),cancelEffectiveAt:timestamp("cancel_effective_at",{withTimezone:true}),
+ reviewRequired:boolean("review_required").notNull(),stripeEventCreated:bigint("stripe_event_created",{mode:"number"}).notNull(),recordedAt:timestamp("recorded_at",{withTimezone:true}).notNull().defaultNow(),
 })

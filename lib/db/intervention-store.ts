@@ -139,7 +139,7 @@ export class DrizzleInterventionStore implements InterventionStore {
   }
  }
  async detail(actor: Actor, id: string, offset: number, now = new Date()) {
-  const [row] = await this.db.select({ ...requestFields, projectName: projects.name }).from(requests)
+  const [row] = await this.db.select({ ...requestFields, ...(actor.admin ? {internalPriority:requests.internalPriority} : {}), projectName: projects.name }).from(requests)
    .innerJoin(projects,eq(projects.id,requests.projectId))
    .where(and(eq(requests.id,id),actor.admin ? undefined : eq(requests.userId,actor.id))).limit(1)
   if (!row) fail("not_found",404)
@@ -153,15 +153,19 @@ export class DrizzleInterventionStore implements InterventionStore {
   const contract = sub ? {planCode:sub.planCode,amountCents:sub.amountCents,billingInterval:sub.billingInterval,quota:await quota(this.db,sub,now)} : null
   return { ...row, contract, events: messages, time: time[0] ?? null, offset, hasMore: messages.length === 100 }
  }
- async mutate(actor: Actor, id: string, operation: "message" | "transition" | "complete", input: Record<string, unknown>, now: Date) {
-  const payloadHash = hashToken(JSON.stringify([operation,input.body??"",input.status??null,input.coverage??null,input.minorScopeConfirmed??false,input.minutes??null,input.performedAt??null,input.internal??false]))
+ async mutate(actor: Actor, id: string, operation: "message" | "transition" | "complete" | "priority", input: Record<string, unknown>, now: Date) {
+  const payloadHash = hashToken(JSON.stringify([operation,input.body??"",input.status??null,input.coverage??null,input.minorScopeConfirmed??false,input.minutes??null,input.performedAt??null,input.internal??false,input.internalPriority??null]))
   await this.db.transaction(async tx => {
    const [row] = await tx.select().from(requests).where(and(eq(requests.id,id),actor.admin ? undefined : eq(requests.userId,actor.id))).limit(1).for("update")
    if (!row) fail("not_found",404)
    const [prior] = await tx.select().from(events).where(and(eq(events.requestId,id),eq(events.actorId,actor.id),eq(events.operationKey,input.operationKey as string))).limit(1)
    if (prior) { if (prior.payloadHash !== payloadHash) fail("idempotency_conflict"); return }
    const common = { operationKey: input.operationKey as string, payloadHash, body: (input.body as string | undefined)?.trim() ?? "" }
-   if (operation === "message") {
+   if (operation === "priority") {
+    if (!actor.admin) fail("forbidden",403)
+    await tx.update(requests).set({internalPriority:input.internalPriority as string,updatedAt:now}).where(eq(requests.id,id))
+    await event(tx,actor,row,{...common,kind:"priority",internal:true,body:"Priority: "+String(input.internalPriority)},now)
+   } else if (operation === "message") {
     if (["completed","cancelled","rejected"].includes(row.status)) fail("request_closed")
     if (input.internal && !actor.admin) fail("forbidden",403)
     await event(tx,actor,row,{...common,kind:"message",internal:input.internal as boolean | undefined},now)

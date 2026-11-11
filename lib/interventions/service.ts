@@ -7,9 +7,9 @@ export interface InterventionStore {
  list(actor: Actor, offset: number): Promise<unknown>
  create(actor: Actor, input: Record<string, unknown>, now: Date): Promise<{ id: string }>
  detail(actor: Actor, id: string, offset: number, now?: Date): Promise<unknown>
- mutate(actor: Actor, id: string, operation: "message" | "transition" | "complete", input: Record<string, unknown>, now: Date): Promise<void>
+ mutate(actor: Actor, id: string, operation: "message" | "transition" | "complete" | "priority", input: Record<string, unknown>, now: Date): Promise<void>
 }
-export type Operation = "dashboard" | "profile" | "list" | "create" | "detail" | "message" | "transition" | "complete"
+export type Operation = "dashboard" | "profile" | "list" | "create" | "detail" | "message" | "transition" | "complete" | "priority"
 export type InterventionDeps = {
  authorize: (cookie: string | null) => Promise<ServiceResult>
  store: InterventionStore; limiter: RateLimiter; now: () => Date; admin: boolean
@@ -48,9 +48,12 @@ export async function interventionOperation(deps: InterventionDeps, cookie: stri
    return { status: 201, body: { ok: true, ...await deps.store.create(actor, input, now) } }
   } else {
    if (!objectId(id) || !objectId(input.operationKey)) return fail(400, "invalid")
-   const fields = operation === "message" ? ["operationKey","body","internal"] : operation === "transition" ? ["operationKey","status","coverage","minorScopeConfirmed","body"] : ["operationKey","minutes","performedAt","body"]
+   const fields = operation === "priority" ? ["operationKey","internalPriority"] : operation === "message" ? ["operationKey","body","internal"] : operation === "transition" ? ["operationKey","status","coverage","minorScopeConfirmed","body"] : ["operationKey","minutes","performedAt","body"]
    if (Object.keys(input).some(k => !fields.includes(k))) return fail(400, "invalid")
-   if (operation === "message") {
+   if (operation === "priority") {
+    if (!actor.admin) return fail(403,"forbidden")
+    if (!["low","normal","high","urgent"].includes(input.internalPriority as string)) return fail(400,"invalid")
+   } else if (operation === "message") {
     if (!validText(input.body,1,4000) || (input.internal !== undefined && typeof input.internal !== "boolean")) return fail(400, "invalid")
     if (input.internal && !actor.admin) return fail(403, "forbidden")
    } else if (operation === "transition") {

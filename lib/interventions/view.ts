@@ -1,4 +1,6 @@
 export const labels = {
+ savePriority:["Enregistrer la priorité","Save priority"],
+ internalPriority:["Priorité interne (invisible au client)","Internal priority (hidden from client)"],urgent:["Urgente","Urgent"],priority:["Priorité interne","Internal priority"],
  payload_too_large:["Demande trop volumineuse (8 Ko maximum). Raccourcissez le texte.","Request too large (8 KB maximum). Shorten the text."],
  unsupported_media:["Format de demande non pris en charge.","Unsupported request format."],invalid_json:["Demande illisible. Réessayez.","Invalid request. Try again."],
 
@@ -72,6 +74,7 @@ export type RequestView = {
  additionalInfo:string;status:string;coverage:string;createdAt:string;updatedAt:string;
 }
 export type RequestDetail = RequestView & {
+ internalPriority?:string;
  events:{id:string;actorId:string;actorRole:string;kind:string;body:string;internal:boolean;fromStatus:string|null;toStatus:string|null;createdAt:string}[];
  time:{minutes:number;coverage:string;performedAt:string}|null;offset:number;hasMore:boolean;
  contract:{planCode:string;amountCents:number;billingInterval:string;quota:ClientQuota}|null;

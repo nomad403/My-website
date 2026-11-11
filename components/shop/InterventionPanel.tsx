@@ -5,7 +5,7 @@ import {categories,transitions,type RequestStatus} from "@/lib/interventions/con
 import {api,translate,type Dashboard,type RequestView,type RequestDetail} from "@/lib/interventions/view"
 const field="mt-1 w-full border border-black/25 bg-white px-3 py-2 font-home-title text-sm focus-visible:outline focus-visible:outline-cyan-500"
 const button="border border-black/25 px-3 py-2 font-kode text-xs uppercase tracking-wide focus-visible:outline-cyan-500 disabled:opacity-40"
-export default function InterventionPanel({admin=false,language,dashboard,onChanged}:{admin?:boolean;language:"fr"|"en";dashboard?:Dashboard;onChanged?:()=>void}) {
+export default function InterventionPanel({admin=false,hideList=false,language,dashboard,onChanged}:{admin?:boolean;hideList?:boolean;language:"fr"|"en";dashboard?:Dashboard;onChanged?:()=>void}) {
  const t=(key:string)=>translate(key,language)
  const router=useRouter(),pathname=usePathname(),params=useSearchParams()
  const selectedId=params.get("request"),base=admin?"/api/admin/interventions":"/api/account/interventions"
@@ -13,7 +13,7 @@ export default function InterventionPanel({admin=false,language,dashboard,onChan
  const [detail,setDetail]=useState<RequestDetail|null>(null),[loading,setLoading]=useState(true),[loadingDetail,setLoadingDetail]=useState(false)
  const [error,setError]=useState(""),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[next,setNext]=useState("analyzing")
  const pending=useRef<{signature:string;key:string}|null>(null)
- const load=useCallback(async()=>{setLoading(true);try{setRows((await api<{requests:RequestView[]}>(base+"?offset="+offset)).requests)}catch(e){setError(e instanceof Error?e.message:"unavailable")}finally{setLoading(false)}},[base,offset])
+ const load=useCallback(async()=>{if(hideList){setLoading(false);return}setLoading(true);try{setRows((await api<{requests:RequestView[]}>(base+"?offset="+offset)).requests)}catch(e){setError(e instanceof Error?e.message:"unavailable")}finally{setLoading(false)}},[base,offset,hideList])
  useEffect(()=>{void load()},[load])
  useEffect(()=>{
   let cancelled=false
@@ -60,8 +60,8 @@ export default function InterventionPanel({admin=false,language,dashboard,onChan
     <button disabled={busy} className={button+" bg-cyan-300 md:col-span-2"}>{t("submit")}</button>
    </form>}
   </details>}
-  {loading?<p role="status">{t("loading")}</p>:rows.length===0?<p>{t("emptyRequests")}</p>:<ul className="my-4 grid gap-3 lg:grid-cols-2">{rows.map(row=><li key={row.id} className="min-w-0 border border-black/20 p-4"><h3 className="break-words font-kode text-sm">{row.subject}</h3><p className="mt-2 break-words">{row.projectName}{admin&&" · "+row.clientEmail}</p><p className="mt-1">{t(row.status)} · {t(row.coverage)}</p><p className="mt-2 text-xs text-black/65">{date(row.updatedAt)}</p><button className={button+" mt-3"} onClick={()=>open(row.id)}>{t("detail")}</button></li>)}</ul>}
-  <div className="flex gap-2"><button className={button} disabled={offset===0||loading} onClick={()=>setOffset(Math.max(0,offset-50))}>{t("previous")}</button><button className={button} disabled={rows.length<50||loading} onClick={()=>setOffset(offset+50)}>{t("next")}</button></div>
+  {!hideList&&(loading?<p role="status">{t("loading")}</p>:rows.length===0?<p>{t("emptyRequests")}</p>:<ul className="my-4 grid gap-3 lg:grid-cols-2">{rows.map(row=><li key={row.id} className="min-w-0 border border-black/20 p-4"><h3 className="break-words font-kode text-sm">{row.subject}</h3><p className="mt-2 break-words">{row.projectName}{admin&&" · "+row.clientEmail}</p><p className="mt-1">{t(row.status)} · {t(row.coverage)}</p><p className="mt-2 text-xs text-black/65">{date(row.updatedAt)}</p><button className={button+" mt-3"} onClick={()=>open(row.id)}>{t("detail")}</button></li>)}</ul>)}
+  {!hideList&&<div className="flex gap-2"><button className={button} disabled={offset===0||loading} onClick={()=>setOffset(Math.max(0,offset-50))}>{t("previous")}</button><button className={button} disabled={rows.length<50||loading} onClick={()=>setOffset(offset+50)}>{t("next")}</button></div>}
   {loadingDetail&&<p className="mt-5" role="status">{t("loading")}</p>}
   {detail&&<section className="mt-8 border-t-2 border-black/25 pt-5" aria-label={t("detail")}>
    <div className="flex items-start justify-between gap-3"><h3 className="break-words font-kode text-lg">{detail.subject}</h3><button className={button} onClick={()=>open(null)}>{t("back")}</button></div>
@@ -81,6 +81,7 @@ export default function InterventionPanel({admin=false,language,dashboard,onChan
     <button className={button+" w-fit"} disabled={busy}>{t("send")}</button><p className="text-xs text-black/60">{t("emailNotice")}</p>
    </form>}
    {!admin&&detail&&["submitted","analyzing","waiting_client"].includes(detail.status)&&<button disabled={busy} className={button+" mt-4"} onClick={()=>void command(base+"/"+selectedId,{action:"transition",status:"cancelled"})}>{t("cancelRequest")}</button>}
+   {admin&&<form className="my-5 flex flex-wrap items-end gap-3 border border-black/25 p-4" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget);void command(base+"/"+selectedId,{action:"priority",internalPriority:f.get("internalPriority")})}}><label>{t("internalPriority")}<select name="internalPriority" key={detail.id+detail.internalPriority} defaultValue={detail.internalPriority??"normal"} className={field}>{["low","normal","high","urgent"].map(p=><option key={p} value={p}>{t(p)}</option>)}</select></label><button className={button} disabled={busy}>{t("savePriority")}</button></form>}
    {admin&&!closed&&<div className="mt-5 grid gap-5 md:grid-cols-2">
     <form onSubmit={transition} className="grid gap-3 border border-black/25 p-4"><label>{t("status")}<select className={field} value={next} onChange={e=>setNext(e.target.value)}>{transitions[detail.status as RequestStatus].filter(s=>s!=="completed").map(s=><option key={s} value={s}>{t(s)}</option>)}</select></label>
      {next==="accepted"&&<><label>{t("coverage")}<select name="coverage" className={field} defaultValue="outside"><option value="outside">{t("outside")}</option><option value="included">{t("included")}</option></select></label><label className="flex items-start gap-2"><input type="checkbox" name="minorScopeConfirmed" className="mt-1"/>{t("minorConfirm")}</label></>}

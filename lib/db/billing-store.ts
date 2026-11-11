@@ -426,6 +426,10 @@ export class DrizzleBillingStore implements BillingStore {
         userId: input.userId,
         subscriptionId: subscription?.id ?? null,
         stripeInvoiceId: input.stripeInvoiceId,
+        totalCents: input.totalCents ?? null,
+        serviceSubscriptionId: input.stripeSubscriptionId,
+        servicePeriodStart: input.servicePeriodStart ?? null,
+        servicePeriodEnd: input.servicePeriodEnd ?? null,
         status: input.status as typeof invoices.$inferInsert.status,
         amountDueCents: input.amountDueCents,
         amountPaidCents: input.amountPaidCents,
@@ -442,6 +446,7 @@ export class DrizzleBillingStore implements BillingStore {
       .update(invoices)
       .set({
         status: input.status as typeof invoices.$inferInsert.status,
+        totalCents: input.totalCents ?? existing.totalCents,
         amountDueCents: input.amountDueCents,
         amountPaidCents: input.amountPaidCents,
         amountRemainingCents: input.amountRemainingCents,
@@ -519,6 +524,7 @@ export class DrizzleBillingStore implements BillingStore {
       await this.db.insert(refunds).values({
         paymentId: payment.id,
         stripeRefundId: input.stripeRefundId,
+        succeededEventAt: input.status === "succeeded" ? new Date(eventCreated * 1000) : null,
         status: input.status as typeof refunds.$inferInsert.status,
         amountCents: input.amountCents,
         currency: "EUR",
@@ -532,6 +538,7 @@ export class DrizzleBillingStore implements BillingStore {
       .set({
         status: input.status as typeof refunds.$inferInsert.status,
         amountCents: input.amountCents,
+        succeededEventAt: existing.succeededEventAt ?? (input.status === "succeeded" ? new Date(eventCreated * 1000) : null),
         lastEventCreated: eventCreated,
       })
       .where(eq(refunds.id, existing.id))

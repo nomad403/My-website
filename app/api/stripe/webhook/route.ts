@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db/client"
-import { DrizzleBillingStore } from "@/lib/db/billing-store"
-import { applyBillingEvent } from "@/lib/billing/apply-event"
+import { applyStoredBillingEvents } from "@/lib/db/billing-event"
 import { constructStripeEvent, getStripe } from "@/lib/billing/stripe-gateway"
 import { readStripeEnv } from "@/lib/billing/stripe-env"
-import { readStripeSubscriptionState, toBillingNotice } from "@/lib/billing/stripe-map"
+import { readStripeSubscriptionState, toBillingNotices } from "@/lib/billing/stripe-map"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -34,14 +33,14 @@ export async function POST(request: Request) {
       { status: 400, headers: { "Cache-Control": "no-store" } },
     )
   }
-  const notice = toBillingNotice(event)
-  if (!notice) {
+  const notices = toBillingNotices(event)
+  if (!notices.length) {
     return NextResponse.json({ ok: true, ignored: true }, { headers: { "Cache-Control": "no-store" } })
   }
   try {
-    const result = await applyBillingEvent(new DrizzleBillingStore(getDb()), notice, {
+    const result = await applyStoredBillingEvents(getDb(), notices, {
       reconcileSubscription: async (stripeSubscriptionId) => {
-        const current = await getStripe(stripe.secretKey).subscriptions.retrieve(stripeSubscriptionId)
+        const current = await getStripe(stripe.secretKey).subscriptions.retrieve(stripeSubscriptionId, {}, {timeout:5000,maxNetworkRetries:0})
         return readStripeSubscriptionState(current)
       },
     })

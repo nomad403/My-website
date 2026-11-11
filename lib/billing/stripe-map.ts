@@ -92,6 +92,7 @@ function invoiceSnapshot(raw: Loose): InvoiceSnapshot | null {
     userId: meta.userId ?? "",
     stripeSubscriptionId: text(raw.subscription) ?? nestedSubscription(raw),
     status,
+    totalCents: typeof raw.total === "number" && Number.isSafeInteger(raw.total) ? raw.total : null,
     amountDueCents: cents(raw.amount_due),
     amountPaidCents: cents(raw.amount_paid),
     amountRemainingCents: cents(raw.amount_remaining),
@@ -257,4 +258,17 @@ function invoiceServicePeriod(raw: Loose): { servicePeriodStart: Date | null; se
  const period = objectOf(recurring[0].period)
  const start = unixDate(period?.start), end = unixDate(period?.end)
  return start && end && end > start ? {servicePeriodStart:start,servicePeriodEnd:end} : {servicePeriodStart:null,servicePeriodEnd:null}
+}
+
+/** A charge can contain several refunds. Preserve each refund's independent identity. */
+export function toBillingNotices(event:Parameters<typeof toBillingNotice>[0]):BillingNotice[] {
+ if(event.type!=="charge.refunded"){const notice=toBillingNotice(event);return notice?[notice]:[]}
+ const raw=objectOf(event.data.object),refunds=objectOf(raw?.refunds)
+ if(!Array.isArray(refunds?.data))return []
+ return refunds.data.flatMap(item=>{
+  const refund=objectOf(item),id=text(refund?.id)
+  if(!refund||!id)return []
+  const notice=toBillingNotice({...event,id:event.id+":"+id,type:"refund.updated",data:{object:{...refund,payment_intent:refund.payment_intent??raw?.payment_intent}}})
+  return notice?[notice]:[]
+ })
 }

@@ -59,6 +59,7 @@ export type SubscriptionSnapshot = {
 }
 
 export type InvoiceSnapshot = {
+  totalCents?: number | null
   servicePeriodStart?: Date | null
   servicePeriodEnd?: Date | null
   stripeInvoiceId: string
