@@ -21,7 +21,10 @@ interface ClientLayoutProps {
 }
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
-  const isContactCard = usePathname() === "/card"
+  const pathname = usePathname()
+  const isContactCard = pathname === "/card"
+  const isBareAccount =
+    pathname.startsWith("/auth") || pathname.startsWith("/admin") || pathname === "/shop"
   // Start in the SSR-safe state, then read the query string after hydration.
   const [captureMode, setCaptureMode] = useState(false)
 
@@ -29,11 +32,19 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     setCaptureMode(isCaptureMode(window.location.search))
   }, [])
 
-  useLockMobileDocumentScroll(!isContactCard)
+  useLockMobileDocumentScroll(!isContactCard && !isBareAccount)
 
   // NFC visitors need immediate access to contact actions, without portfolio
   // permission gates, dynamic SEO overrides or decorative WebGL effects.
   if (isContactCard) return <>{children}</>
+
+  if (isBareAccount) {
+    return (
+      <LanguageProvider>
+        <BackgroundProvider>{children}</BackgroundProvider>
+      </LanguageProvider>
+    )
+  }
 
   return (
     <LanguageProvider>

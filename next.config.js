@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: __dirname,
+  turbopack: { root: __dirname },
   images: {
     unoptimized: true,
   },
@@ -14,6 +16,36 @@ const nextConfig = {
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         { key: 'Content-Security-Policy', value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'" },
       ],
+    }, {
+      source: '/auth/:path*',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store' },
+        { key: 'X-Robots-Tag', value: 'noindex' },
+      ],
+    }, {
+      source: '/admin',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store' },
+        { key: 'X-Robots-Tag', value: 'noindex' },
+      ],
+    }, {
+      source: '/admin/:path*',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store' },
+        { key: 'X-Robots-Tag', value: 'noindex' },
+      ],
+    }, {
+      source: '/api/auth/:path*',
+      headers: [{ key: 'Cache-Control', value: 'no-store' }],
+    }, {
+      source: '/api/account/:path*',
+      headers: [{ key: 'Cache-Control', value: 'no-store' }],
+    }, {
+      source: '/api/admin/:path*',
+      headers: [{ key: 'Cache-Control', value: 'no-store' }],
+    }, {
+      source: '/api/stripe/:path*',
+      headers: [{ key: 'Cache-Control', value: 'no-store' }],
     }]
   },
   async redirects() {
