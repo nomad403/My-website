@@ -2,7 +2,11 @@ import assert from "node:assert/strict"
 import {existsSync,readFileSync} from "node:fs"
 const config=JSON.parse(readFileSync(new URL("../wrangler.jsonc",import.meta.url),"utf8"))
 assert.equal(config.name,"my-website","Unexpected Worker target")
-assert.equal(config.main,".open-next/worker.js")
+assert.equal(config.main,"cloudflare/worker.mjs")
+assert.equal(config.keep_vars,true)
+assert.deepEqual(config.durable_objects,{bindings:[{name:"CONTACT_LIMITER",class_name:"ContactLimiter"}]})
+assert.deepEqual(config.exports,{ContactLimiter:{type:"durable-object",storage:"sqlite"}})
+assert.deepEqual(config.previews.durable_objects,config.durable_objects)
 assert.equal(config.services?.length,1)
 assert.equal(config.services[0].binding,"WORKER_SELF_REFERENCE")
 assert.equal(config.services[0].service,config.name,"Self binding must match Worker name")
@@ -16,7 +20,7 @@ assert.equal(config.images.binding,"IMAGES")
 assert.deepEqual(config.routes,[],"No production route or custom domain may be configured here")
 // Preview services must not call the active production Worker. No self service is
 // supplied until an OpenNext loopback adapter is validated; remote Preview is NO-GO.
-assert.deepEqual(Object.keys(config.previews).sort(),["images","r2_buckets","services","vars"])
+assert.deepEqual(Object.keys(config.previews).sort(),["durable_objects","images","r2_buckets","services","vars"])
 assert.deepEqual(config.previews.vars,{NOMAD403_ENV:"preview"})
 assert.deepEqual(config.previews.services,[],"Preview service bindings can reach production")
 assert.deepEqual(config.previews.r2_buckets,[{binding:"NEXT_INC_CACHE_R2_BUCKET",bucket_name:"nomad403-preview-opennext-cache"}])

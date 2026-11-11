@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
-import { reserveContactEmail } from "@/lib/contact/contact-abuse"
+import { ContactAbuseError, reserveContactEmail } from "@/lib/contact/contact-abuse"
 import {
   escapeHtml,
   sanitizeContactPayload,
@@ -104,8 +104,10 @@ export async function POST(req: Request) {
           headers: { "Retry-After": String(reservation.retryAfter) },
         })
       }
-    } catch {
-      console.error("[contact] abuse protection unavailable")
+    } catch (error) {
+      // Only fixed internal codes are logged, never provider errors or request data.
+      const code = error instanceof ContactAbuseError ? error.code : "unknown"
+      console.error("[contact] abuse protection unavailable", { code })
       return NextResponse.json(UNAVAILABLE, { status: 503, headers: { "Retry-After": "60" } })
     }
 

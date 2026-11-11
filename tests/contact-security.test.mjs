@@ -11,7 +11,7 @@ const payload = { nom: "Test Person", contact: "test@example.com", message: "A l
 
 // Run the real TypeScript handler and limiter with isolated environment and mocked outbound mail/HTTP.
 function fixture(options = {}) {
-  const calls = { emails: 0, sent: [], redis: [] }
+  const calls = { emails: 0, sent: [], redis: [], durable: [], logs: [] }
   const env = {
     RESEND_API_KEY: "test-mail-key", RESEND_FROM: "from@example.com", RESEND_TO: "owner@example.com",
     UPSTASH_REDIS_REST_URL: "https://redis.example.com", UPSTASH_REDIS_REST_TOKEN: "test-redis-key",
@@ -25,7 +25,7 @@ function fixture(options = {}) {
     const module = { exports: {} }
     runInNewContext(code, {
       exports: module.exports, module, Buffer, Request, Response, AbortSignal,
-      URL, console: { error() {} }, process: { env },
+      URL, console: { error(...args) { calls.logs.push(args) } }, process: { env },
       fetch: async (url, init) => {
         calls.redis.push({ url, init, command: JSON.parse(init.body) })
         if (options.redisThrows) throw new Error("private redis failure")
@@ -37,7 +37,13 @@ function fixture(options = {}) {
         if (name === "next/server") return { NextResponse: { json: (body, init) => Response.json(body, init) } }
         if (name === "@opennextjs/cloudflare") return { getCloudflareContext: () => {
           if (!options.cloudflare) throw new Error("No Worker context")
-          return { env: options.missingWorkerBinding ? {} : { WORKER_SELF_REFERENCE: { fetch() {} } } }
+          return { env: { NOMAD403_ENV: options.preview ? "preview" : undefined, ...(options.missingWorkerBinding ? {} : {
+            CONTACT_LIMITER: { idFromName(name) { return name }, get(id) { return { async fetch(request) {
+              const body=await request.json();calls.durable.push({id,body});
+              if(options.limiterThrows)throw new Error("private durable failure");
+              return Response.json(options.limiterBody ?? {allowed:true,retryAfter:1},{status:options.limiterStatus ?? 200});
+            } } } }
+          }) } }
         } }
         if (name === "resend") return { Resend: class {
           emails = { send: async (message) => {
@@ -242,8 +248,9 @@ test("Cloudflare runtime trusts CF-Connecting-IP and isolates clients without a 
  const f=fixture({env:{VERCEL:""},cloudflare:true})
  for(const ip of ["192.0.2.1","192.0.2.2"]){assert.equal((await f.post(payload,{"cf-connecting-ip":ip,"x-vercel-forwarded-for":"203.0.113.8"})).status,200)}
  assert.equal(f.calls.emails,2)
- assert.notEqual(f.calls.redis[0].command[3],f.calls.redis[1].command[3])
- assert.ok(f.calls.redis[0].command[3].startsWith("contact:{cloudflare:my-website}:"))
+ assert.notEqual(f.calls.durable[0].body.ip,f.calls.durable[1].body.ip)
+ assert.equal(f.calls.redis.length,0)
+ assert.ok(f.calls.durable[0].id.includes("cloudflare:production"))
 })
 test("Cloudflare header alone outside the Worker cannot select a trusted identity",async()=>{
  const f=fixture({env:{VERCEL:""}})
@@ -259,10 +266,54 @@ test("Cloudflare requires a Worker binding and a valid single client IP",async()
  assert.equal((await missing.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,503)
  assert.equal(missing.calls.redis.length,0)
 })
-test("Cloudflare Redis failure and throttling never send mail",async()=>{
- for(const extra of [{redisThrows:true},{redisBody:{result:[0,600]}}]){
+test("Cloudflare Durable Object failure and throttling never send mail",async()=>{
+ for(const extra of [{limiterThrows:true},{limiterBody:{allowed:false,retryAfter:600}}]){
   const f=fixture({env:{VERCEL:""},cloudflare:true,...extra})
-  assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,extra.redisThrows?503:429)
+  assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,extra.limiterThrows?503:429)
   assert.equal(f.calls.emails,0)
  }
+})
+
+// Diagnostics must identify failures without echoing credentials or provider data.
+for (const [code,options] of [
+  ["redis_configuration_missing",{env:{UPSTASH_REDIS_REST_TOKEN:""}}],
+  ["redis_url_invalid",{env:{UPSTASH_REDIS_REST_URL:"not a URL"}}],
+  ["client_identity_unavailable",{env:{VERCEL:""}}],
+  ["redis_network_error",{redisThrows:true}],
+  ["redis_http_unauthorized",{redisStatus:401}],
+  ["redis_http_error",{redisStatus:500}],
+  ["redis_command_error",{redisBody:{error:"private script error"}}],
+  ["redis_response_invalid",{redisBody:{result:"secret-provider-detail"}}],
+  ["redis_response_invalid",{redisBody:[]}],
+]) {
+  test(`safe contact diagnostics: ${code}`,async()=>{
+    const f=fixture(options), response=await f.post();
+    assert.equal(response.status,503);assert.equal(f.calls.emails,0);
+    assert.equal(f.calls.logs[0][0],"[contact] abuse protection unavailable");
+    assert.equal(f.calls.logs[0][1].code,code);
+    const serialized=JSON.stringify([f.calls.logs,await response.json()]);
+    for(const secret of ["test-mail-key","test-redis-key","redis.example.com",payload.contact,payload.message,"192.0.2.1","private script error","secret-provider-detail"]){
+      assert.ok(!serialized.includes(secret));
+    }
+    assert.equal(response.headers.get("retry-after"),"60");
+  })
+}
+
+test("Cloudflare needs no Redis credentials and ignores an inherited Vercel flag",async()=>{
+ const f=fixture({cloudflare:true,env:{UPSTASH_REDIS_REST_URL:"",UPSTASH_REDIS_REST_TOKEN:""}});
+ assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,200);
+ assert.equal(f.calls.durable.length,1);assert.equal(f.calls.redis.length,0);assert.equal(f.calls.emails,1);
+})
+for(const extra of [{limiterBody:{allowed:"yes",retryAfter:1}},{limiterBody:{allowed:true,retryAfter:-1}},{limiterStatus:500}]){
+ test("invalid Durable Object responses fail closed without mail",async()=>{
+  const f=fixture({cloudflare:true,...extra});
+  assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,503);
+  assert.equal(f.calls.emails,0);assert.equal(f.calls.redis.length,0);
+ })
+}
+test("Preview cannot send mail even if production mail credentials are accidentally provided",async()=>{
+ const f=fixture({cloudflare:true,preview:true});
+ assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,503);
+ assert.equal(f.calls.emails,0);assert.equal(f.calls.redis.length,0);assert.equal(f.calls.durable.length,0);
+ assert.equal(f.calls.logs[0][1].code,"preview_mail_disabled");
 })

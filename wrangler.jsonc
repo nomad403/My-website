@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "my-website",
-  "main": ".open-next/worker.js",
+  "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-11-10",
   "compatibility_flags": [
     "nodejs_compat",
@@ -43,6 +43,29 @@
     ],
     "images": {
       "binding": "IMAGES"
+    },
+    "durable_objects": {
+      "bindings": [
+        {
+          "name": "CONTACT_LIMITER",
+          "class_name": "ContactLimiter"
+        }
+      ]
+    }
+  },
+  "keep_vars": true,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CONTACT_LIMITER",
+        "class_name": "ContactLimiter"
+      }
+    ]
+  },
+  "exports": {
+    "ContactLimiter": {
+      "type": "durable-object",
+      "storage": "sqlite"
     }
   }
 }
