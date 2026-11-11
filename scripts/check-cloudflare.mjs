@@ -14,6 +14,14 @@ assert.equal(config.r2_buckets[0].binding,"NEXT_INC_CACHE_R2_BUCKET")
 assert.equal(config.r2_buckets[0].bucket_name,"my-v0-project-opennext-cache")
 assert.equal(config.images.binding,"IMAGES")
 assert.deepEqual(config.routes,[],"No production route or custom domain may be configured here")
+// Preview services must not call the active production Worker. No self service is
+// supplied until an OpenNext loopback adapter is validated; remote Preview is NO-GO.
+assert.deepEqual(Object.keys(config.previews).sort(),["images","r2_buckets","services","vars"])
+assert.deepEqual(config.previews.vars,{NOMAD403_ENV:"preview"})
+assert.deepEqual(config.previews.services,[],"Preview service bindings can reach production")
+assert.deepEqual(config.previews.r2_buckets,[{binding:"NEXT_INC_CACHE_R2_BUCKET",bucket_name:"nomad403-preview-opennext-cache"}])
+assert.notEqual(config.previews.r2_buckets[0].bucket_name,config.r2_buckets[0].bucket_name)
+assert.deepEqual(config.previews.images,{binding:"IMAGES"})
 assert.ok(!config.env,"Environment overrides require a separate review")
 assert.ok(!config.build,"Wrangler must not rebuild or migrate during deployment")
 const pkg=JSON.parse(readFileSync(new URL("../package.json",import.meta.url),"utf8"))
@@ -27,4 +35,4 @@ if(process.argv.includes("--built")){
   assert.ok(existsSync(new URL("../"+path,import.meta.url)),"Build OpenNext first: "+path)
  }
 }
-console.log("Cloudflare config verified: my-website -> my-website; no production routes.")
+console.log("Cloudflare config verified locally; Preview R2 target proposed, no service bindings. Remote Preview remains NO-GO pending loopback/cache bootstrap and resource verification.")
