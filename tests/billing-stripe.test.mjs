@@ -1061,3 +1061,12 @@ test("all rejected promotion states produce indistinguishable preview and Checko
   assert.ok(checkoutResponses.every(r => JSON.stringify(r) === JSON.stringify(checkoutResponses[0])))
   assert.equal(previewResponses[0].body.code, "invalid")
 })
+
+test("Stripe Portal failure is explicit and cannot modify the stored subscription", async () => {
+ const {store,gateway}=world()
+ await store.saveStripeCustomerId("user-1","client@example.com","cus_test")
+ gateway.createPortal=async()=>{throw new Error("provider offline")}
+ const result=await startBillingPortal({store,gateway,appUrl:"http://localhost:3000"},"user-1")
+ assert.equal(result.status,503);assert.equal(result.body.code,"portal_failed")
+ assert.equal(store.subscriptions.length,0)
+})

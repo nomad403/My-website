@@ -1,5 +1,7 @@
 "use client"
 
+import ClientWorkspace from "./ClientWorkspace"
+
 import { useEffect, useState, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -295,21 +297,6 @@ export default function ShopExperience() {
       cancelled = true
     }
   }, [searchParams])
-
-  useEffect(() => {
-    if (section !== "billing" || session.status !== "ready") return
-    let cancelled = false
-    async function loadInvoices() {
-      const response = await fetch("/api/account/invoices", { headers: { Accept: "application/json" } })
-      if (!response.ok || cancelled) return
-      const body = (await response.json()) as { invoices?: InvoiceRow[] }
-      if (!cancelled) setInvoices(Array.isArray(body.invoices) ? body.invoices : [])
-    }
-    void loadInvoices()
-    return () => {
-      cancelled = true
-    }
-  }, [section, session.status])
 
   useEffect(() => {
     if (!authOpen) return
@@ -643,129 +630,7 @@ export default function ShopExperience() {
                 </section>
               ) : null}
 
-              {section === "subscriptions" ? (
-                <AccountGate
-                  language={language}
-                  session={session}
-                  unavailable={accountUnavailable}
-                  signedOut={ui.signedOutSubscriptions}
-                >
-                  {subscriptions && subscriptions.length > 0 ? (
-                    <ul className="flex flex-col border-y-2 border-black/30">
-                      {subscriptions.map((item) => (
-                        <li key={item.id} className="border-b border-black/15 py-4 last:border-b-0">
-                          <p className="font-kode text-[0.8125rem] uppercase tracking-[0.12em]">{item.planCode}</p>
-                          <p className="mt-2 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
-                            {formatEuro(item.amountCents, language)} · {item.billingInterval} · {item.status}
-                            {item.currency ? ` · ${item.currency}` : ""}
-                          </p>
-                          {item.privateOffer ? (
-                            <p className="mt-1 font-home-title text-[0.8125rem] text-black/60">
-                              {shopText(ui.privateNote, language)}
-                            </p>
-                          ) : null}
-                          {item.currentPeriodEnd ? (
-                            <p className="mt-1 font-home-title text-[0.8125rem] text-black/60">
-                              {shopText(ui.renewed, language)}{" "}
-                              {new Date(item.currentPeriodEnd).toLocaleDateString(language === "en" ? "en-GB" : "fr-FR")}
-                            </p>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <EmptyCopy language={language} copy={ui.emptySubscriptions} />
-                  )}
-                </AccountGate>
-              ) : null}
-
-              {section === "billing" ? (
-                <AccountGate language={language} session={session} unavailable={accountUnavailable} signedOut={ui.signedOutSubscriptions}>
-                  {invoices && invoices.length > 0 ? (
-                    <ul className="flex flex-col border-y-2 border-black/30">
-                      {invoices.map((invoice) => (
-                        <li key={invoice.id} className="border-b border-black/15 py-4 last:border-b-0">
-                          <p className="font-kode text-[0.8125rem] uppercase tracking-[0.12em]">{invoice.status}</p>
-                          <p className="mt-2 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
-                            {formatEuro(invoice.amountDueCents, language)} · {invoice.currency}
-                          </p>
-                          <p className="mt-1 font-home-title text-[0.8125rem] text-black/60">
-                            {formatEuro(invoice.amountPaidCents, language)} / {formatEuro(invoice.amountRemainingCents, language)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <EmptyCopy language={language} copy={ui.emptyBilling} />
-                  )}
-                  <button type="button" className={`${ghostButtonClass} mt-6`} onClick={() => void openPortal()}>
-                    {shopText(ui.portal, language)}
-                  </button>
-                  {actionMessage ? (
-                    <p role="status" className="mt-4 font-home-title text-[0.8125rem] leading-[1.62]">
-                      {shopText(actionMessage, language)}
-                    </p>
-                  ) : null}
-                </AccountGate>
-              ) : null}
-              {section === "interventions" ? <EmptyCopy language={language} copy={ui.emptyInterventions} /> : null}
-
-              {section === "account" ? (
-                <section aria-labelledby="shop-account-title" className="max-w-xl">
-                  <h2 id="shop-account-title" className="font-kode text-[1.25rem] uppercase tracking-[0.08em]">
-                    {shopText(ui.sections.account, language)}
-                  </h2>
-                  {session.status === "loading" ? <EmptyCopy language={language} copy={ui.loading} /> : null}
-                  {session.status === "anonymous" || session.status === "unavailable" ? (
-                    <div className="mt-6">
-                      {session.status === "unavailable" ? <EmptyCopy language={language} copy={ui.unavailable} /> : null}
-                      <p className="mb-5 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
-                        {shopText(ui.accountIntro, language)}
-                      </p>
-                      <ShopAuthPanel language={language} />
-                    </div>
-                  ) : null}
-                  {session.status === "ready" ? (
-                    <div className="mt-6 flex flex-col gap-6">
-                      {searchParams.get("auth") === "signed-in" ? (
-                        <p role="status" className="font-home-title text-[0.8125rem] leading-[1.62]">
-                          {shopText(ui.signedIn, language)}
-                        </p>
-                      ) : null}
-                      <p className="font-home-title text-[0.8125rem] leading-[1.62]">
-                        <span className="font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/50">
-                          {shopText(ui.email, language)}
-                        </span>
-                        <span className="mt-2 block break-all">{session.email}</span>
-                      </p>
-                      <div>
-                        <h3 className="font-kode text-[0.6875rem] uppercase tracking-[0.14em]">
-                          {shopText(ui.projects, language)}
-                        </h3>
-                        {accountUnavailable ? (
-                          <EmptyCopy language={language} copy={ui.unavailable} />
-                        ) : projects && projects.length > 0 ? (
-                          <ul className="mt-3 border-y-2 border-black/30">
-                            {projects.map((project) => (
-                              <li
-                                key={project.id}
-                                className="border-b border-black/15 py-3 font-home-title text-[0.8125rem] last:border-b-0"
-                              >
-                                {project.name}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <EmptyCopy language={language} copy={ui.emptyProjects} />
-                        )}
-                      </div>
-                      <button type="button" onClick={() => void logout()} className={`${ghostButtonClass} w-fit`}>
-                        {shopText(ui.logout, language)}
-                      </button>
-                    </div>
-                  ) : null}
-                </section>
-              ) : null}
+              {section !== "offers" && <ClientWorkspace key={session.status === "ready" ? session.email : session.status} section={section} language={language} onLogout={() => void logout()} />}
             </motion.div>
           </AnimatePresence>
         </main>

@@ -33,22 +33,7 @@ export function cookieFromRequest(request: Request): string | null {
   return null
 }
 
-export async function readJson(
-  request: Request,
-): Promise<{ ok: true; value: unknown } | { ok: false; status: number; code: string }> {
-  const type = request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase()
-  if (type !== "application/json") return { ok: false, status: 415, code: "unsupported_media" }
-  if (Number(request.headers.get("content-length") ?? 0) > 8192) {
-    return { ok: false, status: 413, code: "payload_too_large" }
-  }
-  const text = await request.text()
-  if (text.length > 8192) return { ok: false, status: 413, code: "payload_too_large" }
-  try {
-    return { ok: true, value: JSON.parse(text) as unknown }
-  } catch {
-    return { ok: false, status: 400, code: "invalid_json" }
-  }
-}
+export { readJson } from "./read-json"
 
 export function jsonError(status: number, code: string, error: string) {
   return NextResponse.json(

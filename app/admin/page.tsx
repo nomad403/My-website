@@ -1,3 +1,4 @@
+import AdminInterventions from "@/components/auth/AdminInterventions"
 import AdminPromotions from "@/components/auth/AdminPromotions"
 import type { Metadata } from "next"
 import AdminBillingLists from "@/components/auth/AdminBillingLists"
@@ -47,6 +48,7 @@ export default async function AdminPage() {
       />
       <AdminBillingLists data={await auth.billing.adminSnapshot()} />
       <AdminPromotions />
+      <AdminInterventions />
     </AuthFrame>
   )
 }

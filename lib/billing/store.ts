@@ -18,6 +18,10 @@ export type PromotionHold =
   | { ok: false; reason: PromoReason }
 
 export type SubscriptionObservation = {
+  serviceAnchorAt?: Date | null
+  observedAmountCents?: number | null
+  observedBillingInterval?: BillingInterval | null
+  observedPlanCode?: string | null
   stripeSubscriptionId: string
   status: string
   currentPeriodStart: Date | null
@@ -37,6 +41,9 @@ export type OpenCheckout = {
 }
 
 export type SubscriptionSnapshot = {
+  serviceAnchorAt?: Date | null
+  observedAmountCents?: number | null
+  observedBillingInterval?: BillingInterval | null
   promotionRedemptionId?: string | null
   stripeSubscriptionId: string
   userId: string
@@ -52,6 +59,8 @@ export type SubscriptionSnapshot = {
 }
 
 export type InvoiceSnapshot = {
+  servicePeriodStart?: Date | null
+  servicePeriodEnd?: Date | null
   stripeInvoiceId: string
   userId: string
   stripeSubscriptionId: string | null

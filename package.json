@@ -15,7 +15,7 @@
     "security:strix": "node scripts/strix.mjs",
     "postbuild": "next-sitemap",
     "db:migrate": "node --experimental-strip-types scripts/db-migrate.mjs",
-    "test:security": "node tests/contact-security.test.mjs && node --import ./tests/register-ts.mjs tests/auth-security.test.mjs && node --import ./tests/register-ts.mjs tests/auth-schema.test.mjs && node --import ./tests/register-ts.mjs tests/shop-catalog.test.mjs && node --import ./tests/register-ts.mjs tests/billing-stripe.test.mjs && node --import ./tests/register-ts.mjs tests/promotion-admin.test.mjs"
+    "test:security": "node tests/contact-security.test.mjs && node --import ./tests/register-ts.mjs tests/auth-security.test.mjs && node --import ./tests/register-ts.mjs tests/auth-schema.test.mjs && node --import ./tests/register-ts.mjs tests/shop-catalog.test.mjs && node --import ./tests/register-ts.mjs tests/billing-stripe.test.mjs && node --import ./tests/register-ts.mjs tests/promotion-admin.test.mjs && node --import ./tests/register-ts.mjs tests/interventions.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",

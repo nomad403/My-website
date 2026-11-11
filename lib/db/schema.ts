@@ -2,9 +2,11 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import {
   boolean,
+  foreignKey,
   check,
   index,
   bigint,
+  bigserial,
   integer,
   jsonb,
   pgEnum,
@@ -137,6 +139,8 @@ export const subscriptions = pgTable(
     currency: text("currency").notNull().default("EUR"),
     privateOffer: boolean("private_offer").notNull().default(false),
     commercialTerms: text("commercial_terms").notNull().default("catalog-v1"),
+    serviceAnchorAt: timestamp("service_anchor_at", { withTimezone: true }),
+    entitlementReviewRequired: boolean("entitlement_review_required").notNull().default(false),
     currentPeriodStart: timestamp("current_period_start", { withTimezone: true }),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
     cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true }),
@@ -167,6 +171,9 @@ export const invoices = pgTable(
       onDelete: "set null",
     }),
     stripeInvoiceId: text("stripe_invoice_id").unique(),
+    servicePeriodStart: timestamp("service_period_start", { withTimezone: true }),
+    servicePeriodEnd: timestamp("service_period_end", { withTimezone: true }),
+    serviceSubscriptionId: text("service_subscription_id"),
     status: invoiceStatus("status").notNull(),
     amountDueCents: integer("amount_due_cents").notNull(),
     amountPaidCents: integer("amount_paid_cents").notNull(),
@@ -378,3 +385,63 @@ export const auditLogs = pgTable(
     index("audit_logs_created_at_idx").on(table.createdAt),
   ],
 )
+
+// Lot 5: client intervention workflow and immutable time ledger.
+export const interventionRequests = pgTable("intervention_requests", {
+ id: uuid("id").primaryKey().defaultRandom(),
+ userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+ projectId: uuid("project_id").notNull(),
+ subscriptionId: uuid("subscription_id"),
+ submissionKey: uuid("submission_key").notNull(),
+ payloadHash: text("payload_hash").notNull(),
+ subject: text("subject").notNull(), description: text("description").notNull(),
+ category: text("category").notNull(), urgency: text("urgency").notNull(),
+ additionalInfo: text("additional_info").notNull().default(""),
+ status: text("status").notNull().default("submitted"),
+ coverage: text("coverage").notNull().default("unreviewed"),
+ minorScopeConfirmed: boolean("minor_scope_confirmed").notNull().default(false),
+ createdAt: createdAt(), updatedAt: updatedAt(),
+}, table => [
+ uniqueIndex("intervention_requests_submission_idx").on(table.userId, table.submissionKey),
+ foreignKey({ columns: [table.projectId, table.userId], foreignColumns: [projects.id, projects.userId] }),
+ foreignKey({ columns: [table.subscriptionId, table.userId], foreignColumns: [subscriptions.id, subscriptions.userId] }),
+ index("intervention_requests_owner_idx").on(table.userId, table.createdAt),
+])
+export const interventionEvents = pgTable("intervention_events", {
+ sequence: bigserial("sequence", { mode: "number" }).notNull(),
+ id: uuid("id").primaryKey().defaultRandom(),
+ requestId: uuid("request_id").notNull().references(() => interventionRequests.id, { onDelete: "restrict" }),
+ actorId: uuid("actor_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+ actorRole: text("actor_role").notNull(), kind: text("kind").notNull(),
+ internal: boolean("internal").notNull().default(false), body: text("body").notNull().default(""),
+ fromStatus: text("from_status"), toStatus: text("to_status"),
+ operationKey: uuid("operation_key").notNull(), payloadHash: text("payload_hash").notNull(),
+ createdAt: createdAt(),
+}, table => [
+ uniqueIndex("intervention_events_operation_idx").on(table.requestId, table.actorId, table.operationKey),
+ index("intervention_events_request_idx").on(table.requestId, table.createdAt),
+])
+export const interventionPeriods = pgTable("intervention_periods", {
+ id: uuid("id").primaryKey().defaultRandom(),
+ subscriptionId: uuid("subscription_id").notNull().references(() => subscriptions.id, { onDelete: "restrict" }),
+ periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+ periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+ includedMinutes: integer("included_minutes").notNull().default(60),
+ consumedMinutes: integer("consumed_minutes").notNull().default(0),
+}, table => [uniqueIndex("intervention_periods_key_idx").on(table.subscriptionId, table.periodStart)])
+export const interventionTimeEntries = pgTable("intervention_time_entries", {
+ id: uuid("id").primaryKey().defaultRandom(),
+ requestId: uuid("request_id").notNull().unique().references(() => interventionRequests.id, { onDelete: "restrict" }),
+ subscriptionId: uuid("subscription_id").references(() => subscriptions.id, { onDelete: "restrict" }),
+ periodId: uuid("period_id").references(() => interventionPeriods.id, { onDelete: "restrict" }),
+ actorId: uuid("actor_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+ minutes: integer("minutes").notNull(), coverage: text("coverage").notNull(),
+ performedAt: timestamp("performed_at", { withTimezone: true }).notNull(), createdAt: createdAt(),
+})
+export const interventionOutbox = pgTable("intervention_outbox", {
+ id: uuid("id").primaryKey().defaultRandom(),
+ eventId: uuid("event_id").notNull().unique().references(() => interventionEvents.id, { onDelete: "restrict" }),
+ userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+ audience: text("audience").notNull(), status: text("status").notNull().default("pending"),
+ createdAt: createdAt(),
+})

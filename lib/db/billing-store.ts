@@ -298,6 +298,8 @@ export class DrizzleBillingStore implements BillingStore {
         .where(and(eq(promotionRedemptions.id, input.promotionRedemptionId), eq(promotionRedemptions.userId, input.userId))).limit(1) : []
       if (input.promotionRedemptionId && (!grant[0] || grant[0].planCode !== input.planCode)) return "missing_user" as const
       await this.db.insert(subscriptions).values({
+        serviceAnchorAt: input.serviceAnchorAt ?? null,
+        entitlementReviewRequired: Boolean((input.observedAmountCents != null && input.observedAmountCents !== input.amountCents) || (input.observedBillingInterval && input.observedBillingInterval !== input.billingInterval)),
         promotionRedemptionId: grant[0]?.id ?? null,
         commercialTerms: grant[0]?.usageTerms ?? "catalog-v1",
         userId: input.userId,
@@ -318,9 +320,15 @@ export class DrizzleBillingStore implements BillingStore {
     const order = subscriptionWrite(eventCreated, existing.lastEventCreated)
     if (order === "tie") return "tie" as const
     if (order === "ignore") return "ok" as const
+    const review = existing.entitlementReviewRequired || input.planCode !== existing.planCode || input.billingInterval !== existing.billingInterval
+      || (input.observedAmountCents != null && input.observedAmountCents !== existing.amountCents)
+      || Boolean(input.observedBillingInterval && input.observedBillingInterval !== existing.billingInterval)
+      || Boolean(existing.serviceAnchorAt && input.serviceAnchorAt && existing.serviceAnchorAt.getTime() !== input.serviceAnchorAt.getTime())
     await this.db
       .update(subscriptions)
       .set({
+        serviceAnchorAt: existing.serviceAnchorAt ?? input.serviceAnchorAt ?? null,
+        entitlementReviewRequired: review,
         status: input.status as typeof subscriptions.$inferInsert.status,
         currentPeriodStart: input.currentPeriodStart,
         currentPeriodEnd: input.currentPeriodEnd,
@@ -352,9 +360,17 @@ export class DrizzleBillingStore implements BillingStore {
   }
 
   async overlaySubscriptionStatus(input: SubscriptionObservation) {
+    const [current] = await this.db.select().from(subscriptions).where(eq(subscriptions.stripeSubscriptionId,input.stripeSubscriptionId)).limit(1)
+    if (!current) return
+    const review = current.entitlementReviewRequired || Boolean(input.observedPlanCode && input.observedPlanCode !== current.planCode)
+      || (input.observedAmountCents != null && input.observedAmountCents !== current.amountCents)
+      || Boolean(input.observedBillingInterval && input.observedBillingInterval !== current.billingInterval)
+      || Boolean(current.serviceAnchorAt && input.serviceAnchorAt && current.serviceAnchorAt.getTime() !== input.serviceAnchorAt.getTime())
     await this.db
       .update(subscriptions)
       .set({
+        serviceAnchorAt: current.serviceAnchorAt ?? input.serviceAnchorAt ?? null,
+        entitlementReviewRequired: review,
         status: input.status as typeof subscriptions.$inferInsert.status,
         currentPeriodStart: input.currentPeriodStart,
         currentPeriodEnd: input.currentPeriodEnd,
@@ -432,6 +448,9 @@ export class DrizzleBillingStore implements BillingStore {
         issuedAt: input.issuedAt,
         paidAt: input.paidAt,
         subscriptionId: subscription?.id ?? existing.subscriptionId,
+        serviceSubscriptionId: input.stripeSubscriptionId ?? existing.serviceSubscriptionId,
+        servicePeriodStart: input.servicePeriodStart ?? existing.servicePeriodStart,
+        servicePeriodEnd: input.servicePeriodEnd ?? existing.servicePeriodEnd,
         lastEventCreated: eventCreated,
       })
       .where(eq(invoices.id, existing.id))

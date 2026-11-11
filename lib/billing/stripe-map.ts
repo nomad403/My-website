@@ -52,6 +52,9 @@ function subscriptionSnapshot(raw: Loose, fallbackUserId: string | null): Subscr
     amountCents,
     privateOffer: meta.privateOffer === "1" || isPrivatePlan(planCode),
     promotionRedemptionId: meta.redemptionId || null,
+    serviceAnchorAt: unixDate(raw.billing_cycle_anchor),
+    observedAmountCents: itemUnitAmount(raw) || null,
+    observedBillingInterval: itemInterval(raw),
     currentPeriodStart: unixDate(item?.current_period_start ?? raw.current_period_start),
     currentPeriodEnd: unixDate(item?.current_period_end ?? raw.current_period_end),
     cancelRequestedAt: unixDate(raw.canceled_at),
@@ -95,6 +98,7 @@ function invoiceSnapshot(raw: Loose): InvoiceSnapshot | null {
     currency: "EUR",
     issuedAt: unixDate(transitions?.finalized_at),
     paidAt: unixDate(transitions?.paid_at),
+    ...invoiceServicePeriod(raw),
   }
 }
 
@@ -135,6 +139,10 @@ export function readStripeSubscriptionState(value: unknown): SubscriptionObserva
   return {
     stripeSubscriptionId,
     status,
+    serviceAnchorAt: unixDate(raw.billing_cycle_anchor),
+    observedAmountCents: itemUnitAmount(raw) || null,
+    observedBillingInterval: itemInterval(raw),
+    observedPlanCode: metadata(raw.metadata).planCode ?? null,
     currentPeriodStart: unixDate(item?.current_period_start ?? raw.current_period_start),
     currentPeriodEnd: unixDate(item?.current_period_end ?? raw.current_period_end),
     cancelRequestedAt: unixDate(raw.canceled_at),
@@ -232,4 +240,21 @@ export function toBillingNotice(event: { id: string; type: string; created: numb
   }
 
   return null
+}
+
+/** Only a single non-prorated subscription line is accepted as evidence of service coverage. */
+function invoiceServicePeriod(raw: Loose): { servicePeriodStart: Date | null; servicePeriodEnd: Date | null } {
+ const lines = objectOf(raw.lines)
+ const id = text(raw.subscription) ?? nestedSubscription(raw)
+ if (!id || lines?.has_more === true) return {servicePeriodStart:null,servicePeriodEnd:null}
+ const rows = (Array.isArray(lines?.data) ? lines.data : []).map(objectOf).filter((line): line is Loose => Boolean(line))
+ const recurring = rows.filter(line => {
+  const details = objectOf(objectOf(line.parent)?.subscription_item_details)
+  return (text(line.subscription) === id || text(details?.subscription) === id)
+    && line.proration !== true && details?.proration !== true
+ })
+ if (recurring.length !== 1) return {servicePeriodStart:null,servicePeriodEnd:null}
+ const period = objectOf(recurring[0].period)
+ const start = unixDate(period?.start), end = unixDate(period?.end)
+ return start && end && end > start ? {servicePeriodStart:start,servicePeriodEnd:end} : {servicePeriodStart:null,servicePeriodEnd:null}
 }

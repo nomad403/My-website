@@ -407,3 +407,21 @@ test("development limiter persists across request factories without weakening pr
   assert.equal((await second.consume(key, 1, 3600)).allowed, false)
   assert.equal(createProductionLimiter({ NODE_ENV: "production" }), null)
 })
+
+test("new MFA-less admin sessions cannot read or mutate intervention administration", async () => {
+ const {interventionOperation}=await import("../lib/interventions/service.ts")
+ const fixture=setup(),client=await signIn(fixture,"client@example.com"),admin=await signIn(fixture,"admin@example.com")
+ let accesses=0
+ const deps={authorize:cookie=>fixture.service.adminIdentity(cookie),admin:true,limiter:new MemoryRateLimiter(),now:fixture.now,store:new Proxy({},{get:()=>async()=>{accesses++;return []}})}
+ for(const operation of["list","detail","message","transition","complete"]){
+  assert.equal((await interventionOperation(deps,null,operation,{})).status,401)
+  assert.equal((await interventionOperation(deps,client.cookie.value,operation,{})).status,403)
+  assert.equal((await interventionOperation(deps,admin.cookie.value,operation,{})).body.code,"mfa_enrollment_required")
+ }
+ const enrollment=await fixture.service.enrollMfa(admin.cookie.value)
+ const verified=await fixture.service.verifyMfa({cookieValue:admin.cookie.value,code:enrollment.body.recoveryCodes[0]})
+ assert.equal((await interventionOperation(deps,verified.cookie.value,"list",{})).status,200)
+ const fresh=await signIn(fixture,"admin@example.com")
+ assert.equal((await interventionOperation(deps,fresh.cookie.value,"list",{})).body.code,"mfa_required")
+ assert.equal(accesses,1)
+})
