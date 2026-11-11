@@ -34,3 +34,10 @@ next-env.d.ts
 
 # generated high-density capture artifacts
 artifacts/captures/
+
+# Cloudflare/OpenNext local outputs and secrets
+/.open-next/
+/.wrangler/
+/.cloudflare-review/
+.dev.vars*
+!.dev.vars.example

@@ -35,6 +35,10 @@ function fixture(options = {}) {
       require: (name) => {
         if (name.startsWith("@/")) return load(name.slice(2))
         if (name === "next/server") return { NextResponse: { json: (body, init) => Response.json(body, init) } }
+        if (name === "@opennextjs/cloudflare") return { getCloudflareContext: () => {
+          if (!options.cloudflare) throw new Error("No Worker context")
+          return { env: options.missingWorkerBinding ? {} : { WORKER_SELF_REFERENCE: { fetch() {} } } }
+        } }
         if (name === "resend") return { Resend: class {
           emails = { send: async (message) => {
             calls.emails++
@@ -232,4 +236,33 @@ test("real Redis: concurrency, per-client isolation, hourly/daily quotas and exp
   assert.equal((await post("192.0.2.1", "Unique valid message 0")).status, 429)
   await new Promise(resolve => setTimeout(resolve, 100))
   assert.equal((await post("192.0.2.1", "Unique valid message 0")).status, 200)
+})
+
+test("Cloudflare runtime trusts CF-Connecting-IP and isolates clients without a shared fallback",async()=>{
+ const f=fixture({env:{VERCEL:""},cloudflare:true})
+ for(const ip of ["192.0.2.1","192.0.2.2"]){assert.equal((await f.post(payload,{"cf-connecting-ip":ip,"x-vercel-forwarded-for":"203.0.113.8"})).status,200)}
+ assert.equal(f.calls.emails,2)
+ assert.notEqual(f.calls.redis[0].command[3],f.calls.redis[1].command[3])
+ assert.ok(f.calls.redis[0].command[3].startsWith("contact:{cloudflare:my-website}:"))
+})
+test("Cloudflare header alone outside the Worker cannot select a trusted identity",async()=>{
+ const f=fixture({env:{VERCEL:""}})
+ assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,503)
+ assert.equal(f.calls.redis.length,0);assert.equal(f.calls.emails,0)
+})
+test("Cloudflare requires a Worker binding and a valid single client IP",async()=>{
+ for(const ip of ["","unknown","192.0.2.1, 192.0.2.2"]){
+  const f=fixture({env:{VERCEL:""},cloudflare:true})
+  assert.equal((await f.post(payload,{"cf-connecting-ip":ip})).status,503);assert.equal(f.calls.emails,0)
+ }
+ const missing=fixture({env:{VERCEL:""},cloudflare:true,missingWorkerBinding:true})
+ assert.equal((await missing.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,503)
+ assert.equal(missing.calls.redis.length,0)
+})
+test("Cloudflare Redis failure and throttling never send mail",async()=>{
+ for(const extra of [{redisThrows:true},{redisBody:{result:[0,600]}}]){
+  const f=fixture({env:{VERCEL:""},cloudflare:true,...extra})
+  assert.equal((await f.post(payload,{"cf-connecting-ip":"192.0.2.1"})).status,extra.redisThrows?503:429)
+  assert.equal(f.calls.emails,0)
+ }
 })

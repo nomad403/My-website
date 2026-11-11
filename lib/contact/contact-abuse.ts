@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto"
-import { isIP } from "node:net"
+import { trustedContactClient } from "@/lib/contact/trusted-client"
 
 // Redis evaluates all limits and reserves an email slot atomically, across instances.
 export const CONTACT_RESERVATION_SCRIPT = `
@@ -34,14 +34,10 @@ export async function reserveContactEmail(
     throw new Error("Contact abuse protection is not configured")
   }
 
-  // This deployment uses Vercel, which overwrites this header at its edge.
-  // Outside that platform no arbitrary client-supplied header is accepted.
-  if (process.env.VERCEL !== "1") throw new Error("Trusted platform identity unavailable")
-  const client = request.headers.get("x-vercel-forwarded-for")?.trim()
-  if (!client || !isIP(client)) throw new Error("Trusted client identity unavailable")
+  const {ip:client,scope}=trustedContactClient(request)
   const hash = (value: string) => createHmac("sha256", token).update(value).digest("hex")
-  // Hash tags keep the four keys in the same slot on a Redis cluster.
-  const prefix = `contact:{${process.env.VERCEL_ENV || process.env.NODE_ENV || "development"}}`
+  // Hash tags keep all four keys in the same slot, isolated by platform.
+  const prefix = `contact:{${scope}}`
   const clientPrefix = `${prefix}:client:${hash(client)}`
   const response = await fetch(endpoint, {
     method: "POST",
