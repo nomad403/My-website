@@ -8,15 +8,17 @@ import { useLanguage } from "@/contexts/LanguageContext"
 export default function AuthFrame({
   titleKey,
   children,
+  wide = false,
 }: {
   titleKey: string
   children: ReactNode
+  wide?: boolean
 }) {
   const { t } = useLanguage()
 
   return (
-    <main className="min-h-dvh bg-white px-6 py-10 text-black">
-      <div className="mx-auto flex w-full max-w-md flex-col gap-8">
+    <main className={`${wide ? "fixed inset-0 overflow-x-hidden overflow-y-auto overscroll-contain" : "min-h-dvh"} bg-white px-6 py-10 text-black`}>
+      <div className={`mx-auto flex w-full flex-col gap-8 ${wide ? "max-w-5xl" : "max-w-md"}`}>
         <div className="flex items-start justify-between gap-4">
           <a href="/" aria-label="NOMAD403">
             <HeaderLogo mode="day" variant="loader" />

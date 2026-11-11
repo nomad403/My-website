@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import {
   boolean,
@@ -141,12 +142,14 @@ export const subscriptions = pgTable(
     cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true }),
     cancelEffectiveAt: timestamp("cancel_effective_at", { withTimezone: true }),
     stripeSubscriptionId: text("stripe_subscription_id").unique(),
+    promotionRedemptionId: uuid("promotion_redemption_id").references((): AnyPgColumn => promotionRedemptions.id, { onDelete: "restrict" }),
     lastEventCreated: bigint("last_event_created", { mode: "number" }).notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (table) => [
     index("subscriptions_user_id_idx").on(table.userId),
+    index("subscriptions_promotion_redemption_idx").on(table.promotionRedemptionId),
     index("subscriptions_status_idx").on(table.status),
     check("subscriptions_amount_positive", sql`${table.amountCents} > 0`),
     check("subscriptions_currency_eur", sql`${table.currency} = 'EUR'`),
@@ -233,6 +236,11 @@ export const promotionCodes = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     codeHash: text("code_hash").notNull().unique(),
+    codeHint: text("code_hint"),
+    usageTerms: text("usage_terms").notNull().default("catalog-v1"),
+    internalNotes: text("internal_notes").notNull().default(""),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    changedBy: uuid("changed_by").references(() => users.id, { onDelete: "set null" }),
     planCode: text("plan_code")
       .notNull()
       .references(() => plans.code),
@@ -266,6 +274,7 @@ export const promotionRedemptions = pgTable(
   },
   (table) => [
     index("promotion_redemptions_code_idx").on(table.promotionCodeId),
+    uniqueIndex("promotion_redemptions_one_reserved_idx").on(table.promotionCodeId, table.userId).where(sql`${table.status} = 'reserved'`),
     check("promotion_redemptions_status", sql`${table.status} in ('reserved', 'consumed', 'released')`),
   ],
 )

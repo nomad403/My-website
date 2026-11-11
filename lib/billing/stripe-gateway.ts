@@ -21,6 +21,13 @@ export function createStripeGateway(env: StripeEnv): PaymentGateway {
         interval: asInterval(price.recurring?.interval ?? null),
       }
     },
+    async retrieveCheckoutStatus(id) {
+      const session = await stripe.checkout.sessions.retrieve(id)
+      if (session.status === "open") return "open"
+      if (session.status === "complete") return "complete"
+      if (session.status === "expired") return "expired"
+      throw new Error("Unknown Checkout status")
+    },
     async createCustomer(input) {
       const customer = await stripe.customers.create({
         email: input.email,
@@ -32,6 +39,7 @@ export function createStripeGateway(env: StripeEnv): PaymentGateway {
       const session = await stripe.checkout.sessions.create(
         {
           mode: "subscription",
+          expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
           customer: input.customerId,
           client_reference_id: input.userId,
           line_items: [{ price: input.priceId, quantity: 1 }],
@@ -53,6 +61,7 @@ export function createStripeGateway(env: StripeEnv): PaymentGateway {
               billingInterval: input.interval,
               amountCents: String(input.amountCents),
               privateOffer: input.privateOffer ? "1" : "0",
+              redemptionId: input.redemptionId ?? "",
             },
           },
         },

@@ -17,13 +17,23 @@ function isInterval(value: unknown): value is BillingInterval {
 }
 
 function fail(status: number, code: string, error: string): CheckoutResult {
-  return { status, body: { ok: false, code, error } }
+  const publicCode = ["expired", "disabled", "exhausted", "restricted"].includes(code) ? "invalid" : code
+  return { status, body: { ok: false, code: publicCode, error } }
 }
 
 export async function previewOffer(
   store: BillingStore,
   input: { code: unknown; email: string; language: string; at: Date },
+  protection?: { limiter: RateLimiter; userId: string; clientKey?: string },
 ): Promise<CheckoutResult> {
+  if (protection) {
+    try {
+      const user = await protection.limiter.consume("promotion-preview:user:" + protection.userId, 30, 3600)
+      if (!user.allowed) return fail(429, "rate_limited", "Trop de demandes.")
+      if (protection.clientKey && !(await protection.limiter.consume("promotion-preview:client:" + protection.clientKey, 60, 3600)).allowed)
+        return fail(429, "rate_limited", "Trop de demandes.")
+    } catch { return fail(503, "unavailable", "Service temporairement indisponible.") }
+  }
   const code = normalizePromotionCode(input.code)
   if (!code) return fail(400, "invalid", "Ce code n'est pas valable.")
   const preview = await store.previewPromotion({
@@ -42,6 +52,7 @@ export async function previewOffer(
       interval: "month",
       name: copy.name,
       summary: copy.summary,
+      usageTerms: preview.usageTerms,
     },
   }
 }
@@ -113,6 +124,16 @@ export async function startCheckout(
   }
 
   const existing = await deps.store.findOpenCheckout(input.userId, locked.planCode, locked.billingInterval)
+  if (existing?.stripeSessionId && deps.now().getTime() - existing.createdAt.getTime() >= OPEN_MS) {
+    try {
+      const status = await deps.gateway.retrieveCheckoutStatus(existing.stripeSessionId)
+      if (status === "open" && existing.url) {
+        if (redemptionId && redemptionId !== existing.redemptionId) await deps.store.releasePromotion(redemptionId, deps.now())
+        return { status: 200, body: { ok: true, url: existing.url, reused: true } }
+      }
+      if (status !== "expired") return fail(409, "checkout_in_progress", "Synchronisation du paiement en cours.")
+    } catch { return fail(503, "unavailable", "Vérification Stripe temporairement indisponible.") }
+  }
   if (holdReason) {
     const ageOk = Boolean(existing && deps.now().getTime() - existing.createdAt.getTime() < OPEN_MS)
     if (ageOk && existing?.url && existing.redemptionId === redemptionId) {
@@ -145,6 +166,14 @@ export async function startCheckout(
     }
     await deps.store.expireCheckout(existing.id)
     if (existing.redemptionId) await deps.store.releasePromotion(existing.redemptionId, deps.now())
+    if (promotionCode && redemptionId === existing.redemptionId) {
+      const renewed = await deps.store.reservePromotion({
+        codeHash: hashPromotionCode(promotionCode), userId: input.userId, email: input.email, at: deps.now(),
+      })
+      if (!renewed.ok) return fail(400, renewed.reason, "Ce code n'est pas valable.")
+      if (renewed.holdReason) return fail(409, "checkout_in_progress", "Une souscription est déjà en cours.")
+      redemptionId = renewed.redemptionId
+    }
   }
 
   const begun = await deps.store.beginCheckout({

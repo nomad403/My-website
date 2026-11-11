@@ -8,6 +8,7 @@ export type PriceQuote = {
 
 export interface PaymentGateway {
   retrievePrice(priceId: string): Promise<PriceQuote>
+  retrieveCheckoutStatus(stripeSessionId: string): Promise<"open" | "complete" | "expired">
   createCustomer(input: { email: string; userId: string }): Promise<{ id: string }>
   createSubscriptionCheckout(input: {
     customerId: string

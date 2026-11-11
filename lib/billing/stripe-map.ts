@@ -51,6 +51,7 @@ function subscriptionSnapshot(raw: Loose, fallbackUserId: string | null): Subscr
     billingInterval: interval,
     amountCents,
     privateOffer: meta.privateOffer === "1" || isPrivatePlan(planCode),
+    promotionRedemptionId: meta.redemptionId || null,
     currentPeriodStart: unixDate(item?.current_period_start ?? raw.current_period_start),
     currentPeriodEnd: unixDate(item?.current_period_end ?? raw.current_period_end),
     cancelRequestedAt: unixDate(raw.canceled_at),

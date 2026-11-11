@@ -72,13 +72,13 @@ export class DrizzleBillingStore implements BillingStore {
     if (expires && expires.getTime() <= at.getTime()) return { ok: false, reason: "expired" }
     if (row.restrictedEmail && row.restrictedEmail !== email) return { ok: false, reason: "restricted" }
     if (row.maxRedemptions != null && row.redemptionCount >= row.maxRedemptions) return { ok: false, reason: "exhausted" }
-    return { ok: true, planCode: locked.planCode, amountCents: locked.amountCents, id: row.id }
+    return { ok: true, planCode: locked.planCode, amountCents: locked.amountCents, id: row.id, usageTerms: row.usageTerms === "catalog-v1" ? undefined : row.usageTerms }
   }
 
   async previewPromotion(input: { codeHash: string; email: string; at: Date }) {
     const preview = await this.promoPreview(input.codeHash, input.email, input.at)
     if (!preview.ok) return preview
-    return { ok: true as const, planCode: preview.planCode, amountCents: preview.amountCents }
+    return { ok: true as const, planCode: preview.planCode, amountCents: preview.amountCents, usageTerms: preview.usageTerms }
   }
 
   async reservePromotion(input: { codeHash: string; userId: string; email: string; at: Date }) {
@@ -292,7 +292,14 @@ export class DrizzleBillingStore implements BillingStore {
       .where(eq(subscriptions.stripeSubscriptionId, input.stripeSubscriptionId))
       .limit(1)
     if (!existing) {
+      const grant = input.promotionRedemptionId ? await this.db.select({
+        id: promotionRedemptions.id, usageTerms: promotionCodes.usageTerms, planCode: promotionCodes.planCode,
+      }).from(promotionRedemptions).innerJoin(promotionCodes, eq(promotionCodes.id, promotionRedemptions.promotionCodeId))
+        .where(and(eq(promotionRedemptions.id, input.promotionRedemptionId), eq(promotionRedemptions.userId, input.userId))).limit(1) : []
+      if (input.promotionRedemptionId && (!grant[0] || grant[0].planCode !== input.planCode)) return "missing_user" as const
       await this.db.insert(subscriptions).values({
+        promotionRedemptionId: grant[0]?.id ?? null,
+        commercialTerms: grant[0]?.usageTerms ?? "catalog-v1",
         userId: input.userId,
         planCode: input.planCode,
         status: input.status as typeof subscriptions.$inferInsert.status,

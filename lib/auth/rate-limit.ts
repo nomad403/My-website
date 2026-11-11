@@ -76,6 +76,8 @@ export class RedisRateLimiter implements RateLimiter {
   }
 }
 
+const developmentLimiter = new MemoryRateLimiter()
+
 export function createProductionLimiter(source: NodeJS.ProcessEnv = process.env): RateLimiter | null {
   const endpoint = source.UPSTASH_REDIS_REST_URL || source.KV_REST_API_URL
   const token = source.UPSTASH_REDIS_REST_TOKEN || source.KV_REST_API_TOKEN
@@ -86,5 +88,5 @@ export function createProductionLimiter(source: NodeJS.ProcessEnv = process.env)
     return new RedisRateLimiter(endpoint, token, `auth:{${scope}}`)
   }
   if (source.NODE_ENV === "production") return null
-  return new MemoryRateLimiter()
+  return developmentLimiter
 }

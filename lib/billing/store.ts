@@ -4,7 +4,7 @@ import type { BillingInterval, PlanCode } from "../shop/plans"
 export type PromoReason = "invalid" | "expired" | "disabled" | "exhausted" | "restricted"
 
 export type PromotionPreview =
-  | { ok: true; planCode: PlanCode; amountCents: number }
+  | { ok: true; planCode: PlanCode; amountCents: number; usageTerms?: string }
   | { ok: false; reason: PromoReason }
 
 export type PromotionHold =
@@ -37,6 +37,7 @@ export type OpenCheckout = {
 }
 
 export type SubscriptionSnapshot = {
+  promotionRedemptionId?: string | null
   stripeSubscriptionId: string
   userId: string
   planCode: string

@@ -45,6 +45,11 @@ function fakeGateway(options = {}) {
       if (!quote) throw new Error("missing price")
       return options.quote ? options.quote(id, quote) : quote
     },
+    async retrieveCheckoutStatus(id) {
+      calls.push({ op: "checkout_status", id })
+      if (options.failStatus) throw new Error("stripe down")
+      return options.checkoutStatus ?? "expired"
+    },
     async createCustomer(input) {
       calls.push({ op: "customer", input })
       return { id: "cus_test" }
@@ -237,7 +242,7 @@ test("invalid, expired, disabled, exhausted and restricted codes stay closed", a
   ]
   for (const [code, reason] of cases) {
     const result = await previewOffer(store, { code, email: "other@example.com", language: "fr", at: NOW })
-    assert.equal(result.body.code, reason)
+    assert.equal(result.body.code, "invalid")
     assert.equal(result.body.planCode, undefined)
   }
   const first = await startCheckout(deps, {
@@ -255,7 +260,7 @@ test("invalid, expired, disabled, exhausted and restricted codes stay closed", a
     interval: "month",
     promotionCode: "ONCE-CODE",
   })
-  assert.equal(second.body.code, "exhausted")
+  assert.equal(second.body.code, "invalid")
   assert.equal(gateway.calls.filter((call) => call.op === "checkout").length, 1)
   const bare = await startCheckout(deps, {
     userId: "user-2",
@@ -580,7 +585,7 @@ test("a granted private price stays locked after the code is disabled", async ()
     language: "en",
     at: NOW,
   })
-  assert.equal(blocked.body.code, "disabled")
+  assert.equal(blocked.body.code, "invalid")
   await applyBillingEvent(store, {
     id: "evt_private_later",
     created: 20,
@@ -877,7 +882,7 @@ test("private-code bypasses and a portal price change keep the contractual price
     interval: "month",
     promotionCode: "HOST-2026",
   })
-  assert.equal(stranger.body.code, "exhausted")
+  assert.equal(stranger.body.code, "invalid")
   now = new Date("2026-11-11T12:20:00.000Z")
   const reused = await startCheckout(deps, {
     userId: "user-1",
@@ -896,7 +901,7 @@ test("private-code bypasses and a portal price change keep the contractual price
     interval: "month",
     promotionCode: "HOST-2026",
   })
-  assert.equal(expired.body.code, "expired")
+  assert.equal(expired.body.code, "invalid")
   assert.equal(gateway.calls.filter((call) => call.op === "checkout").length, 2)
 
   addCode(store, "CARE-ONCE", { planCode: "friend_care", maxRedemptions: 1, restrictedEmail: "client@example.com" })
@@ -939,7 +944,7 @@ test("private-code bypasses and a portal price change keep the contractual price
     interval: "month",
     promotionCode: "CARE-ONCE",
   })
-  assert.equal(again.body.code, "restricted")
+  assert.equal(again.body.code, "invalid")
   const ownerAgain = await startCheckout(deps, {
     userId: "user-1",
     email: "client@example.com",
@@ -947,7 +952,7 @@ test("private-code bypasses and a portal price change keep the contractual price
     interval: "month",
     promotionCode: "CARE-ONCE",
   })
-  assert.equal(ownerAgain.body.code, "exhausted")
+  assert.equal(ownerAgain.body.code, "invalid")
   assert.equal(store.subscriptions.filter((item) => item.planCode === "friend_care").length, 1)
 
   const portal = toBillingNotice({
@@ -979,4 +984,80 @@ test("private-code bypasses and a portal price change keep the contractual price
   assert.equal(cared.billingInterval, "month")
   assert.equal(cared.privateOffer, true)
   assert.equal(readStripeSubscriptionState({ id: "sub_care", status: "canceled" }).status, "canceled")
+})
+
+test("a stale Checkout keeps its reservation until Stripe confirms expiry", async () => {
+  for (const status of ["open", "complete"]) {
+    let now = new Date(NOW)
+    const { store, deps } = world({ checkoutStatus: status })
+    deps.now = () => now
+    addCode(store, "STILL-VALID", { maxRedemptions: 1 })
+    const input = { userId: "user-1", email: "client@example.com", planCode: "friend_host", interval: "month", promotionCode: "STILL-VALID" }
+    const first = await startCheckout(deps, input)
+    now = new Date(NOW.getTime() + 60 * 60 * 1000)
+    const result = await startCheckout(deps, input)
+    assert.equal(result.status, status === "open" ? 200 : 409)
+    if (status === "open") assert.equal(result.body.url, first.body.url)
+    assert.equal(store.redemptions[0].status, "reserved")
+    assert.equal(store.promos[0].redemptionCount, 1)
+  }
+})
+test("Stripe status failure preserves the reservation and retries safely", async () => {
+  let now = new Date(NOW)
+  const { store, deps } = world({ failStatus: true })
+  deps.now = () => now
+  addCode(store, "STATUS-DOWN", { maxRedemptions: 1 })
+  const input = { userId: "user-1", email: "client@example.com", planCode: "friend_host", interval: "month", promotionCode: "STATUS-DOWN" }
+  await startCheckout(deps, input)
+  now = new Date(NOW.getTime() + 60 * 60 * 1000)
+  assert.equal((await startCheckout(deps, input)).status, 503)
+  assert.equal(store.redemptions[0].status, "reserved")
+})
+test("expired unlimited Checkout replaces a released grant with a new reservation", async () => {
+  let now = new Date(NOW)
+  const { store, deps } = world()
+  deps.now = () => now
+  addCode(store, "ROTATE-CODE")
+  const input = { userId: "user-1", email: "client@example.com", planCode: "friend_host", interval: "month", promotionCode: "ROTATE-CODE" }
+  await startCheckout(deps, input)
+  const oldId = store.redemptions[0].id
+  now = new Date(NOW.getTime() + 60 * 60 * 1000)
+  assert.equal((await startCheckout(deps, input)).status, 200)
+  assert.equal(store.redemptions.find(r => r.id === oldId).status, "released")
+  const fresh = store.redemptions.find(r => r.status === "reserved")
+  assert.ok(fresh)
+  assert.notEqual(fresh.id, oldId)
+  assert.equal(store.checkouts.find(c => c.status === "open").redemptionId, fresh.id)
+  assert.equal(store.promos[0].redemptionCount, 1)
+})
+
+test("promotion preview fails closed and rate limits every attempt before reading the code", async () => {
+  const { store } = world()
+  let reads = 0
+  const preview = store.previewPromotion.bind(store)
+  store.previewPromotion = async input => { reads++; return preview(input) }
+  const limiter = new MemoryRateLimiter()
+  const input = { code: "NO-SUCH", email: "client@example.com", language: "fr", at: NOW }
+  for (let i = 0; i < 30; i++) assert.equal((await previewOffer(store, input, { limiter, userId: "user-1" })).status, 400)
+  assert.equal((await previewOffer(store, input, { limiter, userId: "user-1" })).status, 429)
+  assert.equal(reads, 30)
+  const unavailable = { consume: async () => { throw new Error("redis down") } }
+  assert.equal((await previewOffer(store, input, { limiter: unavailable, userId: "user-1" })).status, 503)
+  assert.equal(reads, 30)
+})
+test("all rejected promotion states produce indistinguishable preview and Checkout responses", async () => {
+  const { store, deps } = world()
+  addCode(store, "EXPIRED-CODE", { expiresAt: new Date("2020-01-01T00:00:00Z") })
+  addCode(store, "DISABLED-CODE", { disabledAt: NOW })
+  addCode(store, "RESTRICTED-CODE", { restrictedEmail: "another@example.com" })
+  addCode(store, "EXHAUSTED-CODE", { maxRedemptions: 1 })
+  await store.reservePromotion({ codeHash: hashPromotionCode("EXHAUSTED-CODE"), userId: "user-2", email: "other@example.com", at: NOW })
+  const previewResponses = [], checkoutResponses = []
+  for (const code of ["MISSING-CODE", "EXPIRED-CODE", "DISABLED-CODE", "RESTRICTED-CODE", "EXHAUSTED-CODE"]) {
+    previewResponses.push(await previewOffer(store, { code, email: "client@example.com", language: "fr", at: NOW }))
+    checkoutResponses.push(await startCheckout(deps, { userId: "user-1", email: "client@example.com", planCode: "friend_host", interval: "month", promotionCode: code }))
+  }
+  assert.ok(previewResponses.every(r => JSON.stringify(r) === JSON.stringify(previewResponses[0])))
+  assert.ok(checkoutResponses.every(r => JSON.stringify(r) === JSON.stringify(checkoutResponses[0])))
+  assert.equal(previewResponses[0].body.code, "invalid")
 })

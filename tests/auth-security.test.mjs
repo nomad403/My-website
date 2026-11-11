@@ -367,3 +367,43 @@ test("redis limiter fails closed when the store is unavailable", async () => {
     globalThis.fetch = original
   }
 })
+
+test("promotion administration requires a valid admin session and verified MFA for every operation", async () => {
+  const { administerPromotions } = await import("../lib/billing/promotion-admin.ts")
+  const fixture = setup()
+  const client = await signIn(fixture, "client@example.com")
+  const admin = await signIn(fixture, "admin@example.com")
+  let reads = 0
+  const deps = {
+    authorize: cookie => fixture.service.adminIdentity(cookie),
+    store: { list: async () => { reads++; return [] }, detail: async () => { reads++; return {} }, create: async () => { reads++; return null }, change: async () => { reads++; return true } },
+    limiter: new MemoryRateLimiter(), now: fixture.now,
+  }
+  for (const operation of ["list", "detail", "create", "change"]) {
+    assert.equal((await administerPromotions(deps, null, operation, {})).status, 401)
+    assert.equal((await administerPromotions(deps, client.cookie.value, operation, {})).status, 403)
+    assert.equal((await administerPromotions(deps, admin.cookie.value, operation, {})).body.code, "mfa_enrollment_required")
+  }
+  assert.equal(reads, 0)
+  const enrollment = await fixture.service.enrollMfa(admin.cookie.value)
+  const verified = await fixture.service.verifyMfa({ cookieValue: admin.cookie.value, code: enrollment.body.recoveryCodes[0] })
+  assert.equal(verified.status, 200)
+  assert.equal((await administerPromotions(deps, verified.cookie.value, "list", {})).status, 200)
+  assert.equal(reads, 1)
+  const freshLogin = await signIn(fixture, "admin@example.com")
+  for (const operation of ["list", "detail", "create", "change"]) {
+    assert.equal((await administerPromotions(deps, freshLogin.cookie.value, operation, {})).body.code, "mfa_required")
+  }
+  assert.equal(reads, 1)
+  await fixture.service.logout(verified.cookie.value)
+  assert.equal((await administerPromotions(deps, verified.cookie.value, "list", {})).status, 401)
+})
+
+test("development limiter persists across request factories without weakening production fail-closed behavior", async () => {
+  const first = createProductionLimiter({ NODE_ENV: "development" })
+  const second = createProductionLimiter({ NODE_ENV: "development" })
+  const key = "lot4-factory-regression-" + Date.now()
+  assert.equal((await first.consume(key, 1, 3600)).allowed, true)
+  assert.equal((await second.consume(key, 1, 3600)).allowed, false)
+  assert.equal(createProductionLimiter({ NODE_ENV: "production" }), null)
+})

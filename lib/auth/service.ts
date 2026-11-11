@@ -429,6 +429,12 @@ export function createAuthService(deps: AuthDeps) {
       }
     },
 
+    async adminIdentity(cookieValue: string | null): Promise<ServiceResult> {
+      const gate = await requireSession(cookieValue, "admin")
+      if (!gate.ok) return gate.error
+      return { status: 200, body: { ok: true, userId: gate.session.user.id } }
+    },
+
     async adminSummary(cookieValue: string | null): Promise<ServiceResult> {
       const gate = await requireSession(cookieValue, "admin")
       if (!gate.ok) return gate.error

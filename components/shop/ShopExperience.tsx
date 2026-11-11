@@ -160,6 +160,7 @@ type SessionState =
   | { status: "ready"; email: string }
 
 type UnlockedOffer = {
+  usageTerms?: string
   planCode: string
   name: string
   summary: string
@@ -387,6 +388,7 @@ export default function ShopExperience() {
         planCode: body.planCode,
         name: body.name,
         summary: body.summary,
+        usageTerms: body.usageTerms,
         amountCents: body.amountCents,
         interval: "month",
       })
@@ -605,6 +607,7 @@ export default function ShopExperience() {
                     <article className="mt-4 flex min-w-0 max-w-xl flex-col border-2 border-black p-5 md:p-6">
                       <h3 className="font-kode text-[1.5rem] uppercase tracking-[0.08em]">{unlocked.name}</h3>
                       <p className="mt-3 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">{unlocked.summary}</p>
+                      {unlocked.usageTerms && <p className="mt-3 whitespace-pre-wrap break-words font-home-title text-sm">{unlocked.usageTerms}</p>}
                       <p className="mt-6 font-kode text-[2rem] tracking-[0.04em]">
                         {formatEuro(unlocked.amountCents, language)}
                       </p>

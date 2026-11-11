@@ -1,3 +1,4 @@
+import AdminPromotions from "@/components/auth/AdminPromotions"
 import type { Metadata } from "next"
 import AdminBillingLists from "@/components/auth/AdminBillingLists"
 import AdminSummary from "@/components/auth/AdminSummary"
@@ -32,7 +33,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <AuthFrame titleKey="auth.admin.title">
+    <AuthFrame titleKey="auth.admin.title" wide>
       <AdminSummary
         data={{
           accounts: Number(result.body.accounts),
@@ -45,6 +46,7 @@ export default async function AdminPage() {
         }}
       />
       <AdminBillingLists data={await auth.billing.adminSnapshot()} />
+      <AdminPromotions />
     </AuthFrame>
   )
 }
