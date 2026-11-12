@@ -114,7 +114,7 @@ export default function SiteChromeNav({
             </Link>
           ))}
         </div>
-        {documentNavigation ? (
+        {documentNavigation && currentPage !== "shop" ? (
           <div className="pt-2">
             <LanguageSwitcher mode={mode} />
           </div>

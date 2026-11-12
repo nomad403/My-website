@@ -1,6 +1,7 @@
 "use client"
 
 import ClientWorkspace from "./ClientWorkspace"
+import ShopAsciiBackground from "./ShopAsciiBackground"
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
@@ -30,16 +31,9 @@ const solidButtonClass =
 const buttonClass = `${solidButtonClass} w-full`
 
 const ghostButtonClass =
-  "font-kode min-h-12 rounded-full border border-black/30 bg-white px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+  "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black/30 bg-white px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
 
 const ui = {
-  eyebrow: { fr: "Abonnements", en: "Subscriptions" },
-  title: { fr: "Shop", en: "Shop" },
-  intro: {
-    fr: "Hébergement, maintenance et suivi des projets déjà en ligne. Les prestations de création restent sur la page Expertise.",
-    en: "Hosting, maintenance and follow-up for projects already online. Creation work stays on the Expertise page.",
-  },
-  expertise: { fr: "Voir Expertise", en: "View Expertise" },
   monthly: { fr: "Mensuel", en: "Monthly" },
   yearly: { fr: "Annuel", en: "Yearly" },
   perMonth: { fr: "par mois", en: "per month" },
@@ -411,7 +405,8 @@ export default function ShopExperience() {
         menuOpen || authOpen ? "overflow-hidden" : "overflow-y-auto"
       }`}
     >
-      <div className="relative min-h-full">
+      <ShopAsciiBackground />
+      <div className="relative z-10 min-h-full">
         <SiteChromeNav
           mode="day"
           currentPage="shop"
@@ -427,27 +422,10 @@ export default function ShopExperience() {
           onPageChange={() => setMenuOpen(false)}
           documentNavigation
         />
-        <main className="mx-auto w-full max-w-7xl px-4 pb-36 md:px-8">
-          <header className="max-w-3xl pt-6 md:pt-8">
-            <p className="font-kode text-[0.625rem] uppercase tracking-[0.16em] text-cyan-600">
-              {shopText(ui.eyebrow, language)}
-            </p>
-            <h1 className="mt-3 font-kode text-[2rem] uppercase tracking-[0.08em] md:text-[2.75rem]">
-              {shopText(ui.title, language)}
-            </h1>
-            <p className="mt-4 font-home-title text-[0.8125rem] leading-[1.62] text-black/80">
-              {shopText(ui.intro, language)}
-            </p>
-            <Link
-              href="/specialist"
-              className="mt-4 inline-flex font-kode text-[0.6875rem] uppercase tracking-[0.12em] text-black/60 transition-colors duration-300 hover:text-cyan-600"
-            >
-              {shopText(ui.expertise, language)}
-            </Link>
-          </header>
-
-          <nav aria-label={shopText(ui.sectionNav, language)} className="mt-10 border-y-2 border-black/30 py-4">
-            <ul className="flex flex-wrap gap-x-5 gap-y-3">
+        <main className="mx-auto grid w-full max-w-[84rem] grid-cols-1 gap-8 px-4 pb-36 pt-6 md:px-8 lg:grid-cols-[11rem_minmax(0,1fr)]">
+          <h1 className="sr-only">Shop Nomad403</h1>
+          <nav aria-label={shopText(ui.sectionNav, language)} className="self-start border-y-2 border-black/30 py-4 lg:sticky lg:top-28">
+            <ul className="flex flex-wrap gap-x-5 gap-y-3 lg:flex-col lg:gap-5">
               {SHOP_SECTIONS.map((item) => {
                 const active = item === section
                 return (
@@ -474,14 +452,14 @@ export default function ShopExperience() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: motionDuration, ease: "easeOut" }}
-              className="pt-8"
+              className="min-w-0"
             >
               {section === "offers" ? (
                 <section aria-labelledby="shop-offers-title">
                   <h2 id="shop-offers-title" className="sr-only">
                     {shopText(ui.sections.offers, language)}
                   </h2>
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="grid grid-cols-1 items-end gap-6 xl:grid-cols-2">
                     <div role="group" aria-label={shopText(ui.intervalName, language)} className="flex flex-wrap gap-3">
                       {(["month", "year"] as const).map((item) => (
                         <Link
@@ -535,13 +513,13 @@ export default function ShopExperience() {
                     </p>
                   ) : null}
 
-                  <ul className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <ul className="mt-8 grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
                     {offers.map((offer) => {
                       const cents = interval === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
                       return (
                         <li
                           key={offer.code}
-                          className={`flex min-w-0 flex-col border-2 p-5 md:p-6 ${
+                          className={`flex min-w-0 flex-col border-2 bg-white/90 p-5 md:p-6 ${
                             offer.emphasized ? "border-cyan-500" : "border-black/20"
                           }`}
                         >
@@ -573,19 +551,21 @@ export default function ShopExperience() {
                               </li>
                             ))}
                           </ul>
-                          <button
-                            type="button"
-                            className={`${buttonClass} mt-6`}
-                            onClick={() => void subscribe(offer.code)}
-                            disabled={session.status === "loading"}
-                          >
-                            {shopText(ui.subscribe, language)}
-                          </button>
                           {paymentPlan === offer.code && actionMessage ? (
                             <p role="status" className="mt-4 font-home-title text-[0.8125rem] leading-[1.62]">
                               {shopText(actionMessage, language)}
                             </p>
                           ) : null}
+                          <div className="mt-auto pt-6">
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            onClick={() => void subscribe(offer.code)}
+                            disabled={session.status === "loading"}
+                          >
+                            {shopText(ui.subscribe, language)}
+                          </button>
+                          </div>
                         </li>
                       )
                     })}
