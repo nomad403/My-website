@@ -38,8 +38,8 @@ export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
       : "text-black hover:text-cyan-400"
 
   return (
-    <div className="site-chrome absolute bottom-0 left-0 right-0 z-50 p-6 sm:p-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
+    <div className="site-chrome site-grid absolute bottom-0 left-0 right-0 z-50 py-6 md:py-8">
+      <div className="site-grid-inner relative flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-kode text-[0.625rem] font-normal uppercase tracking-[0.12em] sm:text-[0.8125rem]">
           {SOCIAL_LINKS.map((link) => (
             <a
@@ -56,7 +56,7 @@ export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
             </a>
           ))}
         </div>
-        <div className="flex items-center justify-center gap-3 lg:absolute lg:right-8">
+        <div className="flex items-center justify-center gap-3 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
           <SoundToggle />
           <LanguageSwitcher />
         </div>

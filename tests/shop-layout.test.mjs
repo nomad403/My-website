@@ -19,24 +19,28 @@ for(const lang of ["fr","en"]) for(const width of [1440,820,390]) for(const inte
    page.on("pageerror",error=>errors.push(error.message))
    await page.goto(origin+"/shop"+(interval==="year"?"?interval=year":""),{waitUntil:"networkidle"})
    await page.evaluate(()=>document.fonts.ready)
-   const navigation=await page.evaluate(()=>({rightBorder:getComputedStyle(document.querySelector("main nav li:last-child")).borderRightWidth,switchBorder:getComputedStyle(document.querySelector("[role=switch]").parentElement).borderLeftWidth}))
+   const navigation=await page.evaluate(()=>({rightBorder:getComputedStyle(document.querySelector("main nav li:last-child")).borderRightWidth,switches:[...document.querySelectorAll("main section [role=switch]")].length}))
    assert.equal(navigation.rightBorder,"1px")
-   assert.equal(navigation.switchBorder,"0px")
+   assert.equal(navigation.switches,3)
    const cards=await page.evaluate(()=>[...document.querySelectorAll("main section > ul > li")].map(card=>{
     const box=element=>{const r=element.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}}
     const title=card.querySelector("h3"),description=title.nextElementSibling,price=description.nextElementSibling
     const features=[...card.querySelectorAll(":scope > ul > li")]
-    return {box:box(card),title:box(title),description:box(description),summary:description.textContent,price:box(price),amount:Number(price.textContent.replace(/\D/g,"")),button:box(card.querySelector("button")),rows:features.map(row=>({...box(row),label:row.querySelector(":scope > div > span").textContent,overflow:row.scrollWidth>row.clientWidth+1}))}
+    return {box:box(card),title:box(title),description:box(description),summary:description.textContent,price:box(price),amount:Number(price.textContent.replace(/\D/g,"")),button:box(card.querySelector(".shop-subscribe")),rows:features.map(row=>({...box(row),label:row.querySelector(":scope > span").textContent,overflow:row.scrollWidth>row.clientWidth+1}))}
    }))
    assert.equal(cards.length,3)
    assert.deepEqual(cards.map(card=>card.amount),interval==="year"?[190,490,690]:[19,49,69])
    for(const card of cards){
-    assert.ok(card.summary.startsWith(lang==="fr"?"Votre":"Your"))
-    assert.equal(card.rows.length,10)
+    assert.equal(card.rows.length,12)
     assert.deepEqual(card.rows.map(row=>row.label),cards[0].rows.map(row=>row.label))
+    assert.ok(
+      (lang==="fr" && /^(Hébergement|Essential|Plus)/.test(card.summary)) ||
+      (lang==="en" && /^(Hosting|Essential|Plus)/.test(card.summary)),
+      "Summary must match the commercial progression copy",
+    )
     assert.ok(card.title.bottom<=card.description.top+1,"Title must not overlap description")
     assert.ok(card.description.bottom<=card.price.top+1,"Description must not overlap price")
-    for(let index=0;index<10;index++){
+    for(let index=0;index<12;index++){
      const row=card.rows[index]
      assert.ok(row.height>0&&!row.overflow)
      assert.ok(row.left>=card.box.left-1&&row.right<=Math.min(card.box.right,width)+1)
@@ -49,7 +53,7 @@ for(const lang of ["fr","en"]) for(const width of [1440,820,390]) for(const inte
    if(width>=768){
     const aligned=values=>assert.ok(Math.max(...values)-Math.min(...values)<1,"Shared rows must align within a CSS pixel")
     aligned(cards.map(card=>card.box.top));aligned(cards.map(card=>card.price.top));aligned(cards.map(card=>card.button.bottom))
-    for(let index=0;index<10;index++){aligned(cards.map(card=>card.rows[index].top));aligned(cards.map(card=>card.rows[index].height))}
+    for(let index=0;index<12;index++){aligned(cards.map(card=>card.rows[index].top));aligned(cards.map(card=>card.rows[index].height))}
    }
    assert.deepEqual(errors,[])
   } finally {await context.close()}

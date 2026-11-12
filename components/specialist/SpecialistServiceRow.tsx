@@ -16,7 +16,6 @@ import { playSiteSfx } from "@/lib/ui/site-sfx"
 interface SpecialistServiceRowProps {
   service: SpecialistService
   lang: SpecialistLang
-  serviceIndex: number
   isOpen: boolean
   onToggle: (id: string) => void
   reducedMotion: boolean
@@ -30,7 +29,6 @@ interface SpecialistServiceRowProps {
 export default function SpecialistServiceRow({
   service,
   lang,
-  serviceIndex,
   isOpen,
   onToggle,
   reducedMotion,
@@ -50,18 +48,23 @@ export default function SpecialistServiceRow({
   }, [isOpen, demoMode])
 
   return (
-    <div ref={rootRef} className="border-t-2 border-black/30 first:border-t-0">
+    <div
+      ref={rootRef}
+      className={`specialist-service-row border-t border-black/20 first:border-t-0 ${
+        isOpen ? "specialist-service-row--open" : ""
+      }`}
+    >
       <div
-        className={`px-2 transition-all duration-300 ${
+        className={`transition-all duration-300 ${
           isOpen
-            ? "specialist-service-glass"
+            ? "specialist-service-glass specialist-service-glass--open"
             : "specialist-service-glass specialist-service-glass--idle"
         }`}
       >
         <button
           type="button"
-          className={`group flex w-full items-center justify-between gap-4 pt-3.5 pb-2 text-left transition-colors duration-200 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:pt-4 md:pb-2 ${
-            isOpen ? "text-cyan-600" : ""
+          className={`group flex w-full items-center justify-between gap-3 px-4 py-1.5 text-left transition-colors duration-200 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:gap-4 md:px-5 md:py-2 ${
+            isOpen ? "text-cyan-600" : "text-black"
           }`}
           aria-expanded={isOpen}
           aria-controls={panelId}
@@ -70,18 +73,9 @@ export default function SpecialistServiceRow({
             onToggle(service.id)
           }}
         >
-          <span
-            className={`shrink-0 self-start pt-[0.1em] font-kode text-[0.625rem] font-normal leading-none tracking-[0.14em] md:text-[0.8125rem] ${
-              isOpen ? "text-cyan-600" : "text-black/35 group-hover:text-cyan-600"
-            }`}
-            aria-hidden="true"
-          >
-            {String(serviceIndex + 1).padStart(2, "0")}
-          </span>
-
           {showDemoSubject && demoFocusVoice ? (
             <ShuffleDualLines
-              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.055em] md:text-[1.3125rem] ${
+              className={`specialist-service-row__title min-w-0 flex-1 font-enigma font-normal uppercase ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               lines={[
@@ -102,7 +96,7 @@ export default function SpecialistServiceRow({
             />
           ) : (
             <ShuffleText
-              className={`min-w-0 flex-1 font-enigma text-[1rem] font-normal uppercase leading-[1.18] tracking-[0.055em] group-hover:text-inherit md:text-[1.3125rem] ${
+              className={`specialist-service-row__title min-w-0 flex-1 font-enigma font-normal uppercase group-hover:text-inherit ${
                 isOpen ? "text-cyan-600" : "text-black"
               }`}
               shuffleDuration={150}
@@ -114,7 +108,7 @@ export default function SpecialistServiceRow({
             </ShuffleText>
           )}
           <motion.span
-            className={`font-enigma inline-block shrink-0 origin-center text-[1.3125rem] font-normal leading-none md:text-[1.625rem] ${
+            className={`specialist-service-row__icon font-enigma inline-block shrink-0 origin-center font-normal leading-none ${
               isOpen
                 ? "text-cyan-600"
                 : "text-black/55 group-hover:text-cyan-600"
@@ -150,8 +144,11 @@ export default function SpecialistServiceRow({
               }}
               className="overflow-hidden"
             >
-              <div className="pb-4 pl-[2rem] pr-10 pt-0 md:pl-[2.75rem]">
-                <p className="specialist-catalog__service-body max-w-xl border-l border-cyan-500/35 pl-4 font-home-title text-black/70 md:pl-5">
+              <div className="specialist-service-branch px-4 pb-2.5 pt-0 md:px-5 md:pb-3">
+                <span className="specialist-service-branch__mark font-kode" aria-hidden="true">
+                  └─
+                </span>
+                <p className="specialist-catalog__service-body specialist-service-branch__text max-w-xl font-home-title text-cyan-700">
                   {description}
                 </p>
               </div>

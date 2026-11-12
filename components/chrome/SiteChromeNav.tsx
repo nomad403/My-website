@@ -67,11 +67,11 @@ export default function SiteChromeNav({
 
   return (
     <nav
-      className={`site-chrome top-0 left-0 right-0 z-50 p-4 md:p-8 ${
+      className={`site-chrome site-grid top-0 left-0 right-0 z-50 py-4 md:py-8 ${
         documentNavigation ? "sticky bg-white" : "absolute"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-start justify-between gap-4">
+      <div className="site-grid-inner flex items-start justify-between gap-4">
         {documentNavigation ? (
           <Link
             href="/"

@@ -8,6 +8,8 @@ export const HOME_TITLE_LINE_HEIGHT = 1.08
 export const HOME_TITLE_LINE_HEIGHT_MOBILE = 0.98
 export const HOME_TITLE_MIN_FONT_PX = 16
 export const HOME_TITLE_MAX_FONT_PX_MOBILE = 34
+/** Cap laptop (~1024–1439) : même hiérarchie, un cran sous le grand desktop. */
+export const HOME_TITLE_MAX_FONT_PX_LAPTOP = 50
 export const HOME_TITLE_MAX_FONT_PX_DESKTOP = 68
 export const HOME_TITLE_STAGGER_MS = 80
 /** Taille max du welcome relative à nomad403 (cap + fit largeur). */
@@ -21,8 +23,11 @@ export const HOME_BRAND_LETTER_SPACING_EM = 0
 export const HOME_BRAND_LINE_HEIGHT = 0.9
 export const HOME_BRAND_MIN_FONT_PX = 26
 export const HOME_BRAND_MAX_FONT_PX_MOBILE = 68
+export const HOME_BRAND_MAX_FONT_PX_LAPTOP = 128
 export const HOME_BRAND_MAX_FONT_PX_DESKTOP = 178
 export const HOME_BRAND_FONT_WEIGHT = 400
+/** Au-delà : caps desktop plein ; en dessous (hors mobile) : caps laptop. */
+export const HOME_TITLE_DESKTOP_WIDE_MIN_PX = 1440
 /** Durée du shuffle au survol de nomad403 (alignée sur le welcome). */
 export const HOME_BRAND_SHUFFLE_MS = 900
 /** Pause sur l'affichage alternatif au hover (logo, welcome). */

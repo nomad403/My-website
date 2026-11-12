@@ -2,6 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Shared vertical content grid:
+  horizontal padding outside max-width so header, footer and page
+  bodies share the same left/right edges at every viewport.
+*/
+@layer components {
+  .site-grid {
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .site-grid-inner {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 80rem; /* matches Tailwind max-w-7xl */
+  }
+
+  @media (min-width: 768px) {
+    .site-grid {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /*
+    Shop subscribe — liquid flames (CodePen) are a hidden guide for ASCII.
+    Rest: black. Hot: only the ASCII field is visible (same glyphs/sobel/#ff0000).
+  */
+  .shop-subscribe.flaming {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    width: 100%;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    border: 0;
+    border-radius: 9999px;
+    padding: 0.6rem 2rem;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font-family: var(--font-enigma), ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .shop-subscribe__body {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: visible;
+    border: 1px solid #000;
+    border-radius: inherit;
+    background: #000;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .shop-subscribe.flaming.is-hot:not(:disabled) {
+    color: #000;
+  }
+
+  .shop-subscribe.flaming.is-hot:not(:disabled) .shop-subscribe__body {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  /* Liquid guide stays in the DOM for sampling, but is fully masked. */
+  .shop-subscribe.flaming.is-hot:not(:disabled) .shop-subscribe__flame {
+    opacity: 0;
+  }
+
+  .shop-subscribe.flaming:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .shop-subscribe.flaming:focus-visible {
+    outline: 2px solid #00e8ff;
+    outline-offset: 2px;
+  }
+
+  .shop-subscribe__ascii {
+    position: absolute;
+    z-index: 1;
+    display: none;
+    pointer-events: none;
+  }
+
+  .shop-subscribe.flaming.is-hot:not(:disabled) .shop-subscribe__ascii {
+    display: block;
+  }
+
+  .shop-subscribe__label {
+    position: relative;
+    z-index: 2;
+  }
+
+  .shop-subscribe.flaming.is-hot:not(:disabled) .shop-subscribe__label {
+    color: #000;
+    text-shadow:
+      0 0 1px rgb(255 255 255 / 0.95),
+      0 0 4px rgb(255 255 255 / 0.7),
+      0 1px 0 rgb(255 255 255 / 0.55);
+  }
+
+  .shop-subscribe__flame {
+    display: block;
+  }
+}
+
 /* Select the experience copy before hydration, including on touch devices. */
 .experience-copy-motion {
   display: none;
@@ -1011,7 +1126,9 @@ body {
 
 @media (min-width: 768px) {
   .projects-scroll-list-shell {
-    --list-inline-end: max(22rem, 32vw);
+    /* Keep list clear of the description panel on the shared site-grid edge. */
+    --list-inline-start: max(2rem, calc((100vw - 80rem) / 2));
+    --list-inline-end: calc(max(2rem, (100vw - 80rem) / 2) + min(22rem, 30vw) + 1.5rem);
   }
 
   .project-detail-panel {
@@ -1020,7 +1137,8 @@ body {
     color: #0a0a0a;
     box-sizing: border-box;
     left: auto;
-    right: clamp(1.75rem, 4.5vw, 3.5rem);
+    /* Same right edge as .site-grid-inner */
+    right: max(2rem, calc((100vw - 80rem) / 2));
     top: 50%;
     bottom: auto;
     transform: translateY(-50%);
@@ -1146,13 +1264,124 @@ body {
   padding-top: var(--specialist-titles-top);
 }
 
+.specialist-catalog__intro {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.specialist-catalog__intro::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.specialist-catalog__frame {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+}
+
+.specialist-catalog__frame-body {
+  container-type: size;
+  container-name: specialist-frame;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.specialist-catalog__frame-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .specialist-catalog__track {
-  padding-top: 0.5rem;
+  padding-top: 0;
+}
+
+.specialist-catalog__block {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 100cqh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 0;
+}
+
+.specialist-catalog__block-services {
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.28);
+}
+
+/*
+  Espace réservé en bas : séparation visuelle + marge pour un item déplié.
+*/
+.specialist-catalog__block-gap {
+  flex: 1 1 auto;
+  min-height: 4rem;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 0, 0, 0.03) 100%
+    );
+}
+
+.specialist-service-row__title {
+  font-size: 0.875rem;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+}
+
+.specialist-service-row__icon {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .specialist-service-row__title {
+    font-size: 0.9375rem;
+    letter-spacing: 0.05em;
+  }
+
+  .specialist-service-row__icon {
+    font-size: 1.25rem;
+  }
+
+  .specialist-catalog__block-gap {
+    min-height: 4.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
-  .specialist-catalog__track {
-    padding-top: var(--specialist-titles-top);
+  .specialist-service-row__title {
+    font-size: 1rem;
+  }
+
+  .specialist-service-row__icon {
+    font-size: 1.3125rem;
+  }
+
+  .specialist-catalog__block-gap {
+    min-height: 5rem;
+  }
+}
+
+/* Uniquement sur listes très basses : densifier un cran, sans passer illisible. */
+@container specialist-frame (max-height: 480px) {
+  .specialist-service-row button {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .specialist-service-row__title {
+    font-size: 0.8125rem;
+  }
+
+  .specialist-service-row__icon {
+    font-size: 1rem;
+  }
+
+  .specialist-catalog__block-gap {
+    min-height: 3.5rem;
   }
 }
 
@@ -1170,9 +1399,31 @@ body {
 
 .specialist-catalog__service-body {
   font-size: 0.8125rem;
-  line-height: 1.62;
+  line-height: 1.5;
   letter-spacing: 0;
   font-weight: 300;
+}
+
+.specialist-service-branch {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.specialist-service-branch__mark {
+  flex-shrink: 0;
+  margin-top: 0.04em;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: rgb(8 145 178);
+  user-select: none;
+}
+
+.specialist-service-branch__text {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-top: 0;
 }
 
 .specialist-service-glass {
@@ -1185,6 +1436,15 @@ body {
     inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
     inset -1px -1px 1px rgba(255, 255, 255, 0.28),
     0 6px 18px rgba(0, 0, 0, 0.07);
+}
+
+.specialist-service-glass--open {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(207, 250, 254, 0.72);
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255, 255, 255, 0.55),
+    inset -1px -1px 1px rgba(8, 145, 178, 0.12),
+    0 6px 18px rgba(8, 145, 178, 0.1);
 }
 
 .specialist-service-glass--idle {
@@ -1219,9 +1479,10 @@ body {
     line-height: 1.54;
   }
 
-  .specialist-catalog__service-body {
+  .specialist-catalog__service-body,
+  .specialist-service-branch__mark {
     font-size: 0.8125rem;
-    line-height: 1.62;
+    line-height: 1.5;
   }
 }
 
@@ -1236,9 +1497,10 @@ body {
     line-height: 1.42;
   }
 
-  .specialist-catalog__service-body {
-    font-size: 1rem;
-    line-height: 1.62;
+  .specialist-catalog__service-body,
+  .specialist-service-branch__mark {
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
 }
 
@@ -1260,34 +1522,30 @@ body {
 
 @media (min-width: 1024px) {
   .specialist-catalog__list-pane {
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    min-height: 0;
+    /* Aligné sur Offres & Expertise, dégagé du footer. */
+    padding-top: var(--specialist-titles-top);
+    padding-bottom: 5.75rem;
+  }
+
+  .specialist-catalog__frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
   }
 
   .specialist-catalog__scroller {
     scrollbar-width: none;
     -ms-overflow-style: none;
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgb(0 0 0 / 0.25) 6%,
-      #000 16%,
-      #000 84%,
-      rgb(0 0 0 / 0.25) 94%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgb(0 0 0 / 0.25) 6%,
-      #000 16%,
-      #000 84%,
-      rgb(0 0 0 / 0.25) 94%,
-      transparent 100%
-    );
   }
 
   .specialist-catalog__scroller::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
   }
 }
 

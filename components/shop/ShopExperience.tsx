@@ -12,6 +12,8 @@ import SiteChromeNav, { SiteChromeMobileMenu } from "@/components/chrome/SiteChr
 import SiteSocialFooter from "@/components/chrome/SiteSocialFooter"
 import { useLanguage } from "@/contexts/LanguageContext"
 import ShopAuthPanel from "@/components/shop/ShopAuthPanel"
+import ShopSubscribeButton, { ShopSubscribeGooDefs } from "@/components/shop/ShopSubscribeButton"
+import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
 import {
   formatEuro,
   parseShopInterval,
@@ -26,12 +28,10 @@ import {
 const INTENT_KEY = "nomad403-shop-intent"
 
 const solidButtonClass =
-  "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black bg-black px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-white transition-opacity duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
-
-const buttonClass = `${solidButtonClass} w-full`
+  "font-kode inline-flex min-h-10 items-center justify-center rounded-full border border-black bg-black px-5 text-[0.75rem] uppercase tracking-[0.12em] text-white transition-opacity duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
 
 const ghostButtonClass =
-  "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black bg-white px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+  "font-kode inline-flex min-h-10 items-center justify-center rounded-full border border-black bg-white px-5 text-[0.75rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
 
 const ui = {
   monthly: { fr: "Mensuel", en: "Monthly" },
@@ -205,6 +205,42 @@ function useReducedMotion() {
   return reduced
 }
 
+function IntervalSwitch({
+  value,
+  language,
+  onChange,
+  className = "",
+}: {
+  value: "month" | "year"
+  language: string
+  onChange: (next: "month" | "year") => void
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={value === "year"}
+      aria-label={shopText(ui.yearly, language)}
+      onClick={() => onChange(value === "month" ? "year" : "month")}
+      className={`relative grid h-7 w-[7.25rem] shrink-0 grid-cols-2 items-center rounded-full border border-black bg-white p-0.5 font-kode text-[0.5rem] uppercase tracking-[0.08em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 md:h-8 md:w-36 md:p-1 md:text-[0.5625rem] md:tracking-[0.1em] ${className}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-full bg-black transition-transform duration-300 motion-reduce:transition-none md:inset-y-1 md:left-1 md:w-[calc(50%-0.25rem)] ${
+          value === "year" ? "translate-x-full" : "translate-x-0"
+        }`}
+      />
+      <span className={`relative z-10 transition-colors ${value === "month" ? "text-white" : "text-black/60"}`}>
+        {shopText(ui.monthly, language)}
+      </span>
+      <span className={`relative z-10 transition-colors ${value === "year" ? "text-white" : "text-black/60"}`}>
+        {shopText(ui.yearly, language)}
+      </span>
+    </button>
+  )
+}
+
 export default function ShopExperience() {
   const { language } = useLanguage()
   const router = useRouter()
@@ -224,8 +260,17 @@ export default function ShopExperience() {
   const [promoCode, setPromoCode] = useState("")
   const [unlocked, setUnlocked] = useState<UnlockedOffer | null>(null)
   const [invoices, setInvoices] = useState<InvoiceRow[] | null>(null)
+  const [offerIntervals, setOfferIntervals] = useState<Record<string, "month" | "year">>({})
   const offers = publicShopOffers()
   const visibleSections: readonly ShopSection[] = session.status === "ready" ? SHOP_SECTIONS : ["offers", "account"]
+
+  function offerInterval(code: string): "month" | "year" {
+    return offerIntervals[code] ?? interval
+  }
+
+  function setOfferInterval(code: string, next: "month" | "year") {
+    setOfferIntervals((current) => ({ ...current, [code]: next }))
+  }
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem(INTENT_KEY)
@@ -398,15 +443,18 @@ export default function ShopExperience() {
 
   const motionDuration = reduced ? 0 : 0.45
 
+  const offersScrollLock = section === "offers" || menuOpen || authOpen
+
   return (
     <div
       className={`fixed inset-0 overflow-x-hidden bg-white text-black ${
-        menuOpen || authOpen ? "overflow-hidden" : "overflow-y-auto"
+        offersScrollLock ? "overflow-hidden" : "overflow-y-auto"
       }`}
     >
       <ShopAsciiBackground />
       <CustomCursor />
-      <div className="relative z-10 min-h-full">
+      <ShopSubscribeGooDefs />
+      <div className={`relative z-10 flex flex-col ${section === "offers" ? "h-dvh" : "min-h-dvh"}`}>
         <SiteChromeNav
           mode="day"
           currentPage="shop"
@@ -422,12 +470,14 @@ export default function ShopExperience() {
           onPageChange={() => setMenuOpen(false)}
           documentNavigation
         />
-        <main className="mx-auto w-full max-w-[84rem] px-4 pb-24 pt-3 md:px-8">
+        <main className={`site-grid flex min-h-0 flex-1 flex-col pt-1 ${section === "offers" ? "pb-3 md:pb-20" : "pb-20"}`}>
+          <div className="site-grid-inner flex min-h-0 flex-1 flex-col">
           <h1 className="sr-only">Shop Nomad403</h1>
-          <div className="border border-black bg-white/80">
-          <div className="flex flex-col gap-x-8 border-b border-black lg:flex-row lg:items-center">
-          <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 flex-1 overflow-x-auto">
-            <ul className="flex min-h-12 items-stretch">
+          <div className={`border border-black bg-white/80 ${section === "offers" ? "flex min-h-0 flex-1 flex-col overflow-hidden" : ""}`}>
+          {menuOpen ? null : (
+          <div className="relative z-40 shrink-0 border-b border-black bg-white">
+          <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 overflow-x-auto">
+            <ul className="flex h-full min-h-10 items-stretch">
               {visibleSections.map((item) => {
                 const active = item === section
                 return (
@@ -435,7 +485,7 @@ export default function ShopExperience() {
                     <Link
                       href={sectionHref(item, interval)}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-12 w-full items-center justify-center whitespace-nowrap px-5 py-2 font-kode text-[0.625rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
+                      className={`flex h-full min-h-10 w-full items-center justify-center whitespace-nowrap px-4 py-2 font-kode text-[0.625rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 md:px-5 md:text-[0.6875rem] ${
                         active ? "bg-cyan-50/80 text-cyan-700" : "text-black/55 hover:bg-black/[0.04] hover:text-black"
                       }`}
                     >
@@ -446,21 +496,8 @@ export default function ShopExperience() {
               })}
             </ul>
           </nav>
-          <div className="flex shrink-0 items-center justify-center px-4 pb-2 lg:py-2 lg:pl-0 lg:pr-5">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={interval === "year"}
-              aria-label={shopText(ui.yearly, language)}
-              onClick={() => router.replace(sectionHref(section, interval === "month" ? "year" : "month"), {scroll:false})}
-              className="relative grid min-h-9 w-48 grid-cols-2 items-center rounded-full border border-black bg-white p-1 font-kode text-[0.5625rem] uppercase tracking-[0.1em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
-            >
-              <span aria-hidden="true" className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-black transition-transform duration-300 motion-reduce:transition-none ${interval === "year" ? "translate-x-full" : "translate-x-0"}`} />
-              <span className={`relative z-10 transition-colors ${interval === "month" ? "text-white" : "text-black/60"}`}>{shopText(ui.monthly, language)}</span>
-              <span className={`relative z-10 transition-colors ${interval === "year" ? "text-white" : "text-black/60"}`}>{shopText(ui.yearly, language)}</span>
-            </button>
           </div>
-          </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -469,53 +506,77 @@ export default function ShopExperience() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: motionDuration, ease: "easeOut" }}
-              className={section === "offers" ? "min-w-0" : "min-w-0 p-5 md:p-6"}
+              className={
+                section === "offers"
+                  ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain md:overflow-hidden"
+                  : "min-w-0 p-5 md:p-6"
+              }
             >
               {section === "offers" ? (
-                <section aria-labelledby="shop-offers-title">
+                <section aria-labelledby="shop-offers-title" className="flex min-h-0 flex-1 flex-col">
                   <h2 id="shop-offers-title" className="sr-only">
                     {shopText(ui.sections.offers, language)}
                   </h2>
                   {searchParams.get("checkout") === "success" ? (
-                    <p role="status" className="mt-4 max-w-2xl font-home-title text-[0.8125rem] leading-[1.62]">
+                    <p role="status" className="mt-2 max-w-2xl px-4 font-home-title text-[0.75rem] leading-[1.45] md:px-5">
                       {shopText(ui.checkoutPending, language)}
                     </p>
                   ) : null}
                   {searchParams.get("checkout") === "cancel" ? (
-                    <p role="status" className="mt-4 max-w-2xl font-home-title text-[0.8125rem] leading-[1.62]">
+                    <p role="status" className="mt-2 max-w-2xl px-4 font-home-title text-[0.75rem] leading-[1.45] md:px-5">
                       {shopText(ui.checkoutCancel, language)}
                     </p>
                   ) : null}
 
-                  <ul className="grid grid-cols-1 items-stretch md:grid-cols-3 md:grid-rows-[repeat(11,auto)]">
+                  <ul className="grid min-h-0 flex-1 grid-cols-1 items-stretch md:grid-cols-3 md:grid-rows-[repeat(17,minmax(0,auto))]">
                     {offers.map((offer) => {
-                      const cents = interval === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
+                      const billing = offerInterval(offer.code)
+                      const cents = billing === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
                       return (
                         <li
                           key={offer.code}
-                          className="group flex min-w-0 flex-col border-b border-black bg-white/85 p-4 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:[grid-row:span_11] md:grid md:grid-rows-subgrid md:border-b-0 md:border-r md:last:border-r-0"
+                          className="group relative flex h-full min-w-0 flex-col border-b border-black bg-white/85 p-4 last:border-b-0 md:[grid-row:span_17] md:grid md:h-auto md:grid-rows-subgrid md:border-b-0 md:border-r md:last:border-r-0 before:pointer-events-none before:absolute before:inset-0 before:bg-cyan-50/80 before:opacity-0 before:transition-opacity before:duration-500 before:ease-out hover:before:opacity-100 focus-within:before:opacity-100 motion-reduce:before:transition-none"
                         >
-                          <h3 className="font-kode text-[1.25rem] uppercase tracking-[0.08em] transition-colors duration-300 group-hover:text-cyan-700">
-                            {shopText(offer.name, language)}
+                          <h3 className="relative z-10 flex items-center justify-between gap-3 font-electric-blue text-[1.5rem] lowercase leading-[0.95] tracking-[0.02em] transition-colors duration-500 ease-out group-hover:text-cyan-700 md:text-[1.625rem]">
+                            <ShuffleDualLines
+                              className="min-w-0"
+                              enableHover={!reduced}
+                              holdDurationMs={2200}
+                              shuffleDurationMs={900}
+                              lines={[
+                                {
+                                  primary: shopText(offer.name, language).toLowerCase(),
+                                  alternate: shopText(offer.hook, language).toLowerCase(),
+                                },
+                              ]}
+                              lineClassName="font-electric-blue text-[1.5rem] lowercase leading-[0.95] tracking-[0.02em] md:text-[1.625rem]"
+                            />
+                            <IntervalSwitch
+                              value={billing}
+                              language={language}
+                              onChange={(next) => setOfferInterval(offer.code, next)}
+                            />
                           </h3>
-                          <p className="mt-1.5 font-home-title text-[0.75rem] leading-[1.4] text-black/70">
+                          <p className="relative z-10 mt-1 font-home-title text-[0.75rem] leading-[1.4] text-black/75">
                             {shopText(offer.summary, language)}
                           </p>
-                          <p className="mt-2.5 flex items-baseline gap-2 font-kode text-[1.75rem] tracking-[0.04em]">
+                          <p className="relative z-10 mt-2 flex items-baseline gap-2 font-kode text-[1.625rem] tracking-[0.04em]">
                             {formatEuro(cents, language)}
-                            <span className="font-home-title text-[0.75rem] tracking-normal text-black/55">
-                              {shopText(interval === "year" ? ui.perYear : ui.perMonth, language)}
+                            <span className="font-home-title text-[0.75rem] tracking-normal text-black/60">
+                              {shopText(billing === "year" ? ui.perYear : ui.perMonth, language)}
                             </span>
                           </p>
-                          <ul className="-mx-4 mt-2.5 flex flex-col md:[grid-row:span_7] md:grid md:grid-rows-subgrid">
+                          <ul className="relative z-10 -mx-4 mt-2 flex flex-1 flex-col md:[grid-row:span_12] md:grid md:flex-none md:grid-rows-subgrid">
                             {offer.features.map((feature) => (
                               <li
                                 key={feature.id}
-                                className={`flex min-w-0 items-start justify-between gap-3 border-t border-black px-4 py-1 font-home-title text-[0.75rem] leading-[1.35] ${feature.included ? "text-black/80" : "text-black/40"}`}
+                                className={`flex min-w-0 items-center justify-between gap-3 border-t border-black px-4 py-1 font-home-title text-[0.75rem] leading-[1.35] ${
+                                  feature.included ? "text-black" : "text-black/40"
+                                }`}
                               >
                                 <span className="min-w-0 break-words">{shopText(feature.label, language)}</span>
                                 {feature.included ? (
-                                  <span className="max-w-[42%] shrink-0 text-right font-kode text-[0.6875rem]">
+                                  <span className="max-w-[45%] shrink-0 text-right font-kode text-[0.6875rem] text-black/65">
                                     {shopText(feature.value, language)}
                                   </span>
                                 ) : (
@@ -527,22 +588,20 @@ export default function ShopExperience() {
                               </li>
                             ))}
                           </ul>
-                          <div>
+                          <div className="relative z-10">
                           {paymentPlan === offer.code && actionMessage ? (
                             <p role="status" className="mt-2 font-home-title text-[0.75rem] leading-[1.4]">
                               {shopText(actionMessage, language)}
                             </p>
                           ) : null}
                           </div>
-                          <div className="mt-auto pt-3 md:mt-0">
-                          <button
-                            type="button"
-                            className={buttonClass}
-                            onClick={() => void subscribe(offer.code)}
+                          <div className="relative z-10 mt-auto pt-3 md:mt-0">
+                          <ShopSubscribeButton
+                            onClick={() => void subscribe(offer.code, billing)}
                             disabled={session.status === "loading"}
                           >
                             {shopText(ui.subscribe, language)}
-                          </button>
+                          </ShopSubscribeButton>
                           </div>
                         </li>
                       )
@@ -551,20 +610,21 @@ export default function ShopExperience() {
                   {unlocked ? (
                     <article className="mt-4 flex min-w-0 max-w-xl flex-col border-2 border-black p-5 md:p-6">
                       <h3 className="font-kode text-[1.5rem] uppercase tracking-[0.08em]">{unlocked.name}</h3>
-                      <p className="mt-3 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">{unlocked.summary}</p>
-                      {unlocked.usageTerms && <p className="mt-3 whitespace-pre-wrap break-words font-home-title text-sm">{unlocked.usageTerms}</p>}
-                      <p className="mt-6 font-kode text-[2rem] tracking-[0.04em]">
+                      <p className="mt-2 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">{unlocked.summary}</p>
+                      {unlocked.usageTerms && <p className="mt-3 whitespace-pre-wrap break-words font-home-title text-[0.8125rem] leading-[1.62]">{unlocked.usageTerms}</p>}
+                      <p className="mt-3 flex items-baseline gap-2 font-kode text-[2rem] tracking-[0.04em]">
                         {formatEuro(unlocked.amountCents, language)}
+                        <span className="font-home-title text-[0.8125rem] tracking-normal text-black/60">
+                          {shopText(ui.perMonth, language)}
+                        </span>
                       </p>
-                      <p className="font-home-title text-[0.8125rem] text-black/60">{shopText(ui.perMonth, language)}</p>
-                      <button
-                        type="button"
-                        className={`${buttonClass} mt-6`}
+                      <ShopSubscribeButton
+                        className="mt-4"
                         onClick={() => void subscribe(unlocked.planCode, "month")}
                         disabled={session.status === "loading"}
                       >
                         {shopText(ui.subscribe, language)}
-                      </button>
+                      </ShopSubscribeButton>
                       {paymentPlan === unlocked.planCode && actionMessage ? (
                         <p role="status" className="mt-4 font-home-title text-[0.8125rem] leading-[1.62]">
                           {shopText(actionMessage, language)}
@@ -579,6 +639,7 @@ export default function ShopExperience() {
               {section !== "offers" && <ClientWorkspace key={session.status === "ready" ? session.email : session.status} section={section} language={language} onLogout={() => void logout()} />}
             </motion.div>
           </AnimatePresence>
+          </div>
           </div>
         </main>
         {menuOpen ? null : <SiteSocialFooter mode="day" />}

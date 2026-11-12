@@ -28,19 +28,33 @@ function sharedService(id: string, label: Localized, level: ServiceLevel): Servi
 }
 
 export const SHOP_SERVICE_CRITERIA: ServiceCriterion[] = [
-  sharedService("hosting", {"fr":"Hébergement & HTTPS","en":"Hosting & HTTPS"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
-  sharedService("ops", {"fr":"Surveillance, protection & sauvegardes","en":"Monitoring, protection & backups"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
-  sharedService("security_review", {"fr":"Contrôle de sécurité","en":"Security review"}, {"included":true,"value":{"fr":"Mensuel","en":"Monthly"}}),
+  sharedService("hosting", {"fr":"Hébergement du site","en":"Website hosting"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
+  sharedService("https", {"fr":"Certificat HTTPS","en":"HTTPS certificate"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
+  sharedService("monitoring", {"fr":"Surveillance continue","en":"Continuous monitoring"}, {"included":true,"value":{"fr":"Continue","en":"Continuous"}}),
+  sharedService("protection", {"fr":"Protection contre les attaques courantes","en":"Protection against common attacks"}, {"included":true,"value":{"fr":"Incluse","en":"Included"}}),
+  sharedService("security_review", {"fr":"Contrôle de sécurité mensuel","en":"Monthly security review"}, {"included":true,"value":{"fr":"Mensuel","en":"Monthly"}}),
+  sharedService("backups", {"fr":"Sauvegardes automatiques","en":"Automatic backups"}, {"included":true,"value":{"fr":"Automatiques","en":"Automatic"}}),
   {
-    id: "content_changes", label: {"fr":"Modifications de contenu","en":"Content changes"},
+    id: "admin_panel",
+    label: {"fr":"Espace d'administration","en":"Admin panel"},
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      premium: {"included":true,"value":{"fr":"60 min/mois","en":"60 min/month"}},
+      plus: {"included":true,"value":{"fr":"Inclus","en":"Included"}},
+      premium: {"included":true,"value":{"fr":"Inclus","en":"Included"}},
     },
   },
   {
-    id: "activity_report", label: {"fr":"Rapport d'activité","en":"Activity report"},
+    id: "content_changes",
+    label: {"fr":"Modifications de contenu","en":"Content changes"},
+    levels: {
+      essential: {"included":false,"value":{"fr":"Non incluses","en":"Not included"}},
+      plus: {"included":true,"value":{"fr":"30 min/mois","en":"30 min/month"}},
+      premium: {"included":true,"value":{"fr":"90 min/mois","en":"90 min/month"}},
+    },
+  },
+  {
+    id: "activity_report",
+    label: {"fr":"Rapport d'activité","en":"Activity report"},
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       plus: {"included":true,"value":{"fr":"Simplifié","en":"Summary"}},
@@ -48,55 +62,63 @@ export const SHOP_SERVICE_CRITERIA: ServiceCriterion[] = [
     },
   },
   {
-    id: "priority_support", label: {"fr":"Assistance prioritaire","en":"Priority support"},
+    id: "priority_support",
+    label: {"fr":"Assistance prioritaire","en":"Priority support"},
     levels: {
-      essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
+      essential: {"included":false,"value":{"fr":"Non incluse","en":"Not included"}},
+      plus: {"included":false,"value":{"fr":"Non incluse","en":"Not included"}},
       premium: {"included":true,"value":{"fr":"Incluse","en":"Included"}},
     },
   },
   {
-    id: "personal_support", label: {"fr":"Accompagnement personnalisé","en":"Personal guidance"},
+    id: "personal_support",
+    label: {"fr":"Accompagnement personnalisé","en":"Personal guidance"},
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       premium: {"included":true,"value":{"fr":"Bilan trimestriel","en":"Quarterly review"}},
     },
   },
+  {
+    id: "major_evolution_discount",
+    label: {"fr":"Réduction sur les évolutions majeures","en":"Discount on major evolutions"},
+    levels: {
+      essential: {"included":false,"value":{"fr":"Non incluse","en":"Not included"}},
+      plus: {"included":false,"value":{"fr":"Non incluse","en":"Not included"}},
+      premium: {"included":true,"value":{"fr":"−10 %","en":"−10%"}},
+    },
+  },
 ]
 
-const OFFER_COPY: Record<PublicOfferCode, { name: Localized; summary: Localized; emphasized?: boolean }> = {
-  "essential": {
-    "name": {
-      "fr": "Essential",
-      "en": "Essential"
+const OFFER_COPY: Record<
+  PublicOfferCode,
+  { name: Localized; summary: Localized; hook: Localized; emphasized?: boolean }
+> = {
+  essential: {
+    name: { fr: "Essential", en: "Essential" },
+    summary: {
+      fr: "Hébergement, protection et surveillance.",
+      en: "Hosting, protection and monitoring.",
     },
-    "summary": {
-      "fr": "Votre site hébergé, surveillé et protégé.",
-      "en": "Your website hosted, monitored and protected."
-    }
+    hook: { fr: "C'EST PARTI", en: "LET'S GO" },
   },
-  "plus": {
-    "name": {
-      "fr": "Plus",
-      "en": "Plus"
+  plus: {
+    name: { fr: "Plus", en: "Plus" },
+    summary: {
+      fr: "Essential, avec admin et modifications mensuelles.",
+      en: "Essential, with admin panel and monthly edits.",
     },
-    "summary": {
-      "fr": "Votre site protégé et suivi régulièrement.",
-      "en": "Your website protected and regularly maintained."
-    }
+    hook: { fr: "LEVEL UP", en: "LEVEL UP" },
   },
-  "premium": {
-    "name": {
-      "fr": "Premium",
-      "en": "Premium"
+  premium: {
+    name: { fr: "Premium", en: "Premium" },
+    summary: {
+      fr: "Plus, accompagnement et −10 % sur les évolutions majeures.",
+      en: "Plus, guidance and −10% on major evolutions.",
     },
-    "summary": {
-      "fr": "Votre site protégé, entretenu et accompagné.",
-      "en": "Your website protected, maintained and supported."
-    },
-    "emphasized": true
-  }
+    hook: { fr: "FULL SEND", en: "FULL SEND" },
+    emphasized: true,
+  },
 }
 
 export const SHOP_CONDITIONS: Localized[] = [
@@ -117,8 +139,16 @@ export const SHOP_CONDITIONS: Localized[] = [
     en: "The yearly plan is charged once. It equals ten months, so two months are included.",
   },
   {
-    fr: "L'heure Premium est un plafond d'intervention, pas une réserve de développement.",
-    en: "The Premium hour is an intervention ceiling, not a development reserve.",
+    fr: "Les minutes de modification sont un plafond mensuel non cumulable, pas une réserve de développement.",
+    en: "Content-change minutes are a monthly ceiling, not bankable, and not a development reserve.",
+  },
+  {
+    fr: "L'espace d'administration couvre l'accès et la maintenance d'un panneau existant ; son développement initial n'est pas inclus.",
+    en: "The admin panel covers access and maintenance of an existing panel; building one from scratch is not included.",
+  },
+  {
+    fr: "La réduction Premium de 10 % s'applique aux nouveaux devis Nomad403, hors hébergement et services tiers, sans cumul promotionnel.",
+    en: "The Premium 10% discount applies to new Nomad403 quotes only, excluding hosting and third-party services, and does not stack with other promotions.",
   },
 ]
 
@@ -154,6 +184,7 @@ export function publicShopOffers() {
       emphasized: Boolean(copy.emphasized),
       name: copy.name,
       summary: copy.summary,
+      hook: copy.hook,
       features: SHOP_SERVICE_CRITERIA.map(criterion => ({ id: criterion.id, label: criterion.label, ...criterion.levels[code] })),
       monthlyAmountCents: plan.monthlyAmountCents,
       yearlyAmountCents: plan.yearlyAmountCents,
