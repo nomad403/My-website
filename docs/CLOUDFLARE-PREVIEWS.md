@@ -2,14 +2,14 @@
 
 Audit du 12 novembre 2026. Depot nomad403/My-website, worktree My-website-cloudflare, branche fix/cloudflare-worker-self-reference.
 Base locale : 82039427af20862b2b060cc7c50ee218fdd5b04f.
-Statut avant publication : **GO local et preflight distant ; validation du deploiement Preview encore attendue.**
+Statut : **Preview fonctionnelle verifiee ; NO-GO pour affirmer une automatisation GitHub complete.**
 
 ## Etat reel et preservation
 
 Au debut de cet audit, le working tree etait propre : l'hypothese de modifications Preview encore non commitees ne correspondait plus au depot.
 main distant : 82039427af20862b2b060cc7c50ee218fdd5b04f.
 Branche de correction distante : 539708cd4201d8c19099c2bcb9291449fe347c52.
-Les changements de cette finalisation sont uniquement locaux. Aucun push ou deploiement n'a ete lance.
+Corrections commitees et poussees uniquement sur fix/cloudflare-worker-self-reference : cb9515989371c8fea8ceb3d4b7cfcce1afddef41. main reste a 82039427af20862b2b060cc7c50ee218fdd5b04f.
 
 wrangler.jsonc et open-next.config.ts sont conserves inchanges. Les bindings, flags, routes et variables de production ne sont pas modifies. Le fetch de production du custom Worker est transmis directement a OpenNext, avec ses arguments d'origine. Aucun deuxieme Worker permanent, aucune branche staging, aucun Lot Shop, aucune action DNS ou Vercel.
 
@@ -135,6 +135,28 @@ Le bucket peut consommer du stockage/des operations R2 ; aucune promesse de grat
 
 ## Etat de livraison
 
-Autorisations obtenues : creation/initialisation du bucket Preview ; configuration des commandes Previews Base confirmee par le proprietaire, main conservee en production. Preflight distant reussi. Publication autorisee uniquement sur fix/cloudflare-worker-self-reference ; aucune URL ne sera declaree fonctionnelle avant son controle effectif.
+Autorisations obtenues : creation/initialisation du bucket Preview ; configuration des commandes Previews Base confirmee par le proprietaire, main conservee en production. Preflight distant reussi. Publication realisee uniquement sur fix/cloudflare-worker-self-reference. Voir ci-dessous la distinction entre build automatique initial incomplet et publication native fonctionnelle executee directement.
 
 Controles finaux : git diff --check reussi ; scan de 170 chemins suivis ou nouveaux sans detection de secret ; audit npm du 12 novembre : 0 vulnerabilite connue. wrangler.jsonc et open-next.config.ts inchanges.
+
+## Verification distante effective
+
+Commit publie : cb9515989371c8fea8ceb3d4b7cfcce1afddef41.
+URL native : https://fix-cloudflare-worker-self-reference-my-website.glennrichard-dev.workers.dev
+
+Le build automatique dbcb24ee-f90b-4dab-aa6e-69191644dc01 a ete declare reussi par Cloudflare, mais son deploiement 66ba2231-9ebb-4e3f-8022-4427422f3f0d ne contenait pas NEXT_INC_CACHE_R2_PREFIX : les pages serveur repondaient 503, les assets 200. Ses annotations etaient le titre Git et le SHA court, contrairement aux arguments de notre publisher. Le journal fourni par le proprietaire confirme la cause : Executing user deploy command: npx wrangler preview. La commande npm run publish:preview n'a donc pas ete executee ; initialisation du cache et prefixe dynamique etaient absents.
+
+La commande npm run publish:preview a ensuite ete executee directement avec le code et les artefacts verifies du commit cb95159. Elle a peuple six entrees dans le seul bucket Preview et cree le deploiement natif ce713a39-8255-4511-a423-2e21c48166ac. Son tag est le SHA complet cb9515989371c8fea8ceb3d4b7cfcce1afddef41 et son message est Preview commit suivi de ce SHA. Prefixe effectif : preview/ef987f88ba2c/43ZfjW8WQZYUswswcun_T.
+
+Controles apres cette publication :
+- /, /contact, /projects, /specialist, /card et /signature : HTTP 200 ; police ProFont : 200 ; /shop : 404 attendu.
+- HEAD de revalidation /card : HTTP 200, x-nextjs-cache REVALIDATED.
+- POST valide de controle Preview : HTTP 503 attendu, aucune credential Resend dans le deploiement, aucun envoi de mail.
+- Metadonnees : bucket R2 Preview confirme, namespace CONTACT_LIMITER distinct de production, aucun secret, aucun service WORKER_SELF_REFERENCE distant.
+- Navigateur Chrome distant : 6 pages aux largeurs 1440 et 390, FR/EN, WebGL actif, polices chargees, 8 captures, 0 erreur et 0 echec de requete. Le navigateur n'autorise que le domaine Preview et les lectures du CDN public jsDelivr ; les appels a la production sont bloques.
+- BUILD_ID Preview : 43ZfjW8WQZYUswswcun_T. Identifiant statique de production inchange : ZBltsk6rmvODQ5EsZw4Po.
+- Le helper open-next-cache-populate n'apparait pas parmi les Workers permanents du compte.
+
+Ces resultats valident la version Preview publiee par notre commande. Ils ne prouvent pas encore que chaque push de branche executera correctement cette commande. Ne pas relancer de push uniquement pour contourner ce constat : corriger et enregistrer d'abord Preview command = npm run publish:preview dans Previews Base, puis verifier un nouveau build automatique. Aucune mise a jour de main, aucun deploiement de production, aucun DNS ni parametre Vercel modifie.
+
+Le present complement de rapport reste local en attente de la correction du champ Preview command confirme errone par le journal ; le code de correction est deja publie au commit indique.
