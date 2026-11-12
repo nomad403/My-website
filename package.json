@@ -13,13 +13,15 @@
     "security:check": "node scripts/strix.mjs doctor",
     "security:scan": "node scripts/strix.mjs scan",
     "security:strix": "node scripts/strix.mjs",
-    "test:security": "node --test tests/contact-security.test.mjs tests/contact-durable.test.mjs",
+    "test:security": "node --test tests/contact-security.test.mjs tests/contact-durable.test.mjs tests/cloudflare-preview.test.mjs",
     "check:cloudflare": "node scripts/check-cloudflare.mjs",
-    "build:cloudflare": "node scripts/check-cloudflare.mjs && opennextjs-cloudflare build --config wrangler.jsonc --openNextConfigPath open-next.config.ts",
+    "build:cloudflare": "node scripts/check-preview-build.mjs && node scripts/check-cloudflare.mjs && opennextjs-cloudflare build --config wrangler.jsonc --openNextConfigPath open-next.config.ts",
     "preview:cloudflare": "node scripts/check-cloudflare.mjs --built && opennextjs-cloudflare preview --config wrangler.jsonc --ip 127.0.0.1 --port 8787",
     "deploy:cloudflare": "node scripts/check-cloudflare.mjs --built && opennextjs-cloudflare deploy --config wrangler.jsonc",
     "build:next": "next build",
-    "postbuild:next": "next-sitemap"
+    "postbuild:next": "next-sitemap",
+    "publish:preview": "node scripts/publish-preview.mjs",
+    "audit:preview": "node scripts/publish-preview.mjs --check"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",

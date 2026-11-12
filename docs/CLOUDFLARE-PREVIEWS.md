@@ -1,155 +1,140 @@
-# NOMAD403 ? Securisation des Previews Cloudflare
+# NOMAD403 ? Previews natives Cloudflare / OpenNext
 
-Date : 2026-11-11. Branche : fix/cloudflare-worker-self-reference.
-Reference locale et publiee : 539708cd4201d8c19099c2bcb9291449fe347c52.
-Statut : preparation locale verifiee ; **NO-GO Preview distant**.
+Audit du 12 novembre 2026. Depot nomad403/My-website, worktree My-website-cloudflare, branche fix/cloudflare-worker-self-reference.
+Base locale : 82039427af20862b2b060cc7c50ee218fdd5b04f.
+Statut avant publication : **GO local et preflight distant ; validation du deploiement Preview encore attendue.**
 
-## Decision et portee
+## Etat reel et preservation
 
-Un simple bloc previews ne rend pas OpenNext 1.20.16 integralement compatible avec les Worker Previews isolees. La configuration proposee supprime toute cible de service de production et separe le R2, mais ne remplace pas encore le mecanisme de revalidation interne. Elle n'est pas une configuration distante prete a publier.
+Au debut de cet audit, le working tree etait propre : l'hypothese de modifications Preview encore non commitees ne correspondait plus au depot.
+main distant : 82039427af20862b2b060cc7c50ee218fdd5b04f.
+Branche de correction distante : 539708cd4201d8c19099c2bcb9291449fe347c52.
+Les changements de cette finalisation sont uniquement locaux. Aucun push ou deploiement n'a ete lance.
 
-Aucune ressource distante creee, aucune relance, aucun push ni commit pendant cette preparation. Aucun changement de main, DNS OVH, Vercel ou Lots 1?6. Les parametres de production au niveau racine du fichier Wrangler sont conserves identiques au commit de reference. open-next.config.ts et les scripts npm restent inchanges.
+wrangler.jsonc et open-next.config.ts sont conserves inchanges. Les bindings, flags, routes et variables de production ne sont pas modifies. Le fetch de production du custom Worker est transmis directement a OpenNext, avec ses arguments d'origine. Aucun deuxieme Worker permanent, aucune branche staging, aucun Lot Shop, aucune action DNS ou Vercel.
 
-## Configuration proposee, preparee localement
+## Audit distant execute
 
-Ajout dans wrangler.jsonc :
+La session Wrangler expiree a ete renouvelee par le proprietaire. Les lectures authentifiees confirment :
+- compte Cloudflare attendu, Worker my-website existant ;
+- Previews Base vide : aucun secret ni binding importe depuis la production ;
+- une ressource Preview fix/cloudflare-worker-self-reference existe, mais n'a aucun deploiement ;
+- le bucket etait initialement absent (API R2, code 10006) ; apres autorisation explicite du proprietaire, il a ete cree le 12 novembre 2026, stockage Standard, localisation WEUR ;
+- lecture des triggers Builds refusee par cette connexion OAuth : HTTP 403 / code 10000.
 
-```json
-"previews": {
-  "vars": { "NOMAD403_ENV": "preview" },
-  "services": [],
-  "r2_buckets": [{
-    "binding": "NEXT_INC_CACHE_R2_BUCKET",
-    "bucket_name": "nomad403-preview-opennext-cache"
-  }],
-  "images": { "binding": "IMAGES" }
-}
-```
+Les captures precedentes et le contexte fourni par le proprietaire indiquent main en production et les builds Preview actives. La commande Preview et les droits du token Builds doivent encore etre confirmes dans le dashboard ; aucune valeur de token n'est demandee ou affichee. Le refus API Builds est un manque de droits de lecture, pas une verification reussie.
 
-nomad403-preview-opennext-cache est un **nom propose**, pas un bucket dont l'existence ou l'exclusivite a ete verifiee. Il devra etre confirme ou remplace par le nom exact autorise, puis cree uniquement apres autorisation. Aucun identifiant ni secret invente.
+## Integration locale preparee
 
-Le controle scripts/check-cloudflare.mjs accepte uniquement les champs Preview ci-dessus, refuse un service binding et exige que le bucket Preview differe du bucket racine. Il verifie le fichier local ; il ne constitue ni une politique IAM ni une verification de la configuration distante. Son message distingue desormais validation locale et NO-GO distant.
+### Auto-reference sans production
 
-## Syntaxe et repartition des bindings
+cloudflare/worker.mjs exporte PreviewSelfReference, un WorkerEntrypoint. Pour NOMAD403_ENV=preview, cloudflare/preview-env.mjs fournit a OpenNext un env limite et remplace WORKER_SELF_REFERENCE par ctx.exports.PreviewSelfReference. Les appels imbriques restent dans le meme code Preview, sans service vers my-website actif et sans fetch vers un hostname de production.
 
-La documentation actuelle place les variables et ressources dans previews. ASSETS, la date et les flags de compatibilite restent au niveau racine. Images doit etre redeclare sous previews ; il s'agit d'une API du compte, pas d'un stockage d'images dedie. Les secrets Preview ont leur propre configuration Base et peuvent etre copies aux nouvelles Previews : l'absence de variables de build visible dans la capture ne prouve pas l'absence de secrets runtime.
-Source : [configuration Cloudflare](https://developers.cloudflare.com/workers/previews/configuration/).
+Le guard exige un cache Preview, un prefixe valide et un loopback disponible ; sinon il renvoie 503, sans fallback. Les secrets et bindings hors liste autorisee ne sont pas transmis au handler Preview.
 
-| Binding / parametre | Cible Preview proposee | Verification / limite |
-| --- | --- | --- |
-| NEXT_INC_CACHE_R2_BUCKET | nomad403-preview-opennext-cache | Stockage exclusivement non-production a creer apres accord |
-| WORKER_SELF_REFERENCE | Aucun service binding | Empeche l'appel au Worker my-website actif ; fonctionnalite de loopback encore manquante |
-| ASSETS | .open-next/assets du build courant | Reste racine ; fichiers branches televerses par la commande Preview |
-| IMAGES | API Images du compte | Redeclare sous previews ; pas de nouveau bucket ; usage potentiellement facture au meme compte |
-| NOMAD403_ENV | preview | Marqueur non secret, n'est pas a lui seul une protection runtime |
-| Resend / Redis / KV / credentials | Aucun configure dans le fichier Preview | Inventaire distant Base et Preview a verifier avant toute operation |
-| Routes / domaines / triggers | Aucun ajoute | Aucune association DNS ni cron de production |
+Il s'agit d'une composition des API officielles Custom Worker OpenNext et ctx.exports Cloudflare, pas d'une modification du SDK ou d'un desactivage de validation. OpenNext 1.20.16 ne fournit pas lui-meme un workflow complet Worker Previews : l'orchestration reste explicite et testee dans ce depot.
 
-Les autres bindings de donnees (D1, KV, Queues, Hyperdrive, etc.) sont absents de cette base portfolio et ne sont pas ajoutes.
-Deux Previews liees au meme bucket partagent ses objets ; un bucket Preview dedie isole la production, pas chaque branche. Choisir un bucket par branche si une separation entre Previews est exigee. Les clefs OpenNext incluent un identifiant de build ; cela n'est pas une autorisation d'acces distincte.
-Source : [ressources et isolation](https://developers.cloudflare.com/workers/previews/resources/).
+La page Context mentionne encore un flag explicite, mais la page Compatibility flags et le runtime workerd confirment que ctx.exports est active par defaut depuis le 17 novembre 2025. La date existante 2026-11-10 suffit. Aucun flag supplementaire ni changement de date n'est donc ajoute.
+Sources : [Custom Worker OpenNext](https://opennext.js.org/cloudflare/howtos/custom-worker), [ctx.exports](https://developers.cloudflare.com/workers/runtime-apis/context/), [compatibilite](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#enable-ctxexports).
 
-## Blocage WORKER_SELF_REFERENCE : cause confirmee
+### Cache R2 Preview et initialisation
 
-La documentation Cloudflare precise qu'un service binding depuis une Preview appelle le deploiement actif du Worker cible. Un nom de branche ou l'URL Preview ne constitue pas une cible service equivalente. Cloudflare recommande ctx.exports pour les appels au sein de la meme Preview.
-Source : [limitation des service bindings](https://developers.cloudflare.com/workers/previews/resources/#service-bindings).
+scripts/preview-config.mjs produit deux configurations temporaires ignorees :
+1. Native : meme Worker my-website, parametres Preview issus du bloc previews, avec prefixe dynamique.
+2. Cache : uniquement le R2 Preview et ses variables, sans DO, Images, assets, service ou ressource de production.
 
-L'inspection du paquet installe OpenNext 1.20.16 confirme :
-- dist/cli/build/patches/plugins/res-revalidate.js reecrit la revalidation Next vers env.WORKER_SELF_REFERENCE.fetch ;
-- dist/api/overrides/queue/memory-queue.js utilise ce binding si cette queue est choisie ;
-- dist/api/durable-objects/queue.js en depend egalement si cette option est activee ;
-- le code contact du projet exige actuellement un binding self valide avant d'accepter l'identite cliente Cloudflare.
+Cible R2 autorisee, creee et verifiee : nomad403-preview-opennext-cache.
+Prefixe : preview/<empreinte de branche sur 12 caracteres>/<BUILD_ID Next>.
+Le prefixe utilise pour la population et celui fourni au runtime sont identiques ; des branches ou builds differents ne se melangent pas dans le fonctionnement normal. Le bucket partage reste une separation logique entre Previews, pas une frontiere de confidentialite contre du code de branche malveillant. Il est distinct du bucket de production.
 
-Dans notre open-next.config.ts, seule l'implementation R2 est configuree ; la queue par defaut est dummy, et les queues optionnelles ci-dessus ne sont pas revendiquees actives. Le patch de revalidation demeure dans l'adaptateur. Supprimer le service est donc une mesure d'isolation, pas un remplacement fonctionnel complet. L'audit est une preuve de code ; aucun appel distant de revalidation n'a ete execute.
+La commande preparee npm run publish:preview effectue les controles en lecture seule AVANT toute mutation, puis :
+- populateCache remote avec la CLI officielle OpenNext et la configuration CACHE Preview uniquement ;
+- nouvelle verification des ressources ;
+- wrangler preview --ignore-base-config avec la configuration native generee, le nom de branche et le SHA comme tag/message.
 
-Solutions :
-1. **A privilegier pour conserver npx wrangler preview** : valider une adaptation de Worker OpenNext utilisant un WorkerEntrypoint local via ctx.exports, puis fournir cette reference a l'env interne d'OpenNext pour la seule Preview. Tester revalidation, propagation du contexte, appels imbriques et absence totale de fallback reseau vers my-website. Cette adaptation n'est pas implementee ni qualifiee ici ; ne pas inventer un champ Wrangler service visant une Preview.
-2. Alternative : Worker de staging distinct, avec son propre self binding et bucket, deployee par une procedure non-production dediee. Elle necessite creation/deploiement autorises et modifie le workflow demande. Pointer une Preview vers le deploiement actif de ce Worker de staging ne prouverait pas que la revalidation utilise le meme SHA que la Preview.
-3. Attendre une prise en charge native documentee par l'adaptateur.
-
-Ne pas retablir service=my-website dans previews pour faire disparaitre une erreur : cela violerait l'isolation demandee. Ne pas masquer le probleme avec une desactivation des verifications OpenNext.
-
-## Compatibilite des commandes demandees
-
-- **npm run build:cloudflare** : execute avec succes. Produit le bundle sans operation distante et conserve les protections de validation. Lit la configuration racine ; un build reussi ne verifie pas le runtime Preview ni les droits R2.
-- **npx wrangler preview** : commande presente dans Wrangler 4.160.1, aide locale verifiee. Le bloc propose est reconnu par son parseur. Publication non executee. Compatibilite fonctionnelle OpenNext encore bloquee par le loopback et le cache.
-- **npm run preview:cloudflare** : signifie ici le serveur de developpement LOCAL de la CLI OpenNext, pas une publication de Worker Preview Cloudflare. Ne pas confondre ces deux usages.
-- **npm run deploy:cloudflare** : ne doit pas etre utilise pour publier cette Preview ; publie un deploiement actif.
-
-OpenNext fournit une etape populateCache et ses commandes deploy/upload la realisent avant publication. La commande Wrangler brute ne realise pas cette etape applicative. L'inspection du paquet confirme que populateCache selectionne config.r2_buckets (racine ou environnement nomme), et non config.previews.r2_buckets. **Ne jamais lancer populateCache remote avec le fichier racine actuel**, car il selectionnerait le cache de production. Il faudra generer une configuration auxiliaire ne contenant que le bucket Preview et verifier cette cible avant toute population autorisee. Les flags preview_bucket_name de developpement distant ne remplacent pas le bloc Worker Previews.
+Le helper OpenNext peut provisionner un bucket absent ; notre preflight refuse donc un bucket manquant avant d'appeler le helper. La premiere creation doit etre explicitement autorisee et effectuee separement. Ne jamais lancer populateCache remote avec wrangler.jsonc racine : il selectionnerait le cache de production.
 Source : [CLI OpenNext](https://opennext.js.org/cloudflare/cli).
 
-## Secrets et variables
+### Bindings et donnees
 
-Verifications locales :
-- seules .env.contact.example et .env.strix.example sont presentes parmi les fichiers env examines ;
-- aucune cle Preview ni cle de production fournie ou ajoutee ;
-- NOMAD403_ENV=preview est la seule variable du bloc propose ;
-- .env.local, .dev.vars*, .open-next, .wrangler et les preuves temporaires sont ignores.
+| Binding | Cible effective en Preview |
+| --- | --- |
+| WORKER_SELF_REFERENCE | ctx.exports.PreviewSelfReference ; aucun service externe |
+| NEXT_INC_CACHE_R2_BUCKET | nomad403-preview-opennext-cache, cree apres accord |
+| NEXT_INC_CACHE_R2_PREFIX | prefixe de branche et build, genere |
+| ASSETS | assets du build de cette branche |
+| IMAGES | API de transformation du compte, aucun stockage d'images de production cible |
+| CONTACT_LIMITER | namespace Durable Object propre a la Preview, classe ContactLimiter |
+| NOMAD403_ENV | preview |
+| Resend, Redis, Stripe, base de donnees | Aucun binding/secret autorise |
 
-Non verifie a distance : noms et cibles des secrets Previews Base, secrets d'une Preview existante, variables build et runtime. Ne pas exporter leurs valeurs pour l'audit. Pour ce premier portfolio, conserver Resend/Redis/KV sans credentials dans la Preview et dans son build. Si ces integrations sont qualifiees plus tard, creer des ressources et secrets de test independants avec autorisation separee.
+Les Previews natives isolent automatiquement les namespaces Durable Objects. Le preflight refuse un namespace CONTACT_LIMITER identique a celui de production ou une reference a un autre script.
+Les services externes restent interdits dans le bloc Preview. Les ressources R2 necessitent leur propre bucket ; elles ne sont pas clonees automatiquement.
+Sources : [configuration Preview](https://developers.cloudflare.com/workers/previews/configuration/), [ressources et isolation](https://developers.cloudflare.com/workers/previews/resources/).
 
-La commande exacte npx wrangler preview peut tenir compte de la Base distante. Son aide expose --ignore-base-config, mais cette option ne remplace pas l'audit des secrets existants et sort de la commande exacte demandee. Avant de conserver la commande sans flag, inspecter la Base et toute Preview existante, et exclure explicitement tout binding ou credential de production. Un token de build nomme my-website build token ne prouve pas ses droits ni leur restriction.
+### Variables, secrets et publication
 
-## Verifications locales executees le 11 novembre
+scripts/check-preview-build.mjs refuse les variables applicatives mail/Stripe/Redis/base/auth dans un build Preview, ainsi que les fichiers env locaux non exemples. Le token CI Cloudflare reste une credential du pipeline, jamais une variable runtime de l'application. Ses droits doivent etre limites aux operations necessaires ; le partage d'un token de production trop privilegie avec des branches non fiables n'est pas une isolation des droits CI.
+
+scripts/preview-remote.mjs expose seulement des requetes GET pour les audits. Il utilise l'authentification locale Wrangler ou le token CI sans les afficher :
+- refuse une Base distante non vide ;
+- confirme le bucket Preview et son absence des bindings R2 de production ;
+- compare les namespaces DO via leurs metadonnees, sans lire de donnees applicatives ;
+- refuse les secrets, services et bindings inattendus d'un ancien deploiement Preview.
+
+La commande npm run audit:preview realise ce preflight sans aucune ecriture distante.
+Le formulaire est toujours ferme en Preview, meme si des credentials mail lui sont fournies par erreur. Aucun e-mail reel n'a ete envoye pendant cette tache.
+
+## Commandes Builds a utiliser
+
+Uniquement dans Settings > Builds > Previews Base :
+- Build : npm run build:cloudflare (npm run build reste compatible avec WORKERS_CI=1).
+- Preview : npm run publish:preview.
+- Racine : /.
+- Production branch : main, a conserver.
+
+La commande brute npx wrangler preview ne suffit pas a initialiser le cache OpenNext ni a appliquer notre preflight. La remplacer UNIQUEMENT dans le champ Preview, pas dans le champ Deploy de Production.
+Le proprietaire a confirme avoir configure ces deux commandes dans Previews Base et conserve main en production. Aucun parametre de production n'a ete modifie par l'agent. La lecture independante des triggers reste refusee par l'API.
+
+## Controles executes
 
 | Controle | Resultat |
 | --- | --- |
-| Git branche et HEAD | Branche demandee ; HEAD 539708cd4201d8c19099c2bcb9291449fe347c52 |
-| Parseur Wrangler 4.160.1 unstable_readConfig | Bloc previews reconnu sans erreur |
-| check-cloudflare | Cibles locales conformes, services Preview vides |
+| Wrangler parseur et configurations generees | Reussis |
 | TypeScript | Reussi |
-| npm run test:security | 21 tests : 20 reussis, 1 ignore, 0 echec |
-| Test ignore | Redis TCP externe absent ; non execute |
-| npm run build:cloudflare | Next 15.5.29 puis OpenNext 1.20.16 reussis |
-| Simulation workerd --local | ASSETS, Images et R2 locaux ; aucun service binding |
-| HTTP simulation | /, /projects, /specialist, /signature, /card et police ProFont : 200 |
-| /shop simulation | 404 attendu, Lots Shop exclus |
-| POST /api/contact valide | 503 attendu, aucun envoi |
-| Revalidation via loopback Preview | Non executee, adaptation absente |
-| Deploiement / URL distante / erreur 10143 distante | Non testes, aucune relance |
+| npm run build avec WORKERS_CI=1 et branche Preview | Next et OpenNext reussis |
+| Suite securite et Preview | 48 tests, 47 reussis, 1 Redis externe ignore, 0 echec |
+| Test ignore | Compatibilite Vercel/Redis uniquement ; non revendique comme execute |
+| Loopback workerd | Appels simples et imbriques, aucune sortie reseau ni service de production |
+| Parcours production, fixture workerd | Arguments/env d'origine preserves |
+| Initialisation cache CLI OpenNext locale | 6 entrees peuplees dans le cache Preview local |
+| Wrangler dry-run runtime Preview | R2 Preview, DO, Images, Assets ; aucun service de production |
+| Bundle OpenNext reel | /, /card, /projects, /specialist, /signature : HTTP 200 |
+| Revalidation via loopback du vrai bundle | HTTP 200, x-nextjs-cache: REVALIDATED |
+| R2 du vrai bundle | Entrees ecrites sous le prefixe Preview, aucune ressource distante |
+| Formulaire du vrai bundle Preview | HTTP 503 attendu, aucun e-mail |
+| Sentinelles de sortie du test complet | 0 appel au service de production, 0 requete reseau externe |
+| Preflight distant | A d'abord refuse le bucket absent ; apres creation autorisee, reussi : bucket Preview verifie, Base vide, aucune ressource partagee avec la production |
+| Git, secrets et audit npm | Controles finaux dans le compte rendu ci-dessous |
 
-La simulation utilise un fichier temporaire ignore aplatissant uniquement les champs Preview, avec main/assets resolus localement, et wrangler dev --local sur 127.0.0.1:8788. Elle ne simule pas la fusion Base Cloudflare ni son controle d'acces ; les routes publiques fonctionnant sans population prealable ne prouvent pas la validite des chemins ISR/revalidation.
-Preuves : .cloudflare-review/preview-build.log, preview-security.log, preview-tsc.log, preview-isolation-runtime.log, preview-isolation-http.json.
-Les audits visuels du commit precedent ne sont pas comptes comme reexecutes dans cette preparation. Aucun composant graphique ou fichier applicatif n'a change.
+Le test complet utilise un probe local ignore pour appeler le vrai WorkerEntrypoint de revalidation et le vrai handler OpenNext. Ce probe et le token de revalidation genere ne sont pas livres au site. Les tests du Pages Router res.revalidate ne sont pas revendiques : cette application n'expose pas ce chemin ; le HEAD de revalidation du runtime App Router a ete effectivement execute.
 
-## Ressources manquantes et autorisations
+Les epreuves sont conservees dans .cloudflare-review/native-preview-*.log, les configurations generees et le harnais local ignores. Les audits visuels exhaustifs des versions precedentes ne sont pas comptes comme reexecutes. Aucun composant graphique ou media n'est modifie.
 
-| Action | Situation / autorisation |
-| --- | --- |
-| Creer et verifier nomad403-preview-opennext-cache | Existence inconnue ; accord explicite requis avant creation |
-| Lire les parametres Base/runtime et IAM Cloudflare | Pas d'acces disponible ; le proprietaire peut fournir noms et cibles sans valeurs |
-| Modifier Previews Base build command | Accord explicite requis ; ne pas modifier l'onglet Production |
-| Ajouter / modifier des secrets distants | Pas necessaire au premier essai sans contact ; accord requis si envisage |
-| Publier un nouveau commit de preparation | Non fait ; accord de push supplementaire requis |
-| Peupler le cache R2 Preview | Mutation distante, accord requis et cible auxiliaire controlee |
-| Lancer npx wrangler preview | Accord et prerequis resolus requis ; non lance |
-| Creer un Worker staging alternatif | Accord distinct requis ; aucune ressource creee |
+## Conditions avant commit et push
 
-## Procedure du premier deploiement securise
+1. Autorisation de creer le seul bucket nomad403-preview-opennext-cache et de l'initialiser avec des donnees de build Preview.
+2. Creation puis verification authentifiee : bucket distinct de toute cible de production.
+3. Regler et confirmer les commandes Previews Base ci-dessus, les builds Preview actives et main toujours branche de production. Verifier les droits du token Builds ; ne pas transmettre sa valeur.
+4. npm run audit:preview doit reussir avec les ressources distantes reelles.
+5. Commit sur fix/cloudflare-worker-self-reference seulement, puis push de cette branche seulement.
+6. Verifier le check Workers Builds du SHA, les metadonnees du deploiement Preview, l'URL fournie et les bindings effectifs. Tester les routes/assets et l'absence d'e-mail ; ne pas declarer GO sur un simple build ou une URL creee avec des avertissements.
 
-Cette procedure est bloquee aux etapes 1 et 2 ; ce n'est pas une invitation a lancer le build distant maintenant.
+Le premier deploiement natif creera ses ressources Preview, notamment son namespace DO. Aucun deuxieme Worker permanent ne sera cree. Le helper cache utilise le mecanisme temporaire officiel OpenNext, sans Worker staging permanent.
+Le bucket peut consommer du stockage/des operations R2 ; aucune promesse de gratuite ni changement de plan n'est fait.
 
-1. Resoudre et tester le loopback OpenNext via ctx.exports, ou faire approuver explicitement l'alternative staging. Conserver services Preview vides ; prouver que toute revalidation reste dans le code Preview du SHA courant. Ajouter des tests de non-regression avant publication.
-2. Faire confirmer le nom du bucket Preview par le proprietaire, autoriser sa creation si absent, puis verifier son exclusivite et les droits du token. Auditer Base, Preview existante, variables build et secrets runtime. Aucune cible de production autorisee.
-3. Preparer et tester une population de cache prenant une configuration auxiliaire Preview seule, sans bucket/service de production. Verifier comment cette etape sera integree au pipeline. Tant qu'elle n'est pas resolue, les deux commandes demandees ne constituent pas un pipeline OpenNext pleinement qualifie.
-4. Refaire TypeScript, securite, build et simulation locale avec loopback et cache. Scanner les fichiers suivis, verifier Git et confirmer un nouveau SHA local (les modifications actuelles ne sont pas commitees). Faire valider ce resultat avant tout push.
-5. Avec autorisation, regler seulement Previews Base : Build = npm run build:cloudflare ; Preview = npx wrangler preview ; racine /. Maintenir main comme branche de production et laisser les commandes Production intactes. Aucune modification DNS/Vercel.
-6. Avec autorisation, pousser uniquement fix/cloudflare-worker-self-reference. Si aucun commit nouveau n'est cree, un push identique ne declenche pas necessairement de build : ne pas fabriquer un commit vide ni relancer automatiquement.
-7. Avant la premiere mutation distante, confirmer a nouveau bucket, bindings effectifs, secrets absents/test et SHA. Executer la population autorisee exclusivement sur le bucket Preview, puis la commande Preview convenue. Aucun deploy actif sur my-website.
-8. Dans les logs, verifier depot/branche/SHA, binding R2 Preview, absence de service vers production, presence Assets/Images et absence de 10143. Recuperer l'URL Preview et verifier son association au SHA. Ne pas se contenter d'une URL creee avec avertissements de bindings manquants.
-9. Tester GET routes/assets/fonts/audio/signature, navigateur/WebGL, ainsi que loopback/revalidation sur cette URL. Maintenir le contact sans envoi reel et verifier son refus. Ne jamais tester de paiement ou de donnees Shop.
-10. GO Preview uniquement apres ces preuves et un deploiement distant reussi. Cette decision ne constitue pas une autorisation de migration production.
+## Etat de livraison
 
-## Blocages restants
+Autorisations obtenues : creation/initialisation du bucket Preview ; configuration des commandes Previews Base confirmee par le proprietaire, main conservee en production. Preflight distant reussi. Publication autorisee uniquement sur fix/cloudflare-worker-self-reference ; aucune URL ne sera declaree fonctionnelle avant son controle effectif.
 
-- **Bloquant fonctionnel** : loopback OpenNext sans service de production non implemente.
-- **Bloquant isolation** : bucket et configuration Base/secrets/IAM distants non verifies.
-- **Bloquant reproductibilite** : population R2 de la Preview a integrer sans selectionner le bucket racine.
-- **Validation distante absente** : aucune URL ni publication executee pour cette preparation.
-
-Le rapport CLOUDFLARE-DEPLOYMENT.md precedent decrit le correctif du deploiement actif et ses validations locales. Le present rapport precise les limites supplementaires du workflow Worker Previews : ne pas reutiliser son deploy:cloudflare pour le premier Preview.
-
-## Controle final des fichiers
-
-Trois fichiers seulement changent : wrangler.jsonc, scripts/check-cloudflare.mjs et ce rapport. Le controle structurel confirme que tous les champs racine de production sont identiques au commit 539708c. git diff --check reussit ; scan des 157 chemins suivis ou nouveaux non ignores : aucune detection de secret. Aucun environnement RESEND/UPSTASH/KV_REST/CLOUDFLARE/CONTACT configure dans le processus de controle. Les exemples env ne sont pas des configurations effectives. main reste 26e5de2aac1a20be225411d18a86b3a05897f883. Les modifications de preparation restent locales, non commitees et non poussees.
+Controles finaux : git diff --check reussi ; scan de 170 chemins suivis ou nouveaux sans detection de secret ; audit npm du 12 novembre : 0 vulnerabilite connue. wrangler.jsonc et open-next.config.ts inchanges.
