@@ -21,7 +21,20 @@ function createResendMailer(source:NodeJS.ProcessEnv): Mailer {
     configured: Boolean(apiKey && from),
     async sendMagicLink(to, url) {
       if (!apiKey || !from) throw new Error("Mail is not configured")
-      if(source.NOMAD403_ENV==="preview" && !(source.QUALIFICATION_EMAILS??"").toLowerCase().split(",").map(x=>x.trim()).includes(to.toLowerCase()))return
+      // Preview qualification: deliver to any address so a personal inbox can be used.
+      // Optional allowlist still supported — set QUALIFICATION_EMAILS to a comma list
+      // to restrict, or leave empty / set "*" to accept every recipient.
+      if (source.NOMAD403_ENV === "preview") {
+        const allow = String(source.QUALIFICATION_EMAILS ?? "")
+          .toLowerCase()
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean)
+        const open = allow.length === 0 || allow.includes("*")
+        if (!open && !allow.includes(to.toLowerCase())) {
+          throw new Error("preview_recipient_blocked")
+        }
+      }
       const { Resend } = await import("resend")
       const resend = new Resend(apiKey)
       const result = await resend.emails.send({
