@@ -422,19 +422,21 @@ export default function ShopExperience() {
           onPageChange={() => setMenuOpen(false)}
           documentNavigation
         />
-        <main className="mx-auto grid w-full max-w-[84rem] grid-cols-1 gap-8 px-4 pb-36 pt-6 md:px-8 lg:grid-cols-[11rem_minmax(0,1fr)]">
+        <main className="mx-auto w-full max-w-[84rem] px-4 pb-36 pt-6 md:px-8">
           <h1 className="sr-only">Shop Nomad403</h1>
-          <nav aria-label={shopText(ui.sectionNav, language)} className="self-start border-y-2 border-black/30 py-4 lg:sticky lg:top-28">
-            <ul className="flex flex-wrap gap-x-5 gap-y-3 lg:flex-col lg:gap-5">
+          <div className="border border-black/35 bg-white/80">
+          <div className="flex flex-col border-b border-black/35 lg:flex-row">
+          <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 flex-1 overflow-x-auto">
+            <ul className="flex h-full min-w-max lg:min-w-0">
               {SHOP_SECTIONS.map((item) => {
                 const active = item === section
                 return (
-                  <li key={item}>
+                  <li key={item} className="flex flex-1 border-r border-black/25 last:border-r-0">
                     <Link
                       href={sectionHref(item, interval)}
                       aria-current={active ? "page" : undefined}
-                      className={`font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-300 ${
-                        active ? "text-cyan-600" : "text-black/45 hover:text-cyan-600"
+                      className={`flex min-h-16 w-full items-center justify-center whitespace-nowrap px-4 py-3 font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
+                        active ? "bg-cyan-50/80 text-cyan-700" : "text-black/55 hover:bg-black/[0.04] hover:text-black"
                       }`}
                     >
                       {shopText(ui.sections[item], language)}
@@ -444,6 +446,21 @@ export default function ShopExperience() {
               })}
             </ul>
           </nav>
+          <div className="flex items-center justify-center border-t border-black/25 px-4 py-3 lg:border-l lg:border-t-0">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={interval === "year"}
+              aria-label={shopText(ui.yearly, language)}
+              onClick={() => router.replace(sectionHref(section, interval === "month" ? "year" : "month"), {scroll:false})}
+              className="relative grid min-h-10 w-52 grid-cols-2 items-center rounded-full border border-black/30 bg-white p-1 font-kode text-[0.625rem] uppercase tracking-[0.1em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+            >
+              <span aria-hidden="true" className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-black transition-transform duration-300 motion-reduce:transition-none ${interval === "year" ? "translate-x-full" : "translate-x-0"}`} />
+              <span className={`relative z-10 transition-colors ${interval === "month" ? "text-white" : "text-black/60"}`}>{shopText(ui.monthly, language)}</span>
+              <span className={`relative z-10 transition-colors ${interval === "year" ? "text-white" : "text-black/60"}`}>{shopText(ui.yearly, language)}</span>
+            </button>
+          </div>
+          </div>
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -452,56 +469,13 @@ export default function ShopExperience() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: motionDuration, ease: "easeOut" }}
-              className="min-w-0"
+              className="min-w-0 p-4 md:p-6"
             >
               {section === "offers" ? (
                 <section aria-labelledby="shop-offers-title">
                   <h2 id="shop-offers-title" className="sr-only">
                     {shopText(ui.sections.offers, language)}
                   </h2>
-                  <div className="grid grid-cols-1 items-end gap-6 xl:grid-cols-2">
-                    <div role="group" aria-label={shopText(ui.intervalName, language)} className="flex flex-wrap gap-3">
-                      {(["month", "year"] as const).map((item) => (
-                        <Link
-                          key={item}
-                          href={item === "year" ? "/shop?interval=year" : "/shop"}
-                          aria-current={interval === item ? "true" : undefined}
-                          className={interval === item ? solidButtonClass : ghostButtonClass}
-                        >
-                          {shopText(item === "month" ? ui.monthly : ui.yearly, language)}
-                        </Link>
-                      ))}
-                    </div>
-                    <form
-                      className="flex w-full max-w-md flex-col gap-2 sm:flex-row sm:items-end"
-                      onSubmit={(event) => void checkPromo(event)}
-                    >
-                      <label className="flex min-w-0 flex-1 flex-col gap-2">
-                        <span className="font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/60">
-                          {shopText(ui.promoLabel, language)}
-                        </span>
-                        <input
-                          value={promoCode}
-                          onChange={(event) => {
-                            setPromoCode(event.target.value)
-                            setPromoMessage(null)
-                            setUnlocked(null)
-                          }}
-                          autoComplete="off"
-                          maxLength={40}
-                          className="min-h-12 w-full rounded-xl border border-gray-300/50 bg-white px-4 font-home-title text-base text-gray-800 transition-all duration-300 focus:border-cyan-400 focus:outline-none"
-                        />
-                      </label>
-                      <button type="submit" className={`${ghostButtonClass} sm:w-auto`}>
-                        {shopText(ui.promoAction, language)}
-                      </button>
-                    </form>
-                  </div>
-                  {promoMessage ? (
-                    <p role="status" className="mt-4 max-w-2xl font-home-title text-[0.8125rem] leading-[1.62]">
-                      {shopText(promoMessage, language)}
-                    </p>
-                  ) : null}
                   {searchParams.get("checkout") === "success" ? (
                     <p role="status" className="mt-4 max-w-2xl font-home-title text-[0.8125rem] leading-[1.62]">
                       {shopText(ui.checkoutPending, language)}
@@ -513,39 +487,36 @@ export default function ShopExperience() {
                     </p>
                   ) : null}
 
-                  <ul className="mt-8 grid grid-cols-1 items-stretch gap-4 xl:grid-cols-3">
+                  <ul className="grid grid-cols-1 items-stretch border border-black/25 md:grid-cols-3">
                     {offers.map((offer) => {
                       const cents = interval === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
                       return (
                         <li
                           key={offer.code}
-                          className={`flex min-w-0 flex-col border-2 bg-white/90 p-5 md:p-6 ${
-                            offer.emphasized ? "border-cyan-500" : "border-black/20"
+                          className={`group flex min-w-0 flex-col border-b border-black/25 bg-white/85 p-5 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:border-b-0 md:border-r md:last:border-r-0 ${
+                            offer.emphasized ? "shadow-[inset_0_2px_0_0_#06b6d4]" : ""
                           }`}
                         >
-                          <p className="font-kode text-[0.6875rem] uppercase tracking-[0.14em] text-cyan-600">
-                            {offer.emphasized ? shopText(ui.priority, language) : "NOMAD403"}
-                          </p>
-                          <h3 className="mt-3 font-kode text-[1.5rem] uppercase tracking-[0.08em]">
+                          <h3 className="font-kode text-[1.5rem] uppercase tracking-[0.08em] transition-colors duration-300 group-hover:text-cyan-700">
                             {shopText(offer.name, language)}
                           </h3>
-                          <p className="mt-3 font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
+                          <p className="mt-3 min-h-[2.625rem] font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
                             {shopText(offer.summary, language)}
                           </p>
-                          <p className="mt-6 font-kode text-[2rem] tracking-[0.04em]">
+                          <p className="mt-4 font-kode text-[2rem] tracking-[0.04em]">
                             {formatEuro(cents, language)}
                           </p>
                           <p className="font-home-title text-[0.8125rem] text-black/60">
                             {shopText(interval === "year" ? ui.perYear : ui.perMonth, language)}
                           </p>
-                          <h4 className="mt-6 font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/50">
+                          <h4 className="mt-4 font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/50">
                             {shopText(ui.included, language)}
                           </h4>
                           <ul className="mt-3 flex flex-col">
                             {offer.features.map((feature) => (
                               <li
                                 key={feature.fr}
-                                className="border-t border-black/15 py-2 font-home-title text-[0.8125rem] leading-[1.62]"
+                                className="border-t border-black/15 py-1.5 font-home-title text-[0.8125rem] leading-[1.62]"
                               >
                                 {shopText(feature, language)}
                               </li>
@@ -556,7 +527,7 @@ export default function ShopExperience() {
                               {shopText(actionMessage, language)}
                             </p>
                           ) : null}
-                          <div className="mt-auto pt-6">
+                          <div className="mt-auto pt-5">
                           <button
                             type="button"
                             className={buttonClass}
@@ -595,7 +566,7 @@ export default function ShopExperience() {
                     </article>
                   ) : null}
 
-                  <section aria-labelledby="shop-conditions-title" className="mt-10 border-y-2 border-black/30 py-6">
+                  <section aria-labelledby="shop-conditions-title" className="mt-6 border-t border-black/25 pt-5">
                     <h2 id="shop-conditions-title" className="font-kode text-[0.6875rem] uppercase tracking-[0.14em]">
                       {shopText(ui.conditions, language)}
                     </h2>
@@ -613,6 +584,7 @@ export default function ShopExperience() {
               {section !== "offers" && <ClientWorkspace key={session.status === "ready" ? session.email : session.status} section={section} language={language} onLogout={() => void logout()} />}
             </motion.div>
           </AnimatePresence>
+          </div>
         </main>
         {menuOpen ? null : <SiteSocialFooter mode="day" />}
       </div>
