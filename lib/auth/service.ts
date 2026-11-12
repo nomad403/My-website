@@ -296,7 +296,9 @@ export function createAuthService(deps: AuthDeps) {
         status: 200,
         body: { ok: true, role: user.role },
         cookie,
-        redirectPath: user.role === "admin" ? "/auth/mfa" : "/shop?section=account&auth=signed-in",
+        // Clients return to Shop offers and auto-resume checkout when an intent is stored.
+        // Admins still complete MFA before any privileged surface.
+        redirectPath: user.role === "admin" ? "/auth/mfa" : "/shop?auth=signed-in",
       }
     },
 

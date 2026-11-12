@@ -65,8 +65,8 @@ const ui = {
     en: "A subscription is already in progress for this plan.",
   },
   signInToPay: {
-    fr: "Connectez-vous pour souscrire. Aucun paiement n'est lancé avant la session.",
-    en: "Sign in to subscribe. No payment starts before the session.",
+    fr: "Validez le lien reçu par e-mail : le paiement s’ouvrira ensuite automatiquement.",
+    en: "Confirm the email link: payment will open automatically afterwards.",
   },
   prepareAccount: {
     fr: "Le paiement n'est pas encore ouvert. Vous pouvez déjà préparer le compte qui reprendra cette offre.",
@@ -275,14 +275,22 @@ export default function ShopExperience() {
   useEffect(() => {
     const raw = window.sessionStorage.getItem(INTENT_KEY)
     if (!raw || searchParams.get("auth") !== "signed-in") return
-    window.sessionStorage.removeItem(INTENT_KEY)
     try {
-      const intent = JSON.parse(raw) as { promotionCode?: string; interval?: string }
+      const intent = JSON.parse(raw) as {
+        plan?: string
+        promotionCode?: string
+        interval?: string
+      }
       if (typeof intent.promotionCode === "string") setPromoCode(intent.promotionCode)
-      const params = new URLSearchParams()
-      if (intent.interval === "year") params.set("interval", "year")
-      params.set("auth", "signed-in")
-      router.replace(`/shop?${params.toString()}`)
+      if (intent.interval === "year" || intent.interval === "month") {
+        // Keep URL in sync with the pending checkout interval.
+        const params = new URLSearchParams(searchParams.toString())
+        if (intent.interval === "year") params.set("interval", "year")
+        else params.delete("interval")
+        params.set("auth", "signed-in")
+        const next = params.toString()
+        if (next !== searchParams.toString()) router.replace(`/shop?${next}`)
+      }
     } catch {
       window.sessionStorage.removeItem(INTENT_KEY)
     }
@@ -335,6 +343,30 @@ export default function ShopExperience() {
       cancelled = true
     }
   }, [searchParams])
+
+  // After magic-link sign-in, resume the pending offer straight into Stripe Checkout.
+  useEffect(() => {
+    if (session.status !== "ready") return
+    if (searchParams.get("auth") !== "signed-in") return
+    const raw = window.sessionStorage.getItem(INTENT_KEY)
+    if (!raw) return
+    let intent: { plan?: string; interval?: string; promotionCode?: string }
+    try {
+      intent = JSON.parse(raw) as { plan?: string; interval?: string; promotionCode?: string }
+    } catch {
+      window.sessionStorage.removeItem(INTENT_KEY)
+      return
+    }
+    if (!intent.plan) {
+      window.sessionStorage.removeItem(INTENT_KEY)
+      return
+    }
+    window.sessionStorage.removeItem(INTENT_KEY)
+    setAuthOpen(false)
+    if (typeof intent.promotionCode === "string") setPromoCode(intent.promotionCode)
+    void subscribe(intent.plan, intent.interval === "year" ? "year" : "month")
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when session becomes ready after auth redirect
+  }, [session.status, searchParams])
 
   useEffect(() => {
     if (!authOpen) return

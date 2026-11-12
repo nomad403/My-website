@@ -13,13 +13,13 @@ const copy = {
   signIn: { fr: "Connexion", en: "Sign in" },
   signUp: { fr: "Créer un compte", en: "Create an account" },
   signInBody: {
-    fr: "Un lien à usage unique ouvre la session. Il expire en 15 minutes.",
-    en: "A single-use link opens the session. It expires in 15 minutes.",
+    fr: "Recevez un lien à usage unique (15 min). Une fois validé, la souscription reprend automatiquement vers le paiement.",
+    en: "Get a single-use link (15 min). After you confirm it, checkout resumes automatically.",
   },
   signUpBody: {
-    fr: "Le premier lien valide crée le compte. Aucun mot de passe n'est demandé.",
-    en: "The first valid link creates the account. No password is required.",
-  },
+    fr: "Le premier lien valide crée le compte client. Ensuite vous êtes renvoyé au Shop pour payer l’offre choisie.",
+    en: "The first valid link creates the client account. You then return to Shop to pay for the selected plan.",
+  }
   email: { fr: "Adresse e-mail", en: "Email address" },
   submit: { fr: "Recevoir le lien", en: "Email me the link" },
   sending: { fr: "Envoi…", en: "Sending…" },
