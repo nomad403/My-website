@@ -432,7 +432,7 @@ export default function ShopExperience() {
               {visibleSections.map((item) => {
                 const active = item === section
                 return (
-                  <li key={item} className="flex border-r border-black last:border-r-0">
+                  <li key={item} className="flex border-r border-black">
                     <Link
                       href={sectionHref(item, interval)}
                       aria-current={active ? "page" : undefined}
@@ -511,11 +511,11 @@ export default function ShopExperience() {
                           <h4 className="mt-4 font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/50">
                             {shopText(ui.included, language)}
                           </h4>
-                          <ul className="mt-3 flex flex-col md:[grid-row:span_10] md:grid md:grid-rows-subgrid">
+                          <ul className="-mx-5 mt-3 flex flex-col md:[grid-row:span_10] md:grid md:grid-rows-subgrid">
                             {offer.features.map((feature) => (
                               <li
                                 key={feature.id}
-                                className={`flex min-w-0 flex-col gap-1 border-t border-black py-1.5 font-home-title text-[0.8125rem] leading-[1.62] ${feature.included ? "text-black/80" : "text-black/40"}`}
+                                className={`flex min-w-0 flex-col gap-1 border-t border-black px-5 py-1.5 font-home-title text-[0.8125rem] leading-[1.62] ${feature.included ? "text-black/80" : "text-black/40"}`}
                               >
                                 <div className="flex items-start justify-between gap-3">
                                 <span className="min-w-0 break-words">{shopText(feature.label, language)}</span>

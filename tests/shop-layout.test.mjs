@@ -19,6 +19,9 @@ for(const lang of ["fr","en"]) for(const width of [1440,820,390]) for(const inte
    page.on("pageerror",error=>errors.push(error.message))
    await page.goto(origin+"/shop"+(interval==="year"?"?interval=year":""),{waitUntil:"networkidle"})
    await page.evaluate(()=>document.fonts.ready)
+   const navigation=await page.evaluate(()=>({rightBorder:getComputedStyle(document.querySelector("main nav li:last-child")).borderRightWidth,switchBorder:getComputedStyle(document.querySelector("[role=switch]").parentElement).borderLeftWidth}))
+   assert.equal(navigation.rightBorder,"1px")
+   assert.equal(navigation.switchBorder,"0px")
    const cards=await page.evaluate(()=>[...document.querySelectorAll("main section > ul > li")].map(card=>{
     const box=element=>{const r=element.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}}
     const title=card.querySelector("h3"),description=title.nextElementSibling,price=description.nextElementSibling
@@ -37,6 +40,7 @@ for(const lang of ["fr","en"]) for(const width of [1440,820,390]) for(const inte
      const row=card.rows[index]
      assert.ok(row.height>0&&!row.overflow)
      assert.ok(row.left>=card.box.left-1&&row.right<=Math.min(card.box.right,width)+1)
+     assert.ok(Math.abs(row.left-card.box.left)<1.1&&Math.abs(row.right-card.box.right)<1.1,"Horizontal separators must reach both card edges")
      if(index>0)assert.ok(card.rows[index-1].bottom<=row.top+1,"Service rows must not overlap")
     }
     assert.ok(card.rows.at(-1).bottom<=card.button.top+1,"Services must not overlap subscription button")
