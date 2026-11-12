@@ -21,7 +21,8 @@
     "build:next": "next build",
     "postbuild:next": "next-sitemap",
     "publish:preview": "node scripts/publish-preview.mjs",
-    "audit:preview": "node scripts/publish-preview.mjs --check"
+    "audit:preview": "node scripts/publish-preview.mjs --check",
+    "publish": "node scripts/publish-preview.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",

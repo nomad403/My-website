@@ -1,5 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { join } from "node:path"
 import { ACCOUNT_ID, PREVIEW_BUCKET } from "./preview-config.mjs"
@@ -9,6 +11,10 @@ export function cloudflareReadOnly() {
     assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID, ACCOUNT_ID, "Unexpected Cloudflare account")
   let token = process.env.CLOUDFLARE_API_TOKEN
   if (!token) {
+    // Let Wrangler refresh its own OAuth session; never implement token rotation here.
+    try {
+      execFileSync(process.execPath, [fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url)), "whoami", "--json"], {stdio:"pipe"})
+    } catch { throw new Error("Cloudflare login unavailable; run wrangler login") }
     const configHome = process.platform === "win32" ? join(process.env.APPDATA, "xdg.config") :
       (process.env.XDG_CONFIG_HOME || join(homedir(), ".config"))
     const text = readFileSync(join(configHome, ".wrangler", "config", "default.toml"), "utf8")

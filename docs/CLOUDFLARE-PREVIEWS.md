@@ -160,3 +160,9 @@ Controles apres cette publication :
 Ces resultats valident la version Preview publiee par notre commande. Ils ne prouvent pas encore que chaque push de branche executera correctement cette commande. Ne pas relancer de push uniquement pour contourner ce constat : corriger et enregistrer d'abord Preview command = npm run publish:preview dans Previews Base, puis verifier un nouveau build automatique. Aucune mise a jour de main, aucun deploiement de production, aucun DNS ni parametre Vercel modifie.
 
 Le present complement de rapport reste local en attente de la correction du champ Preview command confirme errone par le journal ; le code de correction est deja publie au commit indique.
+
+## Compatibilite de la commande enregistree
+
+Le journal du build de validation suivant confirme Executing user deploy command: npm run publish, suivi de Missing script: publish. Le champ enregistre n'etait donc toujours pas npm run publish:preview. Un alias npm run publish est ajoute vers le meme scripts/publish-preview.mjs : memes preflights distants, meme refus de main, meme bucket Preview uniquement, meme commande native. Aucun contournement de securite ni publication npm au registre : il s'agit de npm run publish et le package reste private:true. Le champ actuellement enregistre devient ainsi compatible sans nouvelle modification du dashboard.
+
+Le preflight de cet alias a ete execute avec --check et a reussi sans mutation distante. Le lecteur d'authentification local laisse maintenant Wrangler rafraichir sa propre session OAuth via whoami avant de lire la credential locale ; le token CI fourni par environnement garde son parcours direct. Aucune valeur d'authentification n'est affichee.
