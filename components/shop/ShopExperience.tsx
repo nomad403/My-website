@@ -38,7 +38,7 @@ const ui = {
   yearly: { fr: "Annuel", en: "Yearly" },
   perMonth: { fr: "par mois", en: "per month" },
   perYear: { fr: "par an, débité en une fois", en: "per year, charged once" },
-  included: { fr: "Prestations incluses", en: "Included services" },
+  included: { fr: "Services et niveaux", en: "Services and levels" },
   subscribe: { fr: "Souscrire", en: "Subscribe" },
   priority: { fr: "Prioritaire", en: "Priority" },
   checkoutPending: {
@@ -488,13 +488,13 @@ export default function ShopExperience() {
                     </p>
                   ) : null}
 
-                  <ul className="grid grid-cols-1 items-stretch md:grid-cols-3">
+                  <ul className="grid grid-cols-1 items-stretch md:grid-cols-3 md:grid-rows-[repeat(17,auto)]">
                     {offers.map((offer) => {
                       const cents = interval === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
                       return (
                         <li
                           key={offer.code}
-                          className="group flex min-w-0 flex-col border-b border-black bg-white/85 p-5 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:border-b-0 md:border-r md:last:border-r-0"
+                          className="group flex min-w-0 flex-col border-b border-black bg-white/85 p-5 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:[grid-row:span_17] md:grid md:grid-rows-subgrid md:border-b-0 md:border-r md:last:border-r-0"
                         >
                           <h3 className="font-kode text-[1.5rem] uppercase tracking-[0.08em] transition-colors duration-300 group-hover:text-cyan-700">
                             {shopText(offer.name, language)}
@@ -511,22 +511,28 @@ export default function ShopExperience() {
                           <h4 className="mt-4 font-kode text-[0.625rem] uppercase tracking-[0.14em] text-black/50">
                             {shopText(ui.included, language)}
                           </h4>
-                          <ul className="mt-3 flex flex-col">
+                          <ul className="mt-3 flex flex-col md:[grid-row:span_10] md:grid md:grid-rows-subgrid">
                             {offer.features.map((feature) => (
                               <li
-                                key={feature.fr}
-                                className="border-t border-black py-1.5 font-home-title text-[0.8125rem] leading-[1.62]"
+                                key={feature.id}
+                                className={`flex min-w-0 flex-col gap-1 border-t border-black py-1.5 font-home-title text-[0.8125rem] leading-[1.62] ${feature.included ? "text-black/80" : "text-black/40"}`}
                               >
-                                {shopText(feature, language)}
+                                <div className="flex items-start justify-between gap-3">
+                                <span className="min-w-0 break-words">{shopText(feature.label, language)}</span>
+                                {feature.included ? <span className="max-w-[45%] shrink-0 text-right font-kode text-[0.75rem]">{shopText(feature.value, language)}</span> : <span><span aria-hidden="true">—</span><span className="sr-only">{shopText(feature.value, language)}</span></span>}
+                                </div>
+                                {feature.note ? <span className="break-words text-[0.6875rem] leading-relaxed text-black/55">{shopText(feature.note, language)}</span> : null}
                               </li>
                             ))}
                           </ul>
+                          <div>
                           {paymentPlan === offer.code && actionMessage ? (
                             <p role="status" className="mt-4 font-home-title text-[0.8125rem] leading-[1.62]">
                               {shopText(actionMessage, language)}
                             </p>
                           ) : null}
-                          <div className="mt-auto pt-5">
+                          </div>
+                          <div className="mt-auto pt-5 md:mt-0">
                           <button
                             type="button"
                             className={buttonClass}
