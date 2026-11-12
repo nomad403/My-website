@@ -301,7 +301,7 @@ test("public prices exclude private friend plans and yearly friend billing", () 
   assert.equal(lockPlanPrice("premium", "year", "public").amountCents, 69000)
 })
 
-test("production refuses to start the limiter without Redis", () => {
+test("production refuses to start the limiter without a Cloudflare binding", () => {
   assert.equal(createProductionLimiter({ NODE_ENV: "production" }), null)
   assert.equal(readAuthEnv({ AUTH_SECRET: "short", APP_URL: "https://www.nomad403.com" }), null)
   assert.equal(
@@ -356,16 +356,10 @@ test("removing an administrator revokes the stored role and live admin sessions"
   assert.equal((await revoked.adminSummary(next.cookie.value)).status, 403)
 })
 
-test("redis limiter fails closed when the store is unavailable", async () => {
-  const { RedisRateLimiter } = await import("../lib/auth/rate-limit.ts")
-  const limiter = new RedisRateLimiter("https://redis.example", "token", "auth")
-  const original = globalThis.fetch
-  globalThis.fetch = async () => Response.json({ error: "down" }, { status: 500 })
-  try {
-    await assert.rejects(() => limiter.consume("magic", 5, 60))
-  } finally {
-    globalThis.fetch = original
-  }
+test("Cloudflare auth limiter fails closed when the object is unavailable",async()=>{
+ const {CloudflareRateLimiter}=await import("../lib/auth/rate-limit.ts")
+ const limiter=new CloudflareRateLimiter({idFromName:name=>name,get:()=>({fetch:async()=>Response.json({error:"down"},{status:500})})})
+ await assert.rejects(limiter.consume("magic",5,60))
 })
 
 test("promotion administration requires a valid admin session and verified MFA for every operation", async () => {

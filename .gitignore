@@ -35,3 +35,11 @@ next-env.d.ts
 
 # generated high-density capture artifacts
 artifacts/captures/
+
+# Local D1 development state (never qualification or production exports)
+/.wrangler/
+/.dev.vars*
+/.previews.vars*
+
+/.open-next/
+/.cloudflare-review/

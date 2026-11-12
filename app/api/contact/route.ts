@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
+import {runtimeVariables} from "@/lib/cloudflare/runtime"
 import { reserveContactEmail } from "@/lib/contact/contact-abuse"
 import {
   escapeHtml,
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 })
     }
 
-    // A honeypot catches simple form-filling bots; Redis limits also cover direct API scripts.
+    // A honeypot catches simple form-filling bots; Cloudflare limits also cover direct API scripts.
     if (data.website !== undefined && (typeof data.website !== "string" || data.website !== "")) {
       return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 })
     }
@@ -88,9 +89,10 @@ export async function POST(req: Request) {
 
     const { nom, contact, message } = payload
 
-    const apiKey = process.env.RESEND_API_KEY
-    const from = process.env.RESEND_FROM
-    const to = process.env.RESEND_TO
+    const source=runtimeVariables()
+    const apiKey = source.RESEND_API_KEY
+    const from = source.RESEND_FROM
+    const to = source.RESEND_TO
 
     if (!apiKey || !from || !to) {
       return NextResponse.json(UNAVAILABLE, { status: 503 })

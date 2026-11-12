@@ -1,0 +1,90 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "my-website",
+  "main": "cloudflare/worker.mjs",
+  "compatibility_date": "2026-11-10",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "my-website"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "my-v0-project-opennext-cache"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "routes": [],
+  "observability": {
+    "enabled": true
+  },
+  "previews": {
+    "vars": {
+      "NOMAD403_ENV": "preview",
+      "SHOP_ENABLED": "1",
+      "SHOP_DB_ID": "2eb5526a-1d0c-469c-ae36-debe83ec8218",
+      "APP_URL": "https://qualification-shop-lot-7-my-website.glennrichard-dev.workers.dev"
+    },
+    "services": [],
+    "r2_buckets": [
+      {
+        "binding": "NEXT_INC_CACHE_R2_BUCKET",
+        "bucket_name": "nomad403-preview-opennext-cache"
+      }
+    ],
+    "images": {
+      "binding": "IMAGES"
+    },
+    "durable_objects": {
+      "bindings": [
+        {
+          "name": "CONTACT_LIMITER",
+          "class_name": "ContactLimiter"
+        },
+        {
+          "name": "AUTH_LIMITER",
+          "class_name": "AuthLimiter"
+        }
+      ]
+    },
+    "d1_databases": [
+      {
+        "binding": "SHOP_DB",
+        "database_name": "nomad403-shop-qualification",
+        "database_id": "2eb5526a-1d0c-469c-ae36-debe83ec8218",
+        "migrations_dir": "drizzle-d1"
+      }
+    ]
+  },
+  "keep_vars": true,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CONTACT_LIMITER",
+        "class_name": "ContactLimiter"
+      }
+    ]
+  },
+  "exports": {
+    "ContactLimiter": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    },
+    "AuthLimiter": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  }
+}

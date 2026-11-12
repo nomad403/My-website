@@ -1,20 +1,27 @@
+import {D1AuthStore} from "../db/d1/auth-store"
+import {D1BillingStore} from "../db/d1/billing-store"
+import {D1PromotionAdminStore} from "../db/d1/promotion-admin-store"
+import {D1InterventionStore} from "../db/d1/intervention-store"
+import {D1AdminStore} from "../db/d1/admin-store"
+import {applyStoredD1BillingEvents} from "../db/d1/billing-event"
+import type {BillingNotice} from "../billing/notices"
+import type {ApplyOptions} from "../billing/apply-event"
+import {cloudBindings,runtimeVariables} from "../cloudflare/runtime"
 import { cookies } from "next/headers"
-import { DrizzleAuthStore } from "../db/auth-store"
-import { DrizzleBillingStore } from "../db/billing-store"
-import { getDb } from "../db/client"
 import { readStripeEnv } from "../billing/stripe-env"
 import { createStripeGateway } from "../billing/stripe-gateway"
 import { SESSION_COOKIE } from "./cookie"
 import { createProductionLimiter } from "./rate-limit"
 import { createAuthService, readAuthEnv, type Mailer } from "./service"
 
-function createResendMailer(): Mailer {
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM
+function createResendMailer(source:NodeJS.ProcessEnv): Mailer {
+  const apiKey = source.RESEND_API_KEY
+  const from = source.RESEND_FROM
   return {
     configured: Boolean(apiKey && from),
     async sendMagicLink(to, url) {
       if (!apiKey || !from) throw new Error("Mail is not configured")
+      if(source.NOMAD403_ENV==="preview" && !(source.QUALIFICATION_EMAILS??"").toLowerCase().split(",").map(x=>x.trim()).includes(to.toLowerCase()))return
       const { Resend } = await import("resend")
       const resend = new Resend(apiKey)
       const result = await resend.emails.send({
@@ -37,26 +44,18 @@ function createResendMailer(): Mailer {
   }
 }
 
-export async function productionPlatform() {
-  const env = readAuthEnv()
-  const limiter = createProductionLimiter()
-  if (!env || !limiter || !process.env.DATABASE_URL) return null
-  const db = getDb()
-  const stripe = readStripeEnv()
-  return {
-    env,
-    limiter,
-    service: createAuthService({
-      store: new DrizzleAuthStore(db),
-      limiter,
-      mailer: createResendMailer(),
-      env,
-      now: () => new Date(),
-    }),
-    billing: new DrizzleBillingStore(db),
-    stripe,
-    gateway: stripe ? createStripeGateway(stripe) : null,
-  }
+export async function productionPlatform(){
+ const bindings=cloudBindings(),source=runtimeVariables(bindings)
+ const env=readAuthEnv(source),limiter=createProductionLimiter(source,bindings?.AUTH_LIMITER)
+ if(!env||!limiter)return null
+ const qualification=bindings?.NOMAD403_ENV==="preview"&&bindings?.SHOP_ENABLED==="1"
+ if(bindings&&!qualification)return null
+ if(qualification&&(!bindings.SHOP_DB||source.SHOP_DB_ID!=="2eb5526a-1d0c-469c-ae36-debe83ec8218"))return null
+ if(!qualification)return null
+ const d1=bindings!.SHOP_DB!.withSession("first-primary")
+ const store=new D1AuthStore(d1)
+ const stripe=qualification&&(!source.STRIPE_SECRET_KEY?.startsWith("sk_test_")||!source.STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test_"))?null:readStripeEnv(source)
+ return {env,limiter,service:createAuthService({store,limiter,mailer:createResendMailer(source),env,now:()=>new Date()}),billing:new D1BillingStore(d1),promotions:new D1PromotionAdminStore(d1),interventions:new D1InterventionStore(d1),admin:new D1AdminStore(d1),stripe,gateway:stripe?createStripeGateway(stripe):null,applyBilling:(notices:BillingNotice[],options:ApplyOptions)=>applyStoredD1BillingEvents(d1,notices,options)}
 }
 
 export async function productionAuth() {

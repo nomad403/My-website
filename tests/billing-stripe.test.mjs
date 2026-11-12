@@ -1041,7 +1041,7 @@ test("promotion preview fails closed and rate limits every attempt before readin
   for (let i = 0; i < 30; i++) assert.equal((await previewOffer(store, input, { limiter, userId: "user-1" })).status, 400)
   assert.equal((await previewOffer(store, input, { limiter, userId: "user-1" })).status, 429)
   assert.equal(reads, 30)
-  const unavailable = { consume: async () => { throw new Error("redis down") } }
+  const unavailable = { consume: async () => { throw new Error("limiter down") } }
   assert.equal((await previewOffer(store, input, { limiter: unavailable, userId: "user-1" })).status, 503)
   assert.equal(reads, 30)
 })

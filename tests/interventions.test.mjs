@@ -245,7 +245,7 @@ test("abuse limits fail closed and unauthenticated callers cannot reach any stor
  }
  const deps={authorize:async()=>({status:200,body:{userId:"actor"}}),admin:false,store,limiter:{consume:async()=>({allowed:false,retryAfter:1})},now:()=>NOW}
  assert.equal((await interventionOperation(deps,null,"dashboard")).status,429)
- deps.limiter.consume=async()=>{throw new Error("Redis unavailable")}
+ deps.limiter.consume=async()=>{throw new Error("Limiter unavailable")}
  assert.equal((await interventionOperation(deps,null,"dashboard")).status,503)
  assert.equal(calls,0)
 })

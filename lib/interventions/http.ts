@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { productionPlatform } from "../auth/runtime"
 import { cookieFromRequest, isSameOrigin, readJson } from "../auth/route"
 import { toResponse, unavailable } from "../auth/http"
-import { getDb } from "../db/client"
-import { DrizzleInterventionStore } from "../db/intervention-store"
 import { interventionOperation, type Operation } from "./service"
 export async function interventionHttp(request: Request, admin: boolean, operation: Operation | "action", id?: string) {
  if (!isSameOrigin(request)) return NextResponse.json({ok:false,code:"origin_rejected"},{status:403,headers:{"Cache-Control":"no-store"}})
@@ -27,7 +25,7 @@ export async function interventionHttp(request: Request, admin: boolean, operati
    operation = action
    input = body
   }
-  const result = await interventionOperation({authorize,store:new DrizzleInterventionStore(getDb()),limiter:platform.limiter,now:()=>new Date(),admin},cookie,operation,input,id)
+  const result = await interventionOperation({authorize,store:platform.interventions,limiter:platform.limiter,now:()=>new Date(),admin},cookie,operation,input,id)
   return toResponse(result,platform.env.secureCookies,platform.env.appUrl)
  } catch {
   console.error("[interventions] request failed")

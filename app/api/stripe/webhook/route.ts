@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server"
-import { getDb } from "@/lib/db/client"
-import { applyStoredBillingEvents } from "@/lib/db/billing-event"
+import {productionPlatform} from "@/lib/auth/runtime"
 import { constructStripeEvent, getStripe } from "@/lib/billing/stripe-gateway"
-import { readStripeEnv } from "@/lib/billing/stripe-env"
 import { readStripeSubscriptionState, toBillingNotices } from "@/lib/billing/stripe-map"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
-  const stripe = readStripeEnv()
-  if (!stripe || !process.env.DATABASE_URL) {
+  const platform=await productionPlatform()
+  const stripe=platform?.stripe
+  if (!stripe || !platform) {
     return NextResponse.json(
       { ok: false, code: "stripe_unconfigured" },
       { status: 503, headers: { "Cache-Control": "no-store" } },
@@ -38,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true }, { headers: { "Cache-Control": "no-store" } })
   }
   try {
-    const result = await applyStoredBillingEvents(getDb(), notices, {
+    const result = await platform.applyBilling(notices, {
       reconcileSubscription: async (stripeSubscriptionId) => {
         const current = await getStripe(stripe.secretKey).subscriptions.retrieve(stripeSubscriptionId, {}, {timeout:5000,maxNetworkRetries:0})
         return readStripeSubscriptionState(current)

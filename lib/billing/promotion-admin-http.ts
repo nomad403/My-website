@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { productionPlatform } from "../auth/runtime"
 import { cookieFromRequest, isSameOrigin, readJson } from "../auth/route"
 import { unavailable, toResponse } from "../auth/http"
-import { getDb } from "../db/client"
-import { DrizzlePromotionAdminStore } from "../db/promotion-admin-store"
 import { administerPromotions } from "./promotion-admin"
 
 export async function promotionAdminRequest(request: Request, operation: "list" | "detail" | "create" | "change", id?: string) {
@@ -25,7 +23,7 @@ export async function promotionAdminRequest(request: Request, operation: "list" 
       value = { offset: offset === null ? 0 : Number(offset) }
     }
     const result = await administerPromotions({
-      authorize: c => platform.service.adminIdentity(c), store: new DrizzlePromotionAdminStore(getDb()),
+      authorize: c => platform.service.adminIdentity(c), store: platform.promotions,
       limiter: platform.limiter, now: () => new Date(),
     }, cookie, operation, value, id)
     return toResponse(result, platform.env.secureCookies, platform.env.appUrl)

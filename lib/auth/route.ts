@@ -1,3 +1,4 @@
+import {cloudBindings} from "../cloudflare/runtime"
 import { isIP } from "node:net"
 import { NextResponse } from "next/server"
 import { SESSION_COOKIE } from "./cookie"
@@ -6,10 +7,7 @@ import { productionAuth } from "./runtime"
 import type { ServiceResult } from "./service"
 
 export function trustedClientIp(request: Request): string | null {
-  if (process.env.VERCEL === "1") {
-    const value = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ?? ""
-    return isIP(value) ? value : null
-  }
+  if(cloudBindings()){const ip=request.headers.get("cf-connecting-ip")?.trim()??"";return isIP(ip)?ip:null}
   if (process.env.NODE_ENV !== "production") return "127.0.0.1"
   return null
 }

@@ -26,67 +26,20 @@ export class MemoryRateLimiter implements RateLimiter {
   }
 }
 
-const REDIS_SCRIPT = `
-local limit = tonumber(ARGV[1])
-local window = tonumber(ARGV[2])
-local current = tonumber(redis.call('GET', KEYS[1]) or '0')
-if current >= limit then
-  local ttl = redis.call('TTL', KEYS[1])
-  if ttl < 1 then ttl = 1 end
-  return {0, ttl}
-end
-local next = redis.call('INCR', KEYS[1])
-if next == 1 then
-  redis.call('EXPIRE', KEYS[1], window)
-end
-return {1, 0}
-`
-
-export class RedisRateLimiter implements RateLimiter {
-  constructor(
-    private readonly endpoint: string,
-    private readonly token: string,
-    private readonly prefix: string,
-  ) {}
-
-  async consume(key: string, limit: number, windowSeconds: number): Promise<LimitDecision> {
-    const response = await fetch(this.endpoint, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify([
-        "EVAL",
-        REDIS_SCRIPT,
-        "1",
-        `${this.prefix}:${key}`,
-        String(limit),
-        String(windowSeconds),
-      ]),
-      cache: "no-store",
-      signal: AbortSignal.timeout(3000),
-      redirect: "error",
-    })
-    if (!response.ok) throw new Error("Rate limiter unavailable")
-    const data = (await response.json()) as { result?: unknown; error?: string }
-    if (data.error || !Array.isArray(data.result) || data.result.length !== 2) {
-      throw new Error("Rate limiter unavailable")
-    }
-    const [allowed, retryAfter] = data.result
-    if (allowed !== 0 && allowed !== 1) throw new Error("Rate limiter unavailable")
-    return { allowed: allowed === 1, retryAfter: Number(retryAfter) || 0 }
-  }
+export type LimiterNamespace={idFromName(name:string):unknown;get(id:unknown):{fetch(request:Request):Promise<Response>}}
+export class CloudflareRateLimiter implements RateLimiter {
+ constructor(private readonly namespace:LimiterNamespace){}
+ async consume(key:string,limit:number,windowSeconds:number):Promise<LimitDecision>{
+  const stub=this.namespace.get(this.namespace.idFromName("shop-auth-limits"))
+  const response=await stub.fetch(new Request("https://auth-limiter.internal/consume",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,limit,windowSeconds}),signal:AbortSignal.timeout(3000)}))
+  if(!response.ok)throw new Error("Rate limiter unavailable")
+  const data=await response.json() as {allowed?:unknown;retryAfter?:unknown}
+  if(typeof data.allowed!=="boolean"||!Number.isInteger(data.retryAfter)||typeof data.retryAfter!=="number"||data.retryAfter<0||data.retryAfter>86400||(!data.allowed&&data.retryAfter<1))throw new Error("Rate limiter unavailable")
+  return {allowed:data.allowed,retryAfter:data.retryAfter}
+ }
 }
-
-const developmentLimiter = new MemoryRateLimiter()
-
-export function createProductionLimiter(source: NodeJS.ProcessEnv = process.env): RateLimiter | null {
-  const endpoint = source.UPSTASH_REDIS_REST_URL || source.KV_REST_API_URL
-  const token = source.UPSTASH_REDIS_REST_TOKEN || source.KV_REST_API_TOKEN
-  if (endpoint && token) {
-    const url = new URL(endpoint)
-    if (url.protocol !== "https:") return null
-    const scope = source.VERCEL_ENV || source.NODE_ENV || "development"
-    return new RedisRateLimiter(endpoint, token, `auth:{${scope}}`)
-  }
-  if (source.NODE_ENV === "production") return null
-  return developmentLimiter
+const developmentLimiter=new MemoryRateLimiter()
+export function createProductionLimiter(source:NodeJS.ProcessEnv=process.env,namespace?:LimiterNamespace):RateLimiter|null{
+ if(namespace&&typeof namespace.idFromName==="function"&&typeof namespace.get==="function")return new CloudflareRateLimiter(namespace)
+ return source.NODE_ENV==="production"?null:developmentLimiter
 }
