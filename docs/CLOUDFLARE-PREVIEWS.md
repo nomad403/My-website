@@ -2,7 +2,7 @@
 
 Audit du 12 novembre 2026. Depot nomad403/My-website, worktree My-website-cloudflare, branche fix/cloudflare-worker-self-reference.
 Base locale : 82039427af20862b2b060cc7c50ee218fdd5b04f.
-Statut : **Preview fonctionnelle verifiee ; NO-GO pour affirmer une automatisation GitHub complete.**
+Statut final : **GO Preview native et declenchement automatique GitHub verifies.**
 
 ## Etat reel et preservation
 
@@ -133,7 +133,7 @@ Les epreuves sont conservees dans .cloudflare-review/native-preview-*.log, les c
 Le premier deploiement natif creera ses ressources Preview, notamment son namespace DO. Aucun deuxieme Worker permanent ne sera cree. Le helper cache utilise le mecanisme temporaire officiel OpenNext, sans Worker staging permanent.
 Le bucket peut consommer du stockage/des operations R2 ; aucune promesse de gratuite ni changement de plan n'est fait.
 
-## Etat de livraison
+## Etat intermediaire de livraison (avant qualification automatique)
 
 Autorisations obtenues : creation/initialisation du bucket Preview ; configuration des commandes Previews Base confirmee par le proprietaire, main conservee en production. Preflight distant reussi. Publication realisee uniquement sur fix/cloudflare-worker-self-reference. Voir ci-dessous la distinction entre build automatique initial incomplet et publication native fonctionnelle executee directement.
 
@@ -159,10 +159,24 @@ Controles apres cette publication :
 
 Ces resultats valident la version Preview publiee par notre commande. Ils ne prouvent pas encore que chaque push de branche executera correctement cette commande. Ne pas relancer de push uniquement pour contourner ce constat : corriger et enregistrer d'abord Preview command = npm run publish:preview dans Previews Base, puis verifier un nouveau build automatique. Aucune mise a jour de main, aucun deploiement de production, aucun DNS ni parametre Vercel modifie.
 
-Le present complement de rapport reste local en attente de la correction du champ Preview command confirme errone par le journal ; le code de correction est deja publie au commit indique.
+Les constats intermediaires ci-dessus expliquent les deux echecs de commande du dashboard. La qualification automatique finale figure ci-dessous.
 
 ## Compatibilite de la commande enregistree
 
 Le journal du build de validation suivant confirme Executing user deploy command: npm run publish, suivi de Missing script: publish. Le champ enregistre n'etait donc toujours pas npm run publish:preview. Un alias npm run publish est ajoute vers le meme scripts/publish-preview.mjs : memes preflights distants, meme refus de main, meme bucket Preview uniquement, meme commande native. Aucun contournement de securite ni publication npm au registre : il s'agit de npm run publish et le package reste private:true. Le champ actuellement enregistre devient ainsi compatible sans nouvelle modification du dashboard.
 
 Le preflight de cet alias a ete execute avec --check et a reussi sans mutation distante. Le lecteur d'authentification local laisse maintenant Wrangler rafraichir sa propre session OAuth via whoami avant de lire la credential locale ; le token CI fourni par environnement garde son parcours direct. Aucune valeur d'authentification n'est affichee.
+
+## Qualification automatique finale ? GO
+
+Preuve executee sur le commit f7f664940aa506fcc7996986366286044e56dda1, pousse uniquement sur fix/cloudflare-worker-self-reference : le check Workers Builds a reussi (build 5a25aff4-5bca-4c71-9c4a-93179ea315c4) et publie automatiquement le deploiement natif 466d2ee5-81fa-41df-bcb3-ab8fca794ae6, sans intervention manuelle de publication. Le tag distant est le SHA complet et le message Preview commit suivi de ce SHA : la commande configuree npm run publish a donc utilise le publisher securise via son alias.
+
+URL validee : https://fix-cloudflare-worker-self-reference-my-website.glennrichard-dev.workers.dev
+
+Prefixe effectif : preview/ef987f88ba2c/xrHriE0WA8yhR3NCgSGiR ; son suffixe correspond exactement au BUILD_ID distant. Bucket nomad403-preview-opennext-cache confirme ; namespace CONTACT_LIMITER distinct de production ; aucun secret, aucun service WORKER_SELF_REFERENCE externe. Base Preview toujours vide.
+
+Controles sur ce deploiement automatique : /, /contact, /projects, /specialist, /card, /signature et la police ProFont repondent 200 ; / et /card indiquent HIT ; /shop reste 404 comme attendu. Le navigateur distant a ete relance : 6 pages mobile/desktop, FR/EN, WebGL et polices fonctionnels, 8 captures, aucune erreur ni requete echouee ; seules la Preview et les lectures CDN publiques etaient autorisees. Aucun e-mail reel envoye.
+
+Les 47 tests locaux reussis, 1 Redis externe ignore, TypeScript/build reussis et audit npm sans vulnerabilite connue restent les controles de code de cette livraison. Le refus d'envoi du formulaire et la revalidation REVALIDATED ont ete executes sur la version precedente du meme code applicatif ; les commits suivants ne changent que scripts d'orchestration et documentation.
+
+main demeure 82039427af20862b2b060cc7c50ee218fdd5b04f. Aucun deploiement de production, changement DNS/Vercel, second Worker permanent ou integration des Lots Shop. Le workflow a ete qualifie sur cette branche ; les autres branches sont prises en charge par la meme configuration native, sans pretendre les avoir toutes testees.
