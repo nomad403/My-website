@@ -16,7 +16,6 @@ import {
   parseShopInterval,
   parseShopSection,
   publicShopOffers,
-  SHOP_CONDITIONS,
   SHOP_SECTIONS,
   shopText,
   type Localized,
@@ -31,7 +30,7 @@ const solidButtonClass =
 const buttonClass = `${solidButtonClass} w-full`
 
 const ghostButtonClass =
-  "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black/30 bg-white px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+  "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black bg-white px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-black transition-colors duration-300 hover:border-cyan-500 hover:text-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
 
 const ui = {
   monthly: { fr: "Mensuel", en: "Monthly" },
@@ -39,7 +38,6 @@ const ui = {
   perMonth: { fr: "par mois", en: "per month" },
   perYear: { fr: "par an, débité en une fois", en: "per year, charged once" },
   included: { fr: "Prestations incluses", en: "Included services" },
-  conditions: { fr: "Conditions essentielles", en: "Essential conditions" },
   subscribe: { fr: "Souscrire", en: "Subscribe" },
   priority: { fr: "Prioritaire", en: "Priority" },
   checkoutPending: {
@@ -227,6 +225,7 @@ export default function ShopExperience() {
   const [unlocked, setUnlocked] = useState<UnlockedOffer | null>(null)
   const [invoices, setInvoices] = useState<InvoiceRow[] | null>(null)
   const offers = publicShopOffers()
+  const visibleSections: readonly ShopSection[] = session.status === "ready" ? SHOP_SECTIONS : ["offers", "account"]
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem(INTENT_KEY)
@@ -424,18 +423,18 @@ export default function ShopExperience() {
         />
         <main className="mx-auto w-full max-w-[84rem] px-4 pb-36 pt-6 md:px-8">
           <h1 className="sr-only">Shop Nomad403</h1>
-          <div className="border border-black/35 bg-white/80">
-          <div className="flex flex-col border-b border-black/35 lg:flex-row">
+          <div className="border border-black bg-white/80">
+          <div className="flex flex-col gap-x-8 border-b border-black lg:flex-row lg:items-center">
           <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 flex-1 overflow-x-auto">
-            <ul className="flex h-full min-w-max lg:min-w-0">
-              {SHOP_SECTIONS.map((item) => {
+            <ul className="flex min-h-16 items-center justify-between gap-x-6 px-5 lg:px-6">
+              {visibleSections.map((item) => {
                 const active = item === section
                 return (
-                  <li key={item} className="flex flex-1 border-r border-black/25 last:border-r-0">
+                  <li key={item} className="flex">
                     <Link
                       href={sectionHref(item, interval)}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-16 w-full items-center justify-center whitespace-nowrap px-4 py-3 font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
+                      className={`flex min-h-10 w-full items-center justify-center whitespace-nowrap px-4 py-3 font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
                         active ? "bg-cyan-50/80 text-cyan-700" : "text-black/55 hover:bg-black/[0.04] hover:text-black"
                       }`}
                     >
@@ -446,14 +445,14 @@ export default function ShopExperience() {
               })}
             </ul>
           </nav>
-          <div className="flex items-center justify-center border-t border-black/25 px-4 py-3 lg:border-l lg:border-t-0">
+          <div className="flex shrink-0 items-center justify-center px-5 pb-3 lg:py-3 lg:pl-0 lg:pr-6">
             <button
               type="button"
               role="switch"
               aria-checked={interval === "year"}
               aria-label={shopText(ui.yearly, language)}
               onClick={() => router.replace(sectionHref(section, interval === "month" ? "year" : "month"), {scroll:false})}
-              className="relative grid min-h-10 w-52 grid-cols-2 items-center rounded-full border border-black/30 bg-white p-1 font-kode text-[0.625rem] uppercase tracking-[0.1em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
+              className="relative grid min-h-10 w-52 grid-cols-2 items-center rounded-full border border-black bg-white p-1 font-kode text-[0.625rem] uppercase tracking-[0.1em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
             >
               <span aria-hidden="true" className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-black transition-transform duration-300 motion-reduce:transition-none ${interval === "year" ? "translate-x-full" : "translate-x-0"}`} />
               <span className={`relative z-10 transition-colors ${interval === "month" ? "text-white" : "text-black/60"}`}>{shopText(ui.monthly, language)}</span>
@@ -469,7 +468,7 @@ export default function ShopExperience() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: motionDuration, ease: "easeOut" }}
-              className="min-w-0 p-4 md:p-6"
+              className={section === "offers" ? "min-w-0" : "min-w-0 p-5 md:p-6"}
             >
               {section === "offers" ? (
                 <section aria-labelledby="shop-offers-title">
@@ -487,15 +486,13 @@ export default function ShopExperience() {
                     </p>
                   ) : null}
 
-                  <ul className="grid grid-cols-1 items-stretch border border-black/25 md:grid-cols-3">
+                  <ul className="grid grid-cols-1 items-stretch md:grid-cols-3">
                     {offers.map((offer) => {
                       const cents = interval === "year" ? offer.yearlyAmountCents : offer.monthlyAmountCents
                       return (
                         <li
                           key={offer.code}
-                          className={`group flex min-w-0 flex-col border-b border-black/25 bg-white/85 p-5 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:border-b-0 md:border-r md:last:border-r-0 ${
-                            offer.emphasized ? "shadow-[inset_0_2px_0_0_#06b6d4]" : ""
-                          }`}
+                          className="group flex min-w-0 flex-col border-b border-black bg-white/85 p-5 transition-colors duration-300 last:border-b-0 hover:bg-cyan-50/80 focus-within:bg-cyan-50/80 md:border-b-0 md:border-r md:last:border-r-0"
                         >
                           <h3 className="font-kode text-[1.5rem] uppercase tracking-[0.08em] transition-colors duration-300 group-hover:text-cyan-700">
                             {shopText(offer.name, language)}
@@ -516,7 +513,7 @@ export default function ShopExperience() {
                             {offer.features.map((feature) => (
                               <li
                                 key={feature.fr}
-                                className="border-t border-black/15 py-1.5 font-home-title text-[0.8125rem] leading-[1.62]"
+                                className="border-t border-black py-1.5 font-home-title text-[0.8125rem] leading-[1.62]"
                               >
                                 {shopText(feature, language)}
                               </li>
@@ -566,18 +563,6 @@ export default function ShopExperience() {
                     </article>
                   ) : null}
 
-                  <section aria-labelledby="shop-conditions-title" className="mt-6 border-t border-black/25 pt-5">
-                    <h2 id="shop-conditions-title" className="font-kode text-[0.6875rem] uppercase tracking-[0.14em]">
-                      {shopText(ui.conditions, language)}
-                    </h2>
-                    <ul className="mt-4 flex max-w-3xl flex-col gap-3">
-                      {SHOP_CONDITIONS.map((condition) => (
-                        <li key={condition.fr} className="font-home-title text-[0.8125rem] leading-[1.62] text-black/75">
-                          {shopText(condition, language)}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
                 </section>
               ) : null}
 
