@@ -28,26 +28,23 @@ function sharedService(id: string, label: Localized, level: ServiceLevel): Servi
 }
 
 export const SHOP_SERVICE_CRITERIA: ServiceCriterion[] = [
-  sharedService("hosting", {"fr":"Hébergement du site","en":"Website hosting"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
-  sharedService("https", {"fr":"Certificat HTTPS","en":"HTTPS certificate"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
-  sharedService("monitoring", {"fr":"Surveillance du site","en":"Website monitoring"}, {"included":true,"value":{"fr":"Continue","en":"Continuous"},"note":{"fr":"À configurer","en":"Setup required"}}),
-  sharedService("protection", {"fr":"Protection contre les attaques courantes","en":"Protection against common attacks"}, {"included":true,"value":{"fr":"Incluse","en":"Included"},"note":{"fr":"À configurer et vérifier","en":"Setup and verification required"}}),
-  sharedService("security_review", {"fr":"Contrôle de sécurité","en":"Security review"}, {"included":true,"value":{"fr":"Mensuel","en":"Monthly"},"note":{"fr":"À planifier","en":"Scheduling required"}}),
-  sharedService("backups", {"fr":"Sauvegardes","en":"Backups"}, {"included":true,"value":{"fr":"Automatiques","en":"Automatic"},"note":{"fr":"À configurer et tester","en":"Setup and recovery testing required"}}),
+  sharedService("hosting", {"fr":"Hébergement & HTTPS","en":"Hosting & HTTPS"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
+  sharedService("ops", {"fr":"Surveillance, protection & sauvegardes","en":"Monitoring, protection & backups"}, {"included":true,"value":{"fr":"Inclus","en":"Included"}}),
+  sharedService("security_review", {"fr":"Contrôle de sécurité","en":"Security review"}, {"included":true,"value":{"fr":"Mensuel","en":"Monthly"}}),
   {
     id: "content_changes", label: {"fr":"Modifications de contenu","en":"Content changes"},
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      premium: {"included":true,"value":{"fr":"60 min/mois","en":"60 min/month"},"note":{"fr":"Mineures, sans report ; développements sur devis.","en":"Minor changes, no rollover; development quoted separately."}},
+      premium: {"included":true,"value":{"fr":"60 min/mois","en":"60 min/month"}},
     },
   },
   {
     id: "activity_report", label: {"fr":"Rapport d'activité","en":"Activity report"},
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      plus: {"included":true,"value":{"fr":"Simplifié","en":"Summary"},"note":{"fr":"Remise manuelle à organiser","en":"Manual delivery to arrange"}},
-      premium: {"included":true,"value":{"fr":"Détaillé","en":"Detailed"},"note":{"fr":"Remise manuelle à organiser","en":"Manual delivery to arrange"}},
+      plus: {"included":true,"value":{"fr":"Simplifié","en":"Summary"}},
+      premium: {"included":true,"value":{"fr":"Détaillé","en":"Detailed"}},
     },
   },
   {
@@ -55,7 +52,7 @@ export const SHOP_SERVICE_CRITERIA: ServiceCriterion[] = [
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      premium: {"included":true,"value":{"fr":"Incluse","en":"Included"},"note":{"fr":"Sans délai garanti","en":"No guaranteed response time"}},
+      premium: {"included":true,"value":{"fr":"Incluse","en":"Included"}},
     },
   },
   {
@@ -63,7 +60,7 @@ export const SHOP_SERVICE_CRITERIA: ServiceCriterion[] = [
     levels: {
       essential: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
       plus: {"included":false,"value":{"fr":"Non inclus","en":"Not included"}},
-      premium: {"included":true,"value":{"fr":"Bilan trimestriel","en":"Quarterly review"},"note":{"fr":"À planifier","en":"Scheduling required"}},
+      premium: {"included":true,"value":{"fr":"Bilan trimestriel","en":"Quarterly review"}},
     },
   },
 ]

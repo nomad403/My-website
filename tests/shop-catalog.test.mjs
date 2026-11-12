@@ -53,9 +53,9 @@ test("the shop screen does not render the private offer names", () => {
   assert.equal(screen.includes("/api/account/subscriptions"), true)
 })
 
-test("public cards share ten ordered bilingual service criteria with cumulative levels", () => {
+test("public cards share seven ordered bilingual service criteria with cumulative levels", () => {
   const offers = publicShopOffers()
-  const ids = ["hosting","https","monitoring","protection","security_review","backups","content_changes","activity_report","priority_support","personal_support"]
+  const ids = ["hosting","ops","security_review","content_changes","activity_report","priority_support","personal_support"]
   for (const offer of offers) {
     assert.deepEqual(offer.features.map(row => row.id), ids)
     assert.deepEqual(offer.features.map(row => row.label), offers[0].features.map(row => row.label))
@@ -71,17 +71,14 @@ test("public cards share ten ordered bilingual service criteria with cumulative 
   }
 })
 
-test("commercial copy preserves current content allowances and qualifies unverified operations", () => {
+test("commercial copy preserves current content allowances without operational setup notes", () => {
   const offers = publicShopOffers(), rows = offers.map(offer => offer.features.find(row => row.id === "content_changes"))
   assert.equal(rows[0].included,false)
   assert.equal(rows[1].included,false)
   assert.equal(rows[2].value.fr,"60 min/mois")
   assert.equal(rows[2].value.en,"60 min/month")
-  assert.match(rows[2].note.en,/no rollover/)
-  for (const offer of offers) for (const id of ["monitoring","protection","security_review","backups"]) {
-    const row = offer.features.find(row => row.id === id)
-    assert.ok(row.note?.fr)
-    assert.ok(row.note?.en)
+  for (const offer of offers) for (const row of offer.features) {
+    assert.equal(row.note, undefined)
   }
 })
 
