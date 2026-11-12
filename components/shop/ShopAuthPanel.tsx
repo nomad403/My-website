@@ -17,9 +17,9 @@ const copy = {
     en: "Get a single-use link (15 min). After you confirm it, checkout resumes automatically.",
   },
   signUpBody: {
-    fr: "Le premier lien valide crée le compte client. Ensuite vous êtes renvoyé au Shop pour payer l’offre choisie.",
+    fr: "Le premier lien valide crée le compte client. Ensuite vous êtes renvoyé au Shop pour payer l'offre choisie.",
     en: "The first valid link creates the client account. You then return to Shop to pay for the selected plan.",
-  }
+  },
   email: { fr: "Adresse e-mail", en: "Email address" },
   submit: { fr: "Recevoir le lien", en: "Email me the link" },
   sending: { fr: "Envoi…", en: "Sending…" },
