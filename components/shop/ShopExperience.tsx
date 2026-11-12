@@ -2,6 +2,7 @@
 
 import ClientWorkspace from "./ClientWorkspace"
 import ShopAsciiBackground from "./ShopAsciiBackground"
+import CustomCursor from "@/components/chrome/CustomCursor"
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
@@ -405,6 +406,7 @@ export default function ShopExperience() {
       }`}
     >
       <ShopAsciiBackground />
+      <CustomCursor />
       <div className="relative z-10 min-h-full">
         <SiteChromeNav
           mode="day"
@@ -426,15 +428,15 @@ export default function ShopExperience() {
           <div className="border border-black bg-white/80">
           <div className="flex flex-col gap-x-8 border-b border-black lg:flex-row lg:items-center">
           <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 flex-1 overflow-x-auto">
-            <ul className="flex min-h-16 items-center justify-between gap-x-6 px-5 lg:px-6">
+            <ul className="flex min-h-16 items-stretch">
               {visibleSections.map((item) => {
                 const active = item === section
                 return (
-                  <li key={item} className="flex">
+                  <li key={item} className="flex border-r border-black last:border-r-0">
                     <Link
                       href={sectionHref(item, interval)}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-10 w-full items-center justify-center whitespace-nowrap px-4 py-3 font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
+                      className={`flex min-h-16 w-full items-center justify-center whitespace-nowrap px-6 py-3 font-kode text-[0.6875rem] uppercase tracking-[0.12em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 ${
                         active ? "bg-cyan-50/80 text-cyan-700" : "text-black/55 hover:bg-black/[0.04] hover:text-black"
                       }`}
                     >
