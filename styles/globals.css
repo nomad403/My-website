@@ -1282,9 +1282,15 @@ body {
 .specialist-catalog__frame-body {
   container-type: size;
   container-name: specialist-frame;
-  scroll-snap-type: y mandatory;
+  /* Proximity only: no fight with wheel / expand animations (mandatory was janky). */
+  scroll-snap-type: y proximity;
+  overscroll-behavior-y: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.specialist-catalog__frame-body--free {
+  scroll-snap-type: none;
 }
 
 .specialist-catalog__frame-body::-webkit-scrollbar {
@@ -1303,7 +1309,7 @@ body {
   flex-direction: column;
   min-height: 100cqh;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
   padding: 0;
 }
 

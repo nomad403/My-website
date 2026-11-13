@@ -26,8 +26,8 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
   const [titleShuffleKey, setTitleShuffleKey] = useState(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const blockRefs = useRef<Map<string, HTMLElement>>(new Map())
-  const snapLockRef = useRef(false)
   const activeCategoryRef = useRef(activeCategoryId)
+  const categorySyncTimerRef = useRef(0)
 
   activeCategoryRef.current = activeCategoryId
 
@@ -58,87 +58,35 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     if (shuffle) setTitleShuffleKey((key) => key + 1)
   }, [])
 
-  const scrollToCategory = useCallback(
-    (categoryId: string) => {
-      const block = blockRefs.current.get(categoryId)
-      const scroller = scrollerRef.current
-      if (!block || !scroller) return
-      snapLockRef.current = true
-      setCategory(categoryId)
-      scroller.scrollTo({
-        top: block.offsetTop,
-        behavior: reducedMotion ? "auto" : "smooth",
-      })
-      window.setTimeout(() => {
-        snapLockRef.current = false
-      }, reducedMotion ? 50 : 520)
-    },
-    [reducedMotion, setCategory],
-  )
-
+  // One owner for category sync: IntersectionObserver only (no wheel hijack / scrollTo race).
   useEffect(() => {
     const scroller = scrollerRef.current
     if (!scroller) return
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (snapLockRef.current) return
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        const categoryId = (visible?.target as HTMLElement | undefined)?.dataset
-          .categoryId
-        if (categoryId) setCategory(categoryId)
+        const categoryId = (visible?.target as HTMLElement | undefined)?.dataset.categoryId
+        if (!categoryId || categoryId === activeCategoryRef.current) return
+        window.clearTimeout(categorySyncTimerRef.current)
+        categorySyncTimerRef.current = window.setTimeout(() => {
+          setCategory(categoryId)
+        }, 80)
       },
       {
         root: scroller,
-        threshold: [0.35, 0.55, 0.75],
+        threshold: [0.4, 0.6],
       },
     )
 
     blockRefs.current.forEach((block) => observer.observe(block))
-    return () => observer.disconnect()
-  }, [setCategory])
-
-  useEffect(() => {
-    const scroller = scrollerRef.current
-    if (!scroller || reducedMotion) return
-
-    const onWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) < 8) return
-      if (snapLockRef.current) {
-        event.preventDefault()
-        return
-      }
-
-      const categoryId = activeCategoryRef.current
-      const block = blockRefs.current.get(categoryId)
-      if (!block) return
-
-      const viewTop = scroller.scrollTop
-      const viewBottom = viewTop + scroller.clientHeight
-      const blockTop = block.offsetTop
-      const blockBottom = blockTop + block.offsetHeight
-      const atStart = viewTop <= blockTop + 4
-      const atEnd = viewBottom >= blockBottom - 4
-      const direction = event.deltaY > 0 ? 1 : -1
-
-      // Inside a tall block: keep native scroll until the edge.
-      if (direction > 0 && !atEnd) return
-      if (direction < 0 && !atStart) return
-
-      const index = SPECIALIST_CATALOG.findIndex((category) => category.id === categoryId)
-      if (index < 0) return
-      const next = SPECIALIST_CATALOG[index + direction]
-      if (!next) return
-
-      event.preventDefault()
-      scrollToCategory(next.id)
+    return () => {
+      window.clearTimeout(categorySyncTimerRef.current)
+      observer.disconnect()
     }
-
-    scroller.addEventListener("wheel", onWheel, { passive: false })
-    return () => scroller.removeEventListener("wheel", onWheel)
-  }, [reducedMotion, scrollToCategory])
+  }, [setCategory])
 
   const handleToggle = (serviceId: string) => {
     setActiveService((current) => (current === serviceId ? null : serviceId))
@@ -148,6 +96,14 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     if (node) blockRefs.current.set(categoryId, node)
     else blockRefs.current.delete(categoryId)
   }
+
+  // While a row is expanded, height changes: turn snap off so CSS snap does not yank mid-animation.
+  const scrollerClassName = [
+    "specialist-catalog__scroller specialist-catalog__frame-body relative min-h-0 flex-1 overflow-y-auto overscroll-contain",
+    activeService ? "specialist-catalog__frame-body--free" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   return (
     <div className="specialist-catalog absolute inset-0 z-10 w-full overflow-y-auto overscroll-contain lg:overflow-hidden">
@@ -160,8 +116,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                   <ShuffleDualLines
                     lines={demoStory.voice.lines.map((primary, index) => ({
                       primary,
-                      alternate:
-                        demoStory.voice!.alternate[index] ?? primary,
+                      alternate: demoStory.voice!.alternate[index] ?? primary,
                     }))}
                     playToken={demoStory.voiceToken}
                     enableHover={false}
@@ -214,10 +169,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                 </h2>
               </div>
 
-              <div
-                ref={scrollerRef}
-                className="specialist-catalog__scroller specialist-catalog__frame-body relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
-              >
+              <div ref={scrollerRef} className={scrollerClassName}>
                 <div className="specialist-catalog__track">
                   {SPECIALIST_CATALOG.map((category) => (
                     <div
@@ -227,10 +179,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                       aria-labelledby={`specialist-cat-${category.id}`}
                       className="specialist-catalog__block"
                     >
-                      <h3
-                        id={`specialist-cat-${category.id}`}
-                        className="sr-only"
-                      >
+                      <h3 id={`specialist-cat-${category.id}`} className="sr-only">
                         {pickLocalized(category.title, lang)}
                       </h3>
 
@@ -245,14 +194,11 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
                             reducedMotion={reducedMotion}
                             demoMode={Boolean(demoStory?.playing)}
                             demoFocusVoice={
-                              demoStory?.playing &&
-                              activeService === service.id
+                              demoStory?.playing && activeService === service.id
                                 ? demoStory.focusVoice
                                 : null
                             }
-                            demoFocusVoiceToken={
-                              demoStory?.focusVoiceToken ?? 0
-                            }
+                            demoFocusVoiceToken={demoStory?.focusVoiceToken ?? 0}
                           />
                         ))}
                       </div>
