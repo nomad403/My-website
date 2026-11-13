@@ -222,48 +222,26 @@ export default function InterventionPanel({
   return (
     <section
       aria-labelledby={admin ? "admin-interventions-title" : "client-interventions-title"}
-      className={
-        admin ? "mt-10 border-t border-black/20 pt-6 font-home-title text-sm" : "font-home-title text-sm"
-      }
+      className="font-home-title text-sm"
     >
       <div className="flex flex-col gap-5">
         <TextCard>
-          {admin ? (
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <h2 id="admin-interventions-title" className="font-kode text-xl uppercase tracking-wider">
-                {t("interventions")}
-              </h2>
-              <button
-                className={button}
-                disabled={busy || loading}
-                onClick={() => {
-                  setError("")
-                  void refresh().catch(() => setError("unavailable"))
-                }}
-              >
-                {t("refresh")}
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 id="client-interventions-title" className="sr-only">
-                {t("interventions")}
-              </h2>
-              <div className="mb-3 flex justify-end">
-                <button
-                  className={button}
-                  disabled={busy || loading}
-                  onClick={() => {
-                    setError("")
-                    void refresh().catch(() => setError("unavailable"))
-                  }}
-                >
-                  {t("refresh")}
-                </button>
-              </div>
-            </>
-          )}
-          <p className={`${admin ? "mt-3" : ""} text-sm text-black/70`}>{t("notice")}</p>
+          <h2 id={admin ? "admin-interventions-title" : "client-interventions-title"} className="sr-only">
+            {t("interventions")}
+          </h2>
+          <div className="mb-3 flex justify-end">
+            <button
+              className={button}
+              disabled={busy || loading}
+              onClick={() => {
+                setError("")
+                void refresh().catch(() => setError("unavailable"))
+              }}
+            >
+              {t("refresh")}
+            </button>
+          </div>
+          <p className="text-sm text-black/70">{t("notice")}</p>
           <div role="status" aria-live="polite" className="mt-3">
             {notice ? t(notice) : null}
             {busy ? ` ${t("loading")}` : null}

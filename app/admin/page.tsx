@@ -1,5 +1,6 @@
-import AdminConsole from "@/components/auth/AdminConsole"
+import { Suspense } from "react"
 import type { Metadata } from "next"
+import AdminConsole from "@/components/auth/AdminConsole"
 import AuthFrame, { AuthNote } from "@/components/auth/AuthFrame"
 import { productionPlatform, readRequestCookie } from "@/lib/auth/runtime"
 
@@ -31,8 +32,8 @@ export default async function AdminPage() {
   }
 
   return (
-    <AuthFrame titleKey="auth.admin.title" wide>
+    <Suspense fallback={<div className="fixed inset-0 bg-white" />}>
       <AdminConsole />
-    </AuthFrame>
+    </Suspense>
   )
 }
