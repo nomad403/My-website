@@ -4,8 +4,8 @@ import type { BillingInputs } from "../../billing/metrics"
 import type { D1Connection, D1Binding } from "./types"
 import { date, nullableDate, milliseconds, uuid } from "./codec"
 
-type UserRow = { id: string; email: string; role: UserRecord["role"]; password_hash: string | null; created_at: number; updated_at: number; last_login_at: number | null; disabled_at: number | null }
-const mapUser = (row: UserRow): UserRecord => ({ id: row.id, email: row.email, role: row.role, passwordHash: row.password_hash ?? null, createdAt: date(row.created_at), updatedAt: date(row.updated_at), lastLoginAt: nullableDate(row.last_login_at), disabledAt: nullableDate(row.disabled_at) })
+type UserRow = { id: string; email: string; role: UserRecord["role"]; password_hash: string | null; email_verified_at: number | null; created_at: number; updated_at: number; last_login_at: number | null; disabled_at: number | null }
+const mapUser = (row: UserRow): UserRecord => ({ id: row.id, email: row.email, role: row.role, passwordHash: row.password_hash ?? null, emailVerifiedAt: nullableDate(row.email_verified_at), createdAt: date(row.created_at), updatedAt: date(row.updated_at), lastLoginAt: nullableDate(row.last_login_at), disabledAt: nullableDate(row.disabled_at) })
 
 /** Parallel implementation of AuthStore. Not selected by the application runtime yet.
  * Construct per request with a primary-first D1 session, never a global singleton.
@@ -26,6 +26,9 @@ export class D1AuthStore implements AuthStore {
  }
  async setPasswordHash(userId: string, passwordHash: string, at: Date) {
   await this.db.prepare("UPDATE users SET password_hash=?,updated_at=? WHERE id=?").bind(passwordHash,milliseconds(at),uuid(userId)).run()
+ }
+ async markEmailVerified(userId: string, at: Date) {
+  await this.db.prepare("UPDATE users SET email_verified_at=?,updated_at=? WHERE id=? AND email_verified_at IS NULL").bind(milliseconds(at),milliseconds(at),uuid(userId)).run()
  }
  async setDisabled(userId: string, at: Date | null) {
   await this.db.prepare("UPDATE users SET disabled_at=?,updated_at=? WHERE id=?").bind(at ? milliseconds(at) : null,milliseconds(at ?? new Date()),uuid(userId)).run()

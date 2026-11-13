@@ -43,6 +43,7 @@ function mapUser(row: typeof users.$inferSelect): UserRecord {
     email: row.email,
     role: row.role,
     passwordHash: row.passwordHash ?? null,
+    emailVerifiedAt: asOptionalDate(row.emailVerifiedAt),
     createdAt: asDate(row.createdAt),
     updatedAt: asDate(row.updatedAt),
     lastLoginAt: asOptionalDate(row.lastLoginAt),
@@ -88,6 +89,13 @@ export class DrizzleAuthStore implements AuthStore {
 
   async setPasswordHash(userId: string, passwordHash: string, at: Date) {
     await this.db.update(users).set({ passwordHash, updatedAt: at }).where(eq(users.id, userId))
+  }
+
+  async markEmailVerified(userId: string, at: Date) {
+    await this.db
+      .update(users)
+      .set({ emailVerifiedAt: at, updatedAt: at })
+      .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)))
   }
 
   async setDisabled(userId: string, at: Date | null) {

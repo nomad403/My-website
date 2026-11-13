@@ -12,6 +12,7 @@ export type UserRecord = {
   email: string
   role: UserRole
   passwordHash: string | null
+  emailVerifiedAt: Date | null
   createdAt: Date
   updatedAt: Date
   lastLoginAt: Date | null
@@ -78,6 +79,7 @@ export interface AuthStore {
   insertUser(input: { email: string; role: UserRole; passwordHash?: string | null }): Promise<UserRecord>
   setUserRole(userId: string, role: UserRole, at: Date): Promise<void>
   setPasswordHash(userId: string, passwordHash: string, at: Date): Promise<void>
+  markEmailVerified(userId: string, at: Date): Promise<void>
   setDisabled(userId: string, at: Date | null): Promise<void>
   markLogin(userId: string, at: Date): Promise<void>
   ensureProfile(

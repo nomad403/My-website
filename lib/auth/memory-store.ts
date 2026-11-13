@@ -57,6 +57,7 @@ export class MemoryAuthStore implements AuthStore {
       email: input.email,
       role: input.role,
       passwordHash: input.passwordHash ?? null,
+      emailVerifiedAt: null,
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
@@ -77,6 +78,13 @@ export class MemoryAuthStore implements AuthStore {
     const user = this.users.get(userId)
     if (!user) return
     user.passwordHash = passwordHash
+    user.updatedAt = at
+  }
+
+  async markEmailVerified(userId: string, at: Date) {
+    const user = this.users.get(userId)
+    if (!user || user.emailVerifiedAt) return
+    user.emailVerifiedAt = at
     user.updatedAt = at
   }
 

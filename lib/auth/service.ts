@@ -28,6 +28,7 @@ export type Mailer = {
   configured: boolean
   sendMagicLink(to: string, url: string): Promise<void>
   sendPasswordReset?(to: string, url: string): Promise<void>
+  sendEmailVerification?(to: string, url: string): Promise<void>
 }
 
 export type AuthDeps = {
@@ -181,6 +182,9 @@ export function createAuthService(deps: AuthDeps) {
     names?: { firstName?: string; lastName?: string },
   ): Promise<ServiceResult> {
     let next = user
+    if (!next.emailVerifiedAt) {
+      return fail(403, "email_unverified", "Confirmez votre adresse e-mail avant de continuer.")
+    }
     if (await withdrawAdmin(next)) next = { ...next, role: "client" }
     if (next.role === "client" && deps.env.adminEmails.has(next.email)) {
       await deps.store.setUserRole(next.id, "admin", deps.now())
@@ -198,6 +202,27 @@ export function createAuthService(deps: AuthDeps) {
     }
   }
 
+  async function issueEmailVerification(email: string, userId: string): Promise<ServiceResult | null> {
+    if (!deps.mailer.configured) {
+      return fail(503, "unavailable", "Service temporairement indisponible.")
+    }
+    const token = randomToken()
+    const tokenHash = hashToken(token)
+    const expiresAt = new Date(deps.now().getTime() + MAGIC_LINK_TTL_MS)
+    await deps.store.deleteOpenMagicLinks(email)
+    await deps.store.insertMagicLink({ email, tokenHash, expiresAt })
+    const url = `${deps.env.appUrl}/shop?section=account&verify=${encodeURIComponent(token)}`
+    try {
+      if (deps.mailer.sendEmailVerification) await deps.mailer.sendEmailVerification(email, url)
+      else await deps.mailer.sendMagicLink(email, url)
+    } catch {
+      await deps.store.deleteMagicLinkByHash(tokenHash)
+      return fail(503, "unavailable", "Service temporairement indisponible.")
+    }
+    await audit("email_verification.issued", userId)
+    return null
+  }
+
   async function authenticate(cookieValue: string | null): Promise<ActiveSession | null> {
     if (!cookieValue) return null
     const opened = await openSessionCookie(cookieValue, deps.env.authSecret)
@@ -210,6 +235,7 @@ export function createAuthService(deps: AuthDeps) {
       return null
     }
     if (await withdrawAdmin(row.user)) return null
+    if (!row.user.emailVerifiedAt) return null
     if (now.getTime() - row.lastSeenAt.getTime() >= SLIDE_AFTER_MS) {
       const nextExpires = new Date(
         Math.min(now.getTime() + SESSION_SLIDING_MS, row.absoluteExpiresAt.getTime()),
@@ -263,8 +289,22 @@ export function createAuthService(deps: AuthDeps) {
       const ipLimited = await consumeLimit(`signup:ip:${mac(input.ip, deps.env.authSecret)}`, 20, 3600)
       if (ipLimited) return ipLimited
 
+      if (!deps.mailer.configured) {
+        return fail(503, "unavailable", "Service temporairement indisponible.")
+      }
+
       const existing = await deps.store.findUserByEmail(email)
-      if (existing) return fail(409, "email_taken", "Cette adresse e-mail est déjà utilisée.")
+      if (existing?.emailVerifiedAt) {
+        return fail(409, "email_taken", "Cette adresse e-mail est déjà utilisée.")
+      }
+      if (existing && !existing.emailVerifiedAt) {
+        await deps.store.setPasswordHash(existing.id, await hashPassword(password), deps.now())
+        await deps.store.ensureProfile(existing.id, existing.email, { firstName, lastName })
+        const mailError = await issueEmailVerification(email, existing.id)
+        if (mailError) return mailError
+        await audit("user.signup_reissued", existing.id)
+        return { status: 200, body: { ok: true, pendingVerification: true } }
+      }
 
       const passwordHash = await hashPassword(password)
       let user: UserRecord
@@ -280,8 +320,11 @@ export function createAuthService(deps: AuthDeps) {
         }
         throw error
       }
+      await deps.store.ensureProfile(user.id, user.email, { firstName, lastName })
+      const mailError = await issueEmailVerification(email, user.id)
+      if (mailError) return mailError
       await audit("user.signed_up", user.id)
-      return finalizeClientSession(user, { firstName, lastName })
+      return { status: 200, body: { ok: true, pendingVerification: true } }
     },
 
     async signIn(input: {
@@ -305,7 +348,45 @@ export function createAuthService(deps: AuthDeps) {
         await audit("signin.failed", user?.id ?? null)
         return fail(401, "credentials_invalid", "E-mail ou mot de passe incorrect.")
       }
+      if (!user.emailVerifiedAt) {
+        return fail(403, "email_unverified", "Confirmez votre adresse e-mail avant de vous connecter.")
+      }
       return finalizeClientSession(user)
+    },
+
+    async resendEmailVerification(input: { email: unknown; ip: string | null }): Promise<ServiceResult> {
+      const email = normalizeEmail(input.email)
+      if (!email) return fail(400, "email_invalid", "Indiquez une adresse e-mail valide.")
+      if (!deps.mailer.configured || !input.ip) {
+        return fail(503, "unavailable", "Service temporairement indisponible.")
+      }
+      const limited = await consumeLimit(`verify-resend:email:${mac(email, deps.env.authSecret)}`, 5, 3600)
+      if (limited) return limited
+      const ipLimited = await consumeLimit(`verify-resend:ip:${mac(input.ip, deps.env.authSecret)}`, 20, 3600)
+      if (ipLimited) return ipLimited
+
+      const user = await deps.store.findUserByEmail(email)
+      if (user && !user.disabledAt && !user.emailVerifiedAt) {
+        const mailError = await issueEmailVerification(email, user.id)
+        if (mailError) return mailError
+      }
+      return { status: 200, body: { ok: true, pendingVerification: true } }
+    },
+
+    async verifyEmail(input: { token: unknown; ip: string | null }): Promise<ServiceResult> {
+      if (!input.ip) return fail(503, "unavailable", "Service temporairement indisponible.")
+      const limited = await consumeLimit(`verify-email:ip:${mac(input.ip, deps.env.authSecret)}`, 30, 900)
+      if (limited) return limited
+      const token = typeof input.token === "string" && TOKEN_RE.test(input.token) ? input.token : ""
+      const link = token ? await deps.store.consumeMagicLink(hashToken(token), deps.now()) : null
+      if (!link) return fail(400, "link_invalid", "Lien invalide ou expiré.")
+
+      const user = await deps.store.findUserByEmail(link.email)
+      if (!user || user.disabledAt) return fail(400, "link_invalid", "Lien invalide ou expiré.")
+      const now = deps.now()
+      await deps.store.markEmailVerified(user.id, now)
+      await audit("email_verification.completed", user.id)
+      return finalizeClientSession({ ...user, emailVerifiedAt: user.emailVerifiedAt ?? now })
     },
 
     async requestPasswordReset(input: { email: unknown; ip: string | null }): Promise<ServiceResult> {
@@ -355,10 +436,12 @@ export function createAuthService(deps: AuthDeps) {
 
       const user = await deps.store.findUserByEmail(link.email)
       if (!user || user.disabledAt) return fail(400, "link_invalid", "Lien invalide ou expiré.")
-      await deps.store.setPasswordHash(user.id, await hashPassword(password), deps.now())
-      await deps.store.revokeUserSessions(user.id, deps.now())
+      const now = deps.now()
+      await deps.store.setPasswordHash(user.id, await hashPassword(password), now)
+      await deps.store.markEmailVerified(user.id, now)
+      await deps.store.revokeUserSessions(user.id, now)
       await audit("password_reset.completed", user.id)
-      return finalizeClientSession(user)
+      return finalizeClientSession({ ...user, emailVerifiedAt: user.emailVerifiedAt ?? now })
     },
 
     async requestMagicLink(input: { email: unknown; ip: string | null }): Promise<ServiceResult> {
@@ -412,16 +495,20 @@ export function createAuthService(deps: AuthDeps) {
       }
       if (!user || user.disabledAt) return fail(400, "link_invalid", "Lien invalide ou expiré.")
 
+      const now = deps.now()
+      await deps.store.markEmailVerified(user.id, now)
+      user = { ...user, emailVerifiedAt: user.emailVerifiedAt ?? now }
+
       if (await withdrawAdmin(user)) user = { ...user, role: "client" }
 
       if (user.role === "client" && deps.env.adminEmails.has(user.email)) {
-        await deps.store.setUserRole(user.id, "admin", deps.now())
+        await deps.store.setUserRole(user.id, "admin", now)
         user = { ...user, role: "admin" }
         await audit("role.promoted", user.id)
       }
 
       await deps.store.ensureProfile(user.id, user.email)
-      await deps.store.markLogin(user.id, deps.now())
+      await deps.store.markLogin(user.id, now)
       const cookie = await issueSession(user.id, false)
       await audit("session.created", user.id, { mfa: false })
       return {
@@ -582,11 +669,13 @@ export function createAuthService(deps: AuthDeps) {
         }
       }
       if (!user || user.disabledAt) return fail(403, "forbidden", "Accès administrateur requis.")
+      const now = deps.now()
       if (user.role !== "admin") {
-        await deps.store.setUserRole(user.id, "admin", deps.now())
+        await deps.store.setUserRole(user.id, "admin", now)
         user = { ...user, role: "admin" }
         await audit("role.promoted", user.id, { via: "access" })
       }
+      await deps.store.markEmailVerified(user.id, now)
       await deps.store.ensureProfile(user.id, user.email)
       return { status: 200, body: { ok: true, userId: user.id } }
     },
