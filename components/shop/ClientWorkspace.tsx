@@ -8,8 +8,10 @@ import ShopAuthPanel from "./ShopAuthPanel"
 import InterventionPanel from "./InterventionPanel"
 import ShopSubscribeButton from "./ShopSubscribeButton"
 
+/** Solid text surface — body of the shop grid stays transparent behind. */
+const card = "min-w-0 border border-black bg-white p-4 md:p-5"
 const control =
-  "mt-1 w-full border border-black/25 bg-transparent px-3 py-2 font-home-title text-sm focus-visible:outline-cyan-500"
+  "mt-1 w-full border border-black/25 bg-white px-3 py-2 font-home-title text-sm focus-visible:outline-cyan-500"
 
 const PLAN_NAMES: Record<string, string> = {
   essential: "Essential",
@@ -41,6 +43,24 @@ function ActionButton({
     >
       {children}
     </ShopSubscribeButton>
+  )
+}
+
+function TextCard({
+  children,
+  className = "",
+  role,
+  "aria-live": ariaLive,
+}: {
+  children: ReactNode
+  className?: string
+  role?: string
+  "aria-live"?: "off" | "polite" | "assertive"
+}) {
+  return (
+    <div className={`${card} ${className}`.trim()} role={role} aria-live={ariaLive}>
+      {children}
+    </div>
   )
 }
 
@@ -144,20 +164,28 @@ export default function ClientWorkspace({
 
   if (loading) {
     return (
-      <p role="status" className="font-home-title text-sm">
-        {t("loading")}
-      </p>
+      <TextCard className="max-w-xl">
+        <p role="status" className="font-home-title text-sm">
+          {t("loading")}
+        </p>
+      </TextCard>
     )
   }
 
   if (error) {
     return (
-      <div role="alert" className="max-w-xl font-home-title text-sm">
-        <p>{t(error)}</p>
-        <div className="my-4">
-          <ActionButton onClick={() => void load()}>{t("retry")}</ActionButton>
-        </div>
-        {error === "auth_required" ? <ShopAuthPanel language={language} /> : null}
+      <div className="flex max-w-xl flex-col gap-4">
+        <TextCard role="alert">
+          <p className="font-home-title text-sm">{t(error)}</p>
+          <div className="mt-4">
+            <ActionButton onClick={() => void load()}>{t("retry")}</ActionButton>
+          </div>
+        </TextCard>
+        {error === "auth_required" ? (
+          <TextCard>
+            <ShopAuthPanel language={language} />
+          </TextCard>
+        ) : null}
       </div>
     )
   }
@@ -169,12 +197,14 @@ export default function ClientWorkspace({
   const subscriptions = (
     <div className="grid gap-5 lg:grid-cols-2">
       {data.subscriptions.length === 0 ? (
-        <p>{t("emptySubscriptions")}</p>
+        <TextCard>
+          <p>{t("emptySubscriptions")}</p>
+        </TextCard>
       ) : (
         data.subscriptions.map((sub) => {
           const scheduled = sub.status === "active" && (sub.cancelRequestedAt || sub.cancelEffectiveAt)
           return (
-            <article key={sub.id} className="min-w-0 overflow-hidden border border-black bg-white p-5">
+            <article key={sub.id} className={`${card} overflow-hidden`}>
               <h3 className="font-kode text-lg uppercase">{PLAN_NAMES[sub.planCode] ?? sub.planCode}</h3>
               <p className="mt-2">{t(scheduled ? "scheduled" : sub.status)}</p>
               <p className="mt-3 font-kode text-xl">
@@ -191,7 +221,7 @@ export default function ClientWorkspace({
                 </p>
               ) : null}
 
-              <div className="-mx-5 mt-5 border-t border-black px-5 pt-4">
+              <div className="-mx-4 mt-5 border-t border-black px-4 pt-4 md:-mx-5 md:px-5">
                 <h4 className="font-kode text-xs uppercase">{t("quota")}</h4>
                 <p className="mt-2 text-sm">{t(sub.quota.reason)}</p>
                 <dl className="mt-3 grid grid-cols-3 gap-0 text-center">
@@ -212,7 +242,7 @@ export default function ClientWorkspace({
                 ) : null}
               </div>
 
-              <details className="-mx-5 mt-4 border-t border-black px-5 pt-4">
+              <details className="-mx-4 mt-4 border-t border-black px-4 pt-4 md:-mx-5 md:px-5">
                 <summary className="cursor-pointer font-kode text-xs uppercase">{t("timeHistory")}</summary>
                 {sub.timeEntries.length === 0 ? (
                   <p className="mt-2 text-sm">{t("noTime")}</p>
@@ -221,7 +251,7 @@ export default function ClientWorkspace({
                     {sub.timeEntries.map((entry) => (
                       <li
                         key={entry.id}
-                        className="-mx-5 border-t border-black px-5 py-2 text-sm first:border-t-0"
+                        className="-mx-4 border-t border-black px-4 py-2 text-sm first:border-t-0 md:-mx-5 md:px-5"
                       >
                         {date(entry.performedAt)} · {entry.minutes} {t("minutes")} · {t(entry.coverage)}
                         <br />
@@ -246,18 +276,18 @@ export default function ClientWorkspace({
   return (
     <section className="font-home-title text-sm" aria-label={t(section)}>
       <div
-        className={`mb-6 flex flex-wrap items-start gap-4 ${
+        className={`mb-5 flex flex-wrap items-start gap-4 ${
           showIdentityHeader ? "justify-between" : "justify-end"
         }`}
       >
         {showIdentityHeader ? (
-          <div>
+          <TextCard className="max-w-md">
             <h2 className="font-kode text-xl uppercase tracking-wider">{t(section)}</h2>
             <p className="mt-2">
               {[data.profile.firstName, data.profile.lastName].filter(Boolean).join(" ")}
             </p>
-            <p className="break-all text-black/65">{data.profile.email}</p>
-          </div>
+            <p className="mt-1 break-all text-black/65">{data.profile.email}</p>
+          </TextCard>
         ) : null}
         <div className="flex flex-wrap gap-2">
           <ActionButton onClick={() => router.push("/shop?section=billing")}>{t("billing")}</ActionButton>
@@ -270,15 +300,17 @@ export default function ClientWorkspace({
         </div>
       </div>
 
-      <p role="status" aria-live="polite" className="mb-3">
-        {message ? t(message) : null}
-      </p>
+      {message ? (
+        <TextCard className="mb-4 max-w-xl" role="status" aria-live="polite">
+          <p>{t(message)}</p>
+        </TextCard>
+      ) : null}
 
       {(section === "subscriptions" || section === "account") && subscriptions}
 
       {section === "account" ? (
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <form onSubmit={profile} className="grid gap-3 border border-black bg-transparent p-4">
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
+          <form onSubmit={profile} className={`grid gap-3 ${card}`}>
             <label>
               {t("firstName")}
               <input
@@ -303,7 +335,7 @@ export default function ClientWorkspace({
               {t("save")}
             </ActionButton>
           </form>
-          <div className="border border-black bg-transparent p-4">
+          <div className={card}>
             <h3 className="font-kode text-sm uppercase">{t("projects")}</h3>
             <ul className="mt-3">
               {data.projects.map((p) => (
@@ -325,50 +357,64 @@ export default function ClientWorkspace({
             </form>
           </div>
           {onLogout ? (
-            <ActionButton onClick={onLogout}>
-              {language === "en" ? "Sign out" : "Déconnexion"}
-            </ActionButton>
+            <div className="md:col-span-2">
+              <ActionButton onClick={onLogout}>
+                {language === "en" ? "Sign out" : "Déconnexion"}
+              </ActionButton>
+            </div>
           ) : null}
         </div>
       ) : null}
 
       {section === "billing" ? (
-        <div className="max-w-4xl bg-transparent">
-          <ActionButton disabled={busy} onClick={() => void portal()}>
-            {t("portal")}
-          </ActionButton>
-          <p className="mt-3 text-xs text-black/60">{t("recent")}</p>
-          <h3 className="mt-6 font-kode text-sm uppercase">{t("invoices")}</h3>
-          {data.invoices.length === 0 ? (
-            <p className="mt-3">{t("emptyInvoices")}</p>
-          ) : (
-            <ul className="mt-3 border-y border-black">
-              {data.invoices.map((invoice) => (
-                <li key={invoice.id} className="border-t border-black py-4 first:border-t-0">
-                  <p>
-                    {t(invoice.status)} · {date(invoice.issuedAt)}
-                  </p>
-                  <p className="mt-1">
-                    {t("due")} : {money(invoice.amountDueCents)} · {t("received")} :{" "}
-                    {money(invoice.amountPaidCents)} · {t("balance")} :{" "}
-                    {money(invoice.amountRemainingCents)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-          <h3 className="mt-6 font-kode text-sm uppercase">{t("payments")}</h3>
-          {data.payments.length === 0 ? (
-            <p className="mt-3">{t("emptyPayments")}</p>
-          ) : (
-            <ul className="mt-3 border-y border-black">
-              {data.payments.map((payment) => (
-                <li key={payment.id} className="border-t border-black py-3 first:border-t-0">
-                  {t(payment.status)} · {money(payment.amountCents)} · {date(payment.paidAt)}
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="flex max-w-4xl flex-col gap-5">
+          <TextCard>
+            <ActionButton disabled={busy} onClick={() => void portal()}>
+              {t("portal")}
+            </ActionButton>
+            <p className="mt-3 text-xs text-black/60">{t("recent")}</p>
+          </TextCard>
+          <TextCard>
+            <h3 className="font-kode text-sm uppercase">{t("invoices")}</h3>
+            {data.invoices.length === 0 ? (
+              <p className="mt-3">{t("emptyInvoices")}</p>
+            ) : (
+              <ul className="-mx-4 mt-3 border-t border-black md:-mx-5">
+                {data.invoices.map((invoice) => (
+                  <li
+                    key={invoice.id}
+                    className="border-t border-black px-4 py-4 first:border-t-0 md:px-5"
+                  >
+                    <p>
+                      {t(invoice.status)} · {date(invoice.issuedAt)}
+                    </p>
+                    <p className="mt-1">
+                      {t("due")} : {money(invoice.amountDueCents)} · {t("received")} :{" "}
+                      {money(invoice.amountPaidCents)} · {t("balance")} :{" "}
+                      {money(invoice.amountRemainingCents)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TextCard>
+          <TextCard>
+            <h3 className="font-kode text-sm uppercase">{t("payments")}</h3>
+            {data.payments.length === 0 ? (
+              <p className="mt-3">{t("emptyPayments")}</p>
+            ) : (
+              <ul className="-mx-4 mt-3 border-t border-black md:-mx-5">
+                {data.payments.map((payment) => (
+                  <li
+                    key={payment.id}
+                    className="border-t border-black px-4 py-3 first:border-t-0 md:px-5"
+                  >
+                    {t(payment.status)} · {money(payment.amountCents)} · {date(payment.paidAt)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TextCard>
         </div>
       ) : null}
 

@@ -548,12 +548,18 @@ export default function ShopExperience() {
                     {shopText(ui.sections.offers, language)}
                   </h2>
                   {searchParams.get("checkout") === "success" ? (
-                    <p role="status" className="mt-2 max-w-2xl px-4 font-home-title text-[0.75rem] leading-[1.45] md:px-5">
+                    <p
+                      role="status"
+                      className="mx-4 mt-3 max-w-2xl border border-black bg-white px-4 py-3 font-home-title text-[0.75rem] leading-[1.45] md:mx-5"
+                    >
                       {shopText(ui.checkoutPending, language)}
                     </p>
                   ) : null}
                   {searchParams.get("checkout") === "cancel" ? (
-                    <p role="status" className="mt-2 max-w-2xl px-4 font-home-title text-[0.75rem] leading-[1.45] md:px-5">
+                    <p
+                      role="status"
+                      className="mx-4 mt-3 max-w-2xl border border-black bg-white px-4 py-3 font-home-title text-[0.75rem] leading-[1.45] md:mx-5"
+                    >
                       {shopText(ui.checkoutCancel, language)}
                     </p>
                   ) : null}
