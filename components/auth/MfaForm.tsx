@@ -8,7 +8,7 @@ const buttonClass =
   "font-kode inline-flex min-h-12 items-center justify-center rounded-full border border-black bg-black px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
 
 /**
- * TOTP enrollment is retired: admin access is gated by Cloudflare Access + ADMIN_EMAILS magic-link.
+ * TOTP enrollment is retired: admin access is gated by Cloudflare Access + ADMIN_EMAILS.
  * Keep this route as a soft redirect so old bookmarks do not trap operators.
  */
 export default function MfaForm() {

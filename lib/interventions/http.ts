@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { accessEmailFromRequest } from "../auth/access"
 import { productionPlatform } from "../auth/runtime"
 import { cookieFromRequest, isSameOrigin, readJson } from "../auth/route"
 import { toResponse, unavailable } from "../auth/http"
@@ -9,7 +10,9 @@ export async function interventionHttp(request: Request, admin: boolean, operati
   const platform = await productionPlatform()
   if (!platform) return unavailable()
   const cookie = cookieFromRequest(request)
-  const authorize = (value: string | null) => admin ? platform.service.adminIdentity(value) : platform.service.accountIdentity(value)
+  const accessEmail = admin ? await accessEmailFromRequest(request) : null
+  const authorize = (value: string | null) =>
+    admin ? platform.service.adminIdentity(value, accessEmail) : platform.service.accountIdentity(value)
   const identity = await authorize(cookie)
   if (identity.status !== 200) return toResponse(identity,platform.env.secureCookies,platform.env.appUrl)
   let input: unknown = {}

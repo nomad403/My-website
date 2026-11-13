@@ -50,9 +50,14 @@ test("all admin operations authorize before accessing data; limiter fails closed
  const deps={authorize:async()=>({status:200,body:{userId:randomUUID()}}),store,limiter:{consume:async()=>{throw Error("offline")}},now:()=>NOW}
  assert.equal((await administer(deps,null,"overview")).status,503);assert.equal(accesses,0)
 })
-test("clients include never-paid users and exclude admins, with exact server count",()=>world(async f=>{
+test("clients include never-paid users and billing admins, exclude pure admins",()=>world(async f=>{
  const r=await f.store.records(query({kind:"clients"}));assert.equal(r.total,2);assert.ok(r.rows.some(r=>r.email==="never-paid@example.com"&&r.subscriptions===0&&r.payments===0));assert.equal(r.rows.some(r=>r.email==="admin@example.com"),false)
  assert.equal((await f.store.client(f.people[0].id)),null)
+ const [adminProject]=await f.db.insert(s.projects).values({userId:f.people[0].id,name:"Admin lab",createdAt:NOW}).returning()
+ await f.db.insert(s.subscriptions).values({userId:f.people[0].id,projectId:adminProject.id,planCode:"premium",status:"active",amountCents:1900,billingInterval:"month",stripeSubscriptionId:"sub_admin",lastEventCreated:100,serviceAnchorAt:NOW,currentPeriodStart:NOW,currentPeriodEnd:new Date("2026-12-15"),createdAt:NOW})
+ const billed=await f.store.records(query({kind:"clients"}));assert.equal(billed.total,3);assert.ok(billed.rows.some(r=>r.email==="admin@example.com"&&r.subscriptions===1))
+ assert.equal((await f.store.client(f.people[0].id))?.email,"admin@example.com")
+ assert.equal((await f.store.overview(query(),NOW)).counts.clients,3)
 }))
 test("search names and literal wildcard characters are parameterized, never SQL",()=>world(async f=>{
  assert.equal((await f.store.records(query({q:"Alice"}))).total,1)

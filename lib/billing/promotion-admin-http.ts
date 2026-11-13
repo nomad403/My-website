@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { accessEmailFromRequest } from "../auth/access"
 import { productionPlatform } from "../auth/runtime"
 import { cookieFromRequest, isSameOrigin, readJson } from "../auth/route"
 import { unavailable, toResponse } from "../auth/http"
@@ -10,8 +11,10 @@ export async function promotionAdminRequest(request: Request, operation: "list" 
     const platform = await productionPlatform()
     if (!platform) return unavailable()
     const cookie = cookieFromRequest(request)
+    const accessEmail = await accessEmailFromRequest(request)
+    const authorize = (value: string | null) => platform.service.adminIdentity(value, accessEmail)
     // Authorize before reading a mutation body or querying promotion data.
-    const identity = await platform.service.adminIdentity(cookie)
+    const identity = await authorize(cookie)
     if (identity.status !== 200) return toResponse(identity, platform.env.secureCookies, platform.env.appUrl)
     let value: unknown = {}
     if (operation === "create" || operation === "change") {
@@ -23,7 +26,7 @@ export async function promotionAdminRequest(request: Request, operation: "list" 
       value = { offset: offset === null ? 0 : Number(offset) }
     }
     const result = await administerPromotions({
-      authorize: c => platform.service.adminIdentity(c), store: platform.promotions,
+      authorize, store: platform.promotions,
       limiter: platform.limiter, now: () => new Date(),
     }, cookie, operation, value, id)
     return toResponse(result, platform.env.secureCookies, platform.env.appUrl)

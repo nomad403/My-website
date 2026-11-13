@@ -1,7 +1,9 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import AdminConsole from "@/components/auth/AdminConsole"
 import AuthFrame, { AuthNote } from "@/components/auth/AuthFrame"
+import { accessEmailFromRequest } from "@/lib/auth/access"
 import { productionPlatform, readRequestCookie } from "@/lib/auth/runtime"
 
 export const dynamic = "force-dynamic"
@@ -21,7 +23,8 @@ export default async function AdminPage() {
     )
   }
 
-  const result = await auth.service.adminIdentity(await readRequestCookie())
+  const accessEmail = await accessEmailFromRequest({ headers: await headers() })
+  const result = await auth.service.adminIdentity(await readRequestCookie(), accessEmail)
   if (result.status !== 200) {
     const code = typeof result.body.code === "string" ? result.body.code : "unavailable"
     return (

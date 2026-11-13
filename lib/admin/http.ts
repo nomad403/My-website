@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server"
+import {accessEmailFromRequest} from "../auth/access"
 import {productionPlatform} from "../auth/runtime"
 import {cookieFromRequest,isSameOrigin} from "../auth/route"
 import {toResponse,unavailable} from "../auth/http"
@@ -8,11 +9,14 @@ export async function adminHttp(request:Request,operation:"overview"|"records"|"
  try{
   const platform=await productionPlatform()
   if(!platform)return unavailable()
-  const cookie=cookieFromRequest(request),identity=await platform.service.adminIdentity(cookie)
+  const cookie=cookieFromRequest(request)
+  const accessEmail=await accessEmailFromRequest(request)
+  const authorize=(value:string|null)=>platform.service.adminIdentity(value,accessEmail)
+  const identity=await authorize(cookie)
   if(identity.status!==200)return toResponse(identity,platform.env.secureCookies,platform.env.appUrl)
   const params=new URL(request.url).searchParams
   if(new Set(params.keys()).size!==Array.from(params.keys()).length)return NextResponse.json({ok:false,code:"invalid"},{status:400,headers:{"Cache-Control":"no-store"}})
-  const result=await administer({authorize:c=>platform.service.adminIdentity(c),store:platform.admin,limiter:platform.limiter,now:()=>new Date()},cookie,operation,Object.fromEntries(params),id)
+  const result=await administer({authorize,store:platform.admin,limiter:platform.limiter,now:()=>new Date()},cookie,operation,Object.fromEntries(params),id)
   return toResponse(result,platform.env.secureCookies,platform.env.appUrl)
  }catch{console.error("[admin] request failed");return unavailable()}
 }

@@ -28,15 +28,15 @@ Use a verified qualification sender. ADMIN_EMAILS, QUALIFICATION_EMAILS and RESE
 
 ### Admin: Cloudflare Zero Trust (Access)
 
-Application TOTP MFA for `/admin` is disabled. Protect the Preview hostname with a Cloudflare Access application:
+Application TOTP MFA for `/admin` is disabled. Admin UX is gated by Cloudflare Access alone when the Access JWT email is listed in `ADMIN_EMAILS` (no second magic-link step). Protect the Preview hostname with a Cloudflare Access application:
 
 1. Zero Trust → Access → Applications → Add an application (Self-hosted).
 2. Application domain: the Preview worker hostname (for example `qualification-shop-lot-7-my-website.glennrichard-dev.workers.dev`).
 3. Path policies covering at least `/admin` and `/api/admin` (and subpaths).
-4. Allow policy: your operator identity (email / IdP group).
-5. After Access, open `/admin` and complete the ADMIN_EMAILS magic-link if no Nomad403 session exists.
+4. Allow policy: your operator identity (email / IdP group) with MFA enabled in Access settings.
+5. Set Preview secrets `CF_ACCESS_TEAM_DOMAIN` (for example `glennrichard-dev.cloudflareaccess.com`) and `CF_ACCESS_AUD` (Application Audience tag from the Access app). Keep the same email in `ADMIN_EMAILS`.
 
-Without Access configured on the hostname, `/admin` relies only on magic-link + `ADMIN_EMAILS`. Configure Access before treating Preview admin as edge-hardened.
+Without Access secrets configured, `/admin` falls back to magic-link + `ADMIN_EMAILS`. Client shop auth remains magic-link only.
 
 Stripe remains optional and disabled until test-only STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET and the eight Price IDs from lib/billing/stripe-env.ts are set on this Preview. Use the same preview secret put command for each. Never put application credentials in build variables. No payments or Stripe resources were created.
 

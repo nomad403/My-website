@@ -6,7 +6,7 @@
 |---|---|---|
 | /admin | Page serveur avec session, rôle et MFA ; résumé et listes Stripe | Remplacement de l'assemblage des listes non paginées par une console unique |
 | Identités et sécurité | adminIdentity, middleware, cookies, contrôle d'origine, limiteur | Même système pour toutes les nouvelles lectures ; aucun nouveau rôle |
-| Clients | users, customer_profiles, projets | Recherche et fiches incluant les clients qui n'ont jamais payé |
+| Clients | users, customer_profiles, projets | Recherche et fiches : rôle client, ou présence billing locale (abonnement / customer Stripe), y compris un admin qui souscrit |
 | Abonnements | Snapshots de prix et dates, protection contre événements anciens et égalités | Vues détaillées, distinction local/confirmé, historique local append-only |
 | Finances | Six anciens totaux théoriques, sans dates | Six indicateurs distincts, agrégats par devise et diagnostics |
 | Promotions | Moteur et interfaces Lot 4 | Réutilisation dans la navigation, utilisations consultables par client |

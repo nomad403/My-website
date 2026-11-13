@@ -421,10 +421,32 @@ export function createAuthService(deps: AuthDeps) {
       }
     },
 
-    async adminIdentity(cookieValue: string | null): Promise<ServiceResult> {
+    async adminIdentity(cookieValue: string | null, accessEmail?: string | null): Promise<ServiceResult> {
       const gate = await requireSession(cookieValue, "admin")
-      if (!gate.ok) return gate.error
-      return { status: 200, body: { ok: true, userId: gate.session.user.id } }
+      if (gate.ok) return { status: 200, body: { ok: true, userId: gate.session.user.id } }
+
+      const email = normalizeEmail(accessEmail)
+      if (!email || !deps.env.adminEmails.has(email)) {
+        return gate.error
+      }
+
+      let user = await deps.store.findUserByEmail(email)
+      if (!user) {
+        try {
+          user = await deps.store.insertUser({ email, role: "admin" })
+        } catch (error) {
+          if (!(error instanceof EmailConflictError)) throw error
+          user = await deps.store.findUserByEmail(email)
+        }
+      }
+      if (!user || user.disabledAt) return fail(403, "forbidden", "Accès administrateur requis.")
+      if (user.role !== "admin") {
+        await deps.store.setUserRole(user.id, "admin", deps.now())
+        user = { ...user, role: "admin" }
+        await audit("role.promoted", user.id, { via: "access" })
+      }
+      await deps.store.ensureProfile(user.id, user.email)
+      return { status: 200, body: { ok: true, userId: user.id } }
     },
 
     async adminSummary(cookieValue: string | null): Promise<ServiceResult> {

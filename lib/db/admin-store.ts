@@ -8,6 +8,8 @@ function rows(result:unknown):Record<string,unknown>[] {
  return (Array.isArray(result)?result:(result as {rows:Record<string,unknown>[]}).rows) as Record<string,unknown>[]
 }
 const within=(column:ReturnType<typeof sql>,q:AdminQuery)=>sql`${column} >= ${q.from} and ${column} < ${q.to}`
+/** Shop customers: role client, or any user with local billing presence (incl. admins who subscribe). */
+const shopCustomer=sql`(u.role='client' or exists(select 1 from subscriptions billed where billed.user_id=u.id) or exists(select 1 from customer_profiles stripe where stripe.user_id=u.id and stripe.stripe_customer_id is not null))`
 const eligibility=(now:Date)=>sql`s.status='active' and s.stripe_subscription_id is not null and s.last_event_created>0
  and not s.entitlement_review_required and s.current_period_start <= ${now} and s.current_period_end > ${now}
  and (s.cancel_effective_at is null or s.cancel_effective_at > ${now})
@@ -24,9 +26,9 @@ export class DrizzleAdminStore implements AdminStore {
   return this.db.transaction(async tx=>{
    await tx.execute(sql`set transaction isolation level repeatable read read only`)
    const [counts]=rows(await tx.execute(sql`select
-    (select count(*)::int from users where role='client') as clients,
-    (select count(*)::int from users u where role='client' and not exists(select 1 from subscriptions s where s.user_id=u.id)) as "withoutSubscription",
-    (select count(*)::int from users where role='client' and ${within(sql`created_at`,q)}) as "newClients",
+    (select count(*)::int from users u where ${shopCustomer}) as clients,
+    (select count(*)::int from users u where ${shopCustomer} and not exists(select 1 from subscriptions s where s.user_id=u.id)) as "withoutSubscription",
+    (select count(*)::int from users u where ${shopCustomer} and ${within(sql`u.created_at`,q)}) as "newClients",
     (select count(*)::int from subscriptions where status='active') as "activeSubscriptions",
     (select count(*)::int from subscriptions where status in ('past_due','unpaid')) as "lateSubscriptions",
     (select count(*)::int from subscriptions where status='canceled') as "canceledSubscriptions",
@@ -63,7 +65,7 @@ export class DrizzleAdminStore implements AdminStore {
  async client(id:string){
   const result=rows(await this.db.execute(sql`select u.id,u.email,u.created_at as "createdAt",u.disabled_at as "disabledAt",
    p.first_name as "firstName",p.last_name as "lastName",p.company,p.stripe_customer_id as "stripeCustomerId"
-   from users u left join customer_profiles p on p.user_id=u.id where u.id=${id} and u.role='client'`))
+   from users u left join customer_profiles p on p.user_id=u.id where u.id=${id} and ${shopCustomer}`))
   return result[0]??null
  }
  async records(q:AdminQuery){
@@ -77,7 +79,7 @@ export class DrizzleAdminStore implements AdminStore {
   const base=sql`${owner} and ${search}`
   switch(q.kind){
    case "clients":
-    from=sql`users u left join customer_profiles p on p.user_id=u.id`;where=sql`u.role='client' and ${base} and ${within(sql`u.created_at`,q)}`
+    from=sql`users u left join customer_profiles p on p.user_id=u.id`;where=sql`${shopCustomer} and ${base} and ${within(sql`u.created_at`,q)}`
     select=sql`u.id,u.email,p.first_name as "firstName",p.last_name as "lastName",u.created_at as "createdAt",
      (select count(*)::int from subscriptions where user_id=u.id) as subscriptions,
      (select count(*)::int from payments where user_id=u.id and status='succeeded') as payments`;order=sql`u.created_at desc,u.id desc`;break

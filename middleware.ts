@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { accessEmailFromRequest, isAllowedAdminEmail } from "@/lib/auth/access"
 import { openSessionCookie, SESSION_COOKIE } from "@/lib/auth/cookie"
 
 function denied(request: NextRequest, status: number, code: string) {
@@ -22,15 +23,25 @@ function denied(request: NextRequest, status: number, code: string) {
   return NextResponse.redirect(new URL("/auth/verify", request.url))
 }
 
+function isAdminPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname.startsWith("/api/admin")
+}
+
 export async function middleware(request: NextRequest) {
   const secret = process.env.AUTH_SECRET
   if (!secret || secret.length < 32) return denied(request, 503, "unavailable")
   const raw = request.cookies.get(SESSION_COOKIE)?.value
   const session = raw ? await openSessionCookie(raw, secret) : null
   const fresh = Boolean(session && session.absoluteExpiresAt * 1000 > Date.now())
-  if (!fresh || !session) return denied(request, 401, "auth_required")
-  // Admin MFA is enforced by Cloudflare Access at the edge, not by session.mfa / TOTP.
-  return NextResponse.next()
+  if (fresh && session) return NextResponse.next()
+
+  // Admin: Cloudflare Access JWT alone is enough when the email is in ADMIN_EMAILS.
+  if (isAdminPath(request.nextUrl.pathname)) {
+    const accessEmail = await accessEmailFromRequest(request)
+    if (accessEmail && isAllowedAdminEmail(accessEmail)) return NextResponse.next()
+  }
+
+  return denied(request, 401, "auth_required")
 }
 
 export const config = {
