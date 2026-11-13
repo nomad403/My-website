@@ -117,18 +117,76 @@ function createResendMailer(source:NodeJS.ProcessEnv): Mailer {
   }
 }
 
+/** Preview qualification D1 — never bind to production. */
+export const PREVIEW_SHOP_DB_ID = "2eb5526a-1d0c-469c-ae36-debe83ec8218"
+/** Production shop D1 (`nomad403-prod`). */
+export const PRODUCTION_SHOP_DB_ID = "a5f76558-e7c4-4ca6-bd3a-c1f87243a6df"
+
 export async function productionPlatform(){
  const bindings=cloudBindings(),source=runtimeVariables(bindings)
  const env=readAuthEnv(source),limiter=createProductionLimiter(source,bindings?.AUTH_LIMITER)
  if(!env||!limiter)return null
- const qualification=bindings?.NOMAD403_ENV==="preview"&&bindings?.SHOP_ENABLED==="1"
- if(bindings&&!qualification)return null
- if(qualification&&(!bindings.SHOP_DB||source.SHOP_DB_ID!=="2eb5526a-1d0c-469c-ae36-debe83ec8218"))return null
- if(!qualification)return null
- const d1=bindings!.SHOP_DB!.withSession("first-primary")
- const store=new D1AuthStore(d1)
- const stripe=qualification&&(!source.STRIPE_SECRET_KEY?.startsWith("sk_test_")||!source.STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test_"))?null:readStripeEnv(source)
- return {env,limiter,service:createAuthService({store,limiter,mailer:createResendMailer(source),env,now:()=>new Date()}),billing:new D1BillingStore(d1),promotions:new D1PromotionAdminStore(d1),interventions:new D1InterventionStore(d1),admin:new D1AdminStore(d1),stripe,gateway:stripe?createStripeGateway(stripe):null,applyBilling:(notices:BillingNotice[],options:ApplyOptions)=>applyStoredD1BillingEvents(d1,notices,options)}
+
+ const nomadEnv = String(bindings?.NOMAD403_ENV ?? source.NOMAD403_ENV ?? "")
+ const shopEnabled = String(bindings?.SHOP_ENABLED ?? source.SHOP_ENABLED ?? "") === "1"
+ const isPreview = nomadEnv === "preview" && shopEnabled
+ const isProduction = nomadEnv === "production" && shopEnabled
+ if (!isPreview && !isProduction) return null
+ if (!bindings?.SHOP_DB) return null
+
+ if (isPreview) {
+  if (source.SHOP_DB_ID !== PREVIEW_SHOP_DB_ID) return null
+  // Preview accepts Stripe test keys only.
+  const testOnly =
+   Boolean(source.STRIPE_SECRET_KEY?.startsWith("sk_test_")) &&
+   Boolean(source.STRIPE_PUBLISHABLE_KEY?.startsWith("pk_test_"))
+  const stripe = testOnly ? readStripeEnv(source) : null
+  const d1 = bindings.SHOP_DB.withSession("first-primary")
+  return {
+   env,
+   limiter,
+   service: createAuthService({
+    store: new D1AuthStore(d1),
+    limiter,
+    mailer: createResendMailer(source),
+    env,
+    now: () => new Date(),
+   }),
+   billing: new D1BillingStore(d1),
+   promotions: new D1PromotionAdminStore(d1),
+   interventions: new D1InterventionStore(d1),
+   admin: new D1AdminStore(d1),
+   stripe,
+   gateway: stripe ? createStripeGateway(stripe) : null,
+   applyBilling: (notices: BillingNotice[], options: ApplyOptions) =>
+    applyStoredD1BillingEvents(d1, notices, options),
+  }
+ }
+
+ // Production: dedicated D1 + live Stripe when configured (STRIPE_ALLOW_LIVE=true).
+ if (source.SHOP_DB_ID !== PRODUCTION_SHOP_DB_ID) return null
+ const stripeEnv = readStripeEnv(source)
+ const stripe = stripeEnv?.live ? stripeEnv : null
+ const d1 = bindings.SHOP_DB.withSession("first-primary")
+ return {
+  env,
+  limiter,
+  service: createAuthService({
+   store: new D1AuthStore(d1),
+   limiter,
+   mailer: createResendMailer(source),
+   env,
+   now: () => new Date(),
+  }),
+  billing: new D1BillingStore(d1),
+  promotions: new D1PromotionAdminStore(d1),
+  interventions: new D1InterventionStore(d1),
+  admin: new D1AdminStore(d1),
+  stripe,
+  gateway: stripe ? createStripeGateway(stripe) : null,
+  applyBilling: (notices: BillingNotice[], options: ApplyOptions) =>
+   applyStoredD1BillingEvents(d1, notices, options),
+ }
 }
 
 export async function productionAuth() {

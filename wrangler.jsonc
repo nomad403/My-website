@@ -30,6 +30,20 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "NOMAD403_ENV": "production",
+    "SHOP_ENABLED": "1",
+    "SHOP_DB_ID": "a5f76558-e7c4-4ca6-bd3a-c1f87243a6df",
+    "APP_URL": "https://www.nomad403.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "SHOP_DB",
+      "database_name": "nomad403-prod",
+      "database_id": "a5f76558-e7c4-4ca6-bd3a-c1f87243a6df",
+      "migrations_dir": "drizzle-d1"
+    }
+  ],
   "previews": {
     "vars": {
       "NOMAD403_ENV": "preview",
@@ -74,6 +88,10 @@
       {
         "name": "CONTACT_LIMITER",
         "class_name": "ContactLimiter"
+      },
+      {
+        "name": "AUTH_LIMITER",
+        "class_name": "AuthLimiter"
       }
     ]
   },

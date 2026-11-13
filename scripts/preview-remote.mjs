@@ -48,6 +48,7 @@ export async function auditRemotePreview(get, branch, branchKey) {
   assert.equal(database.name,"nomad403-shop-qualification","Wrong D1 target")
   const production = await get("/workers/scripts/my-website/settings")
   assert.ok(!production.bindings?.some(b=>b.type==="d1"&&(b.id??b.database_id)==="2eb5526a-1d0c-469c-ae36-debe83ec8218"),"Qualification DB is bound to production")
+  // Production may bind nomad403-prod only (a5f76558-…); never the Preview qualification DB.
   const productionDo = production.bindings?.find(b => b.name === "CONTACT_LIMITER")?.namespace_id
   assert.ok(productionDo, "Production namespace metadata unavailable for isolation check")
   assert.ok(!production.bindings?.some(b => b.type === "r2_bucket" && b.bucket_name === PREVIEW_BUCKET),
