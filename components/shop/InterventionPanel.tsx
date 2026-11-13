@@ -228,25 +228,42 @@ export default function InterventionPanel({
     >
       <div className="flex flex-col gap-5">
         <TextCard>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <h2
-              id={admin ? "admin-interventions-title" : "client-interventions-title"}
-              className="font-kode text-xl uppercase tracking-wider"
-            >
-              {t("interventions")}
-            </h2>
-            <button
-              className={button}
-              disabled={busy || loading}
-              onClick={() => {
-                setError("")
-                void refresh().catch(() => setError("unavailable"))
-              }}
-            >
-              {t("refresh")}
-            </button>
-          </div>
-          <p className="mt-3 text-sm text-black/70">{t("notice")}</p>
+          {admin ? (
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h2 id="admin-interventions-title" className="font-kode text-xl uppercase tracking-wider">
+                {t("interventions")}
+              </h2>
+              <button
+                className={button}
+                disabled={busy || loading}
+                onClick={() => {
+                  setError("")
+                  void refresh().catch(() => setError("unavailable"))
+                }}
+              >
+                {t("refresh")}
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 id="client-interventions-title" className="sr-only">
+                {t("interventions")}
+              </h2>
+              <div className="mb-3 flex justify-end">
+                <button
+                  className={button}
+                  disabled={busy || loading}
+                  onClick={() => {
+                    setError("")
+                    void refresh().catch(() => setError("unavailable"))
+                  }}
+                >
+                  {t("refresh")}
+                </button>
+              </div>
+            </>
+          )}
+          <p className={`${admin ? "mt-3" : ""} text-sm text-black/70`}>{t("notice")}</p>
           <div role="status" aria-live="polite" className="mt-3">
             {notice ? t(notice) : null}
             {busy ? ` ${t("loading")}` : null}

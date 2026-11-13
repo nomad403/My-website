@@ -192,7 +192,7 @@ export default function ClientWorkspace({
 
   if (!data) return null
 
-  const showIdentityHeader = section !== "subscriptions"
+  const showIdentityHeader = section === "account"
 
   const subscriptions = (
     <div className="grid gap-5 lg:grid-cols-2">
