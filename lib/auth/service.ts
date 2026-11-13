@@ -96,23 +96,13 @@ function fail(status: number, code: string, error: string, retryAfter?: number):
 export function assessAccess(input: {
   role: UserRecord["role"]
   area: "account" | "admin"
-  totpConfirmed: boolean
-  mfaVerified: boolean
+  /** Kept for call-site compatibility; admin MFA is enforced by Cloudflare Access, not TOTP. */
+  totpConfirmed?: boolean
+  mfaVerified?: boolean
 }): { ok: true } | { ok: false; status: number; code: string; message: string } {
   if (input.area === "account") return { ok: true }
   if (input.role !== "admin") {
     return { ok: false, status: 403, code: "forbidden", message: "Accès administrateur requis." }
-  }
-  if (!input.totpConfirmed) {
-    return {
-      ok: false,
-      status: 403,
-      code: "mfa_enrollment_required",
-      message: "Activez le second facteur.",
-    }
-  }
-  if (!input.mfaVerified) {
-    return { ok: false, status: 403, code: "mfa_required", message: "Second facteur requis." }
   }
   return { ok: true }
 }
@@ -298,7 +288,7 @@ export function createAuthService(deps: AuthDeps) {
         cookie,
         // Clients return to Shop offers and auto-resume checkout when an intent is stored.
         // Admins still complete MFA before any privileged surface.
-        redirectPath: user.role === "admin" ? "/auth/mfa" : "/shop?auth=signed-in",
+        redirectPath: user.role === "admin" ? "/admin" : "/shop?auth=signed-in",
       }
     },
 

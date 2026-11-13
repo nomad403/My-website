@@ -80,6 +80,7 @@ test("an allowlisted address becomes admin only after the link is consumed", asy
   assert.equal(await fixture.store.findUserByEmail("admin@example.com"), null)
   const session = await signIn(fixture, "admin@example.com")
   assert.equal(session.body.role, "admin")
+  assert.equal(session.redirectPath, "/admin")
   const user = await fixture.store.findUserByEmail("admin@example.com")
   assert.equal(user.role, "admin")
   assert.ok(user.lastLoginAt)
@@ -89,7 +90,7 @@ test("a normal address stays a client and a role field cannot be supplied", asyn
   const fixture = setup()
   const session = await signIn(fixture, "client@example.com")
   assert.equal(session.body.role, "client")
-  assert.equal(session.redirectPath, "/shop?section=account&auth=signed-in")
+  assert.equal(session.redirectPath, "/shop?auth=signed-in")
   assert.equal((await fixture.store.findUserByEmail("client@example.com")).role, "client")
 })
 
@@ -214,22 +215,21 @@ test("one account can hold several subscriptions", async () => {
   assert.equal(listed.body.subscriptions.length, 2)
 })
 
-test("admin routes require an enrolled and verified second factor", async () => {
+test("admin routes require an admin role only; app TOTP is not a gate", async () => {
   const fixture = setup()
   const session = await signIn(fixture, "admin@example.com")
-  const before = await fixture.service.adminSummary(session.cookie.value)
-  assert.equal(before.body.code, "mfa_enrollment_required")
+  assert.equal((await fixture.service.adminSummary(session.cookie.value)).status, 200)
+  assert.equal((await fixture.service.adminIdentity(session.cookie.value)).status, 200)
 
   const client = await signIn(fixture, "client@example.com")
   assert.equal((await fixture.service.adminSummary(client.cookie.value)).body.code, "forbidden")
   assert.equal((await fixture.service.enrollMfa(client.cookie.value)).body.code, "forbidden")
 
+  // Legacy MFA endpoints remain callable for admins but are not required for /admin access.
   const enrolled = await fixture.service.enrollMfa(session.cookie.value)
   assert.equal(enrolled.status, 200)
   assert.equal(enrolled.body.secret.length > 0, true)
   assert.equal(enrolled.body.recoveryCodes.length, 8)
-  const stillLocked = await fixture.service.adminSummary(session.cookie.value)
-  assert.equal(stillLocked.body.code, "mfa_enrollment_required")
 
   const wrong = await fixture.service.verifyMfa({ cookieValue: session.cookie.value, code: "000000" })
   assert.equal(wrong.body.code, "mfa_invalid")
@@ -238,9 +238,9 @@ test("admin routes require an enrolled and verified second factor", async () => 
   const code = totpAt(decodeBase32(enrolled.body.secret), fixture.now().getTime())
   const verified = await fixture.service.verifyMfa({ cookieValue: session.cookie.value, code })
   assert.equal(verified.status, 200)
+  assert.equal(verified.redirectPath, "/admin")
   assert.equal((await fixture.service.adminSummary(session.cookie.value)).status, 401)
-  const summary = await fixture.service.adminSummary(verified.cookie.value)
-  assert.equal(summary.status, 200)
+  assert.equal((await fixture.service.adminSummary(verified.cookie.value)).status, 200)
 
   const recovery = enrolled.body.recoveryCodes[0]
   const reusedSession = await fixture.service.verifyMfa({
@@ -352,7 +352,7 @@ test("removing an administrator revokes the stored role and live admin sessions"
   const token = new URL(sent[0]).searchParams.get("token")
   const next = await revoked.verifyMagicLink({ token, ip: "203.0.113.40" })
   assert.equal(next.body.role, "client")
-  assert.equal(next.redirectPath, "/shop?section=account&auth=signed-in")
+  assert.equal(next.redirectPath, "/shop?auth=signed-in")
   assert.equal((await revoked.adminSummary(next.cookie.value)).status, 403)
 })
 
@@ -362,7 +362,7 @@ test("Cloudflare auth limiter fails closed when the object is unavailable",async
  await assert.rejects(limiter.consume("magic",5,60))
 })
 
-test("promotion administration requires a valid admin session and verified MFA for every operation", async () => {
+test("promotion administration requires a valid admin session for every operation", async () => {
   const { administerPromotions } = await import("../lib/billing/promotion-admin.ts")
   const fixture = setup()
   const client = await signIn(fixture, "client@example.com")
@@ -376,21 +376,23 @@ test("promotion administration requires a valid admin session and verified MFA f
   for (const operation of ["list", "detail", "create", "change"]) {
     assert.equal((await administerPromotions(deps, null, operation, {})).status, 401)
     assert.equal((await administerPromotions(deps, client.cookie.value, operation, {})).status, 403)
-    assert.equal((await administerPromotions(deps, admin.cookie.value, operation, {})).body.code, "mfa_enrollment_required")
   }
   assert.equal(reads, 0)
-  const enrollment = await fixture.service.enrollMfa(admin.cookie.value)
-  const verified = await fixture.service.verifyMfa({ cookieValue: admin.cookie.value, code: enrollment.body.recoveryCodes[0] })
-  assert.equal(verified.status, 200)
-  assert.equal((await administerPromotions(deps, verified.cookie.value, "list", {})).status, 200)
+  assert.equal((await administerPromotions(deps, admin.cookie.value, "list", {})).status, 200)
   assert.equal(reads, 1)
   const freshLogin = await signIn(fixture, "admin@example.com")
-  for (const operation of ["list", "detail", "create", "change"]) {
-    assert.equal((await administerPromotions(deps, freshLogin.cookie.value, operation, {})).body.code, "mfa_required")
+  assert.equal((await administerPromotions(deps, freshLogin.cookie.value, "list", {})).status, 200)
+  assert.equal(reads, 2)
+  // Auth passes without app MFA; invalid payloads still fail closed at the handler (not 401/403).
+  for (const operation of ["detail", "create", "change"]) {
+    const result = await administerPromotions(deps, freshLogin.cookie.value, operation, {})
+    assert.notEqual(result.status, 401)
+    assert.notEqual(result.status, 403)
+    assert.notEqual(result.body.code, "mfa_required")
+    assert.notEqual(result.body.code, "mfa_enrollment_required")
   }
-  assert.equal(reads, 1)
-  await fixture.service.logout(verified.cookie.value)
-  assert.equal((await administerPromotions(deps, verified.cookie.value, "list", {})).status, 401)
+  await fixture.service.logout(admin.cookie.value)
+  assert.equal((await administerPromotions(deps, admin.cookie.value, "list", {})).status, 401)
 })
 
 test("development limiter persists across request factories without weakening production fail-closed behavior", async () => {
@@ -402,7 +404,7 @@ test("development limiter persists across request factories without weakening pr
   assert.equal(createProductionLimiter({ NODE_ENV: "production" }), null)
 })
 
-test("new MFA-less admin sessions cannot read or mutate intervention administration", async () => {
+test("intervention administration requires an admin session and rejects clients", async () => {
  const {interventionOperation}=await import("../lib/interventions/service.ts")
  const fixture=setup(),client=await signIn(fixture,"client@example.com"),admin=await signIn(fixture,"admin@example.com")
  let accesses=0
@@ -410,17 +412,14 @@ test("new MFA-less admin sessions cannot read or mutate intervention administrat
  for(const operation of["list","detail","message","transition","complete","priority"]){
   assert.equal((await interventionOperation(deps,null,operation,{})).status,401)
   assert.equal((await interventionOperation(deps,client.cookie.value,operation,{})).status,403)
-  assert.equal((await interventionOperation(deps,admin.cookie.value,operation,{})).body.code,"mfa_enrollment_required")
  }
- const enrollment=await fixture.service.enrollMfa(admin.cookie.value)
- const verified=await fixture.service.verifyMfa({cookieValue:admin.cookie.value,code:enrollment.body.recoveryCodes[0]})
- assert.equal((await interventionOperation(deps,verified.cookie.value,"list",{})).status,200)
+ assert.equal((await interventionOperation(deps,admin.cookie.value,"list",{})).status,200)
  const fresh=await signIn(fixture,"admin@example.com")
- assert.equal((await interventionOperation(deps,fresh.cookie.value,"list",{})).body.code,"mfa_required")
- assert.equal(accesses,1)
+ assert.equal((await interventionOperation(deps,fresh.cookie.value,"list",{})).status,200)
+ assert.equal(accesses,2)
 })
 
-test("Lot 6 reads and priority mutations require current admin MFA and reject revoked sessions",async()=>{
+test("Lot 6 reads require an admin session and reject revoked sessions",async()=>{
  const {administer}=await import("../lib/admin/service.ts")
  const fixture=setup(),client=await signIn(fixture,"client@example.com"),admin=await signIn(fixture,"admin@example.com")
  let reads=0
@@ -428,13 +427,11 @@ test("Lot 6 reads and priority mutations require current admin MFA and reject re
  for(const operation of["overview","records","client"]){
   assert.equal((await administer(deps,null,operation)).status,401)
   assert.equal((await administer(deps,client.cookie.value,operation)).status,403)
-  assert.equal((await administer(deps,admin.cookie.value,operation)).body.code,"mfa_enrollment_required")
  }
  assert.equal(reads,0)
- const enrolled=await fixture.service.enrollMfa(admin.cookie.value),verified=await fixture.service.verifyMfa({cookieValue:admin.cookie.value,code:enrolled.body.recoveryCodes[0]})
- for(const operation of["overview","records","client"])assert.equal((await administer(deps,verified.cookie.value,operation,{},"11111111-1111-4111-8111-111111111111")).status,200)
+ for(const operation of["overview","records","client"])assert.equal((await administer(deps,admin.cookie.value,operation,{},"11111111-1111-4111-8111-111111111111")).status,200)
  const fresh=await signIn(fixture,"admin@example.com")
- assert.equal((await administer(deps,fresh.cookie.value,"records")).body.code,"mfa_required")
- await fixture.service.logout(verified.cookie.value)
- assert.equal((await administer(deps,verified.cookie.value,"records")).status,401);assert.equal(reads,3)
+ assert.equal((await administer(deps,fresh.cookie.value,"records")).status,200)
+ await fixture.service.logout(admin.cookie.value)
+ assert.equal((await administer(deps,admin.cookie.value,"records")).status,401);assert.equal(reads,4)
 })

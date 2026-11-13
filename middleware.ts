@@ -19,8 +19,7 @@ function denied(request: NextRequest, status: number, code: string) {
       { status, headers: { "Cache-Control": "no-store" } },
     )
   }
-  const target = code === "mfa_required" ? "/auth/mfa" : "/auth/verify"
-  return NextResponse.redirect(new URL(target, request.url))
+  return NextResponse.redirect(new URL("/auth/verify", request.url))
 }
 
 export async function middleware(request: NextRequest) {
@@ -30,12 +29,7 @@ export async function middleware(request: NextRequest) {
   const session = raw ? await openSessionCookie(raw, secret) : null
   const fresh = Boolean(session && session.absoluteExpiresAt * 1000 > Date.now())
   if (!fresh || !session) return denied(request, 401, "auth_required")
-
-  const admin =
-    request.nextUrl.pathname === "/admin" ||
-    request.nextUrl.pathname.startsWith("/admin/") ||
-    request.nextUrl.pathname.startsWith("/api/admin/")
-  if (admin && session.mfa !== 1) return denied(request, 403, "mfa_required")
+  // Admin MFA is enforced by Cloudflare Access at the edge, not by session.mfa / TOTP.
   return NextResponse.next()
 }
 

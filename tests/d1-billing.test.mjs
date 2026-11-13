@@ -18,7 +18,6 @@ const scalar=async(f,sql,values=[])=>Object.values((await f.rows(sql,values))[0]
 
 import {createAuthService} from "../lib/auth/service.ts"
 import {createD1AuthStore} from "../lib/db/d1/auth-store.ts"
-import {decodeBase32,totpAt} from "../lib/auth/totp.ts"
 
 // All providers are local doubles; no external request, email, payment or resource is created.
 test("D1 promotion reservations serialize twenty callers against a one-use limit",async t=>{
@@ -395,7 +394,7 @@ test("D1 missing owners and mismatched private grants cannot create subscription
  assert.equal(await scalar(f,"SELECT status FROM promotion_redemptions"),"reserved")
 })
 
-test("D1 promotion administration remains gated by current MFA and never returns stored hashes",async t=>{
+test("D1 promotion administration remains gated by admin role and never returns stored hashes",async t=>{
  const f=await d1Fixture(t),sent=[],limiter=new MemoryRateLimiter(()=>NOW.getTime()),store=createD1AuthStore(f.db)
  const service=createAuthService({store,limiter,mailer:{configured:true,async sendMagicLink(to,url){sent.push({to,url})}},env:{authSecret:"local-qualification-auth-only-secret-0000",appUrl:"http://localhost:3000",adminEmails:new Set([PEOPLE[0].email]),mfaKey:Buffer.from("0123456789abcdef0123456789abcdef"),secureCookies:false},now:()=>NOW})
  const signIn=async email=>{await service.requestMagicLink({email,ip:"203.0.113.8"});return service.verifyMagicLink({token:new URL(sent.at(-1).url).searchParams.get("token"),ip:"203.0.113.8"})}
@@ -404,19 +403,15 @@ test("D1 promotion administration remains gated by current MFA and never returns
  const input={mode:"manual",code:"NOMAD-ADMIN-LOCAL",planCode:"friend_host"}
  assert.equal((await administerPromotions(deps,null,"create",input)).status,401)
  assert.equal((await administerPromotions(deps,client.cookie.value,"create",input)).status,403)
- assert.equal((await administerPromotions(deps,admin.cookie.value,"create",input)).body.code,"mfa_enrollment_required")
- const enrolled=await service.enrollMfa(admin.cookie.value)
- const verified=await service.verifyMfa({cookieValue:admin.cookie.value,code:totpAt(decodeBase32(enrolled.body.secret),NOW.getTime())})
- assert.equal(verified.status,200)
- const created=await administerPromotions(deps,verified.cookie.value,"create",input)
+ const created=await administerPromotions(deps,admin.cookie.value,"create",input)
  assert.equal(created.status,201)
- const list=await administerPromotions(deps,verified.cookie.value,"list",{})
- const detail=await administerPromotions(deps,verified.cookie.value,"detail",{},created.body.id)
+ const list=await administerPromotions(deps,admin.cookie.value,"list",{})
+ const detail=await administerPromotions(deps,admin.cookie.value,"detail",{},created.body.id)
  const output=JSON.stringify([list,detail])
  assert.ok(!output.includes(created.body.code));assert.ok(!output.includes(hashPromotionCode(created.body.code)));assert.ok(!output.includes("codeHash"))
- assert.equal((await administerPromotions(deps,verified.cookie.value,"change",{planCode:"friend_care"},created.body.id)).body.code,"immutable")
- await service.logout(verified.cookie.value)
- assert.equal((await administerPromotions(deps,verified.cookie.value,"list",{})).status,401)
+ assert.equal((await administerPromotions(deps,admin.cookie.value,"change",{planCode:"friend_care"},created.body.id)).body.code,"immutable")
+ await service.logout(admin.cookie.value)
+ assert.equal((await administerPromotions(deps,admin.cookie.value,"list",{})).status,401)
 })
 
 test("D1 dependency revisions invalidate raw SQL changes; broken metadata fails closed",async t=>{

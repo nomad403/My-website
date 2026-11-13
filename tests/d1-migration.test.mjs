@@ -264,14 +264,17 @@ test("unchanged auth service on D1: magic links expire, are single-use, sessions
  assert.equal((await f.service.sessionState(session.cookie.value)).body.authenticated,false)
 })
 
-test("unchanged auth service on D1: client isolation and admin MFA/recovery gates",async t=>{
+test("unchanged auth service on D1: client isolation and admin role without TOTP gate",async t=>{
  const db=await fixture(t),f=authService(db),a=await f.signIn("a@example.test"),b=await f.signIn("b@example.test")
  await f.service.createProject({cookieValue:a.cookie.value,name:"Project A"})
  await f.service.createProject({cookieValue:b.cookie.value,name:"Project B"})
  assert.deepEqual((await f.service.listProjects(a.cookie.value)).body.projects.map(p=>p.name),["Project A"])
  assert.equal((await f.service.adminIdentity(a.cookie.value)).body.code,"forbidden")
  const admin=await f.signIn("admin@example.test")
- assert.equal((await f.service.adminSummary(admin.cookie.value)).body.code,"mfa_enrollment_required")
+ assert.equal(admin.redirectPath,"/admin")
+ assert.equal((await f.service.adminSummary(admin.cookie.value)).status,200)
+ assert.equal((await f.service.adminIdentity(admin.cookie.value)).status,200)
+ // Legacy MFA endpoints remain available but are not required for admin access.
  const enrolled=await f.service.enrollMfa(admin.cookie.value)
  assert.equal(enrolled.status,200);assert.equal(enrolled.body.recoveryCodes.length,8)
  const verified=await f.service.verifyMfa({cookieValue:admin.cookie.value,code:totpAt(decodeBase32(enrolled.body.secret),f.now().getTime())})

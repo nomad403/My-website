@@ -24,7 +24,19 @@ Use native branch secrets, never the production secret command:
     npx wrangler preview secret put RESEND_API_KEY --name qualification/shop-lot-7 --worker-name my-website
     npx wrangler preview secret put RESEND_FROM --name qualification/shop-lot-7 --worker-name my-website
 
-Use a verified qualification sender. ADMIN_EMAILS, QUALIFICATION_EMAILS and RESEND_TO are private Preview secrets initialized with the owner-authorized address. No email is sent by this preparation. Missing mail configuration prevents magic-link qualification; it does not bypass authentication or MFA.
+Use a verified qualification sender. ADMIN_EMAILS, QUALIFICATION_EMAILS and RESEND_TO are private Preview secrets initialized with the owner-authorized address. No email is sent by this preparation. Missing mail configuration prevents magic-link qualification; it does not bypass authentication.
+
+### Admin: Cloudflare Zero Trust (Access)
+
+Application TOTP MFA for `/admin` is disabled. Protect the Preview hostname with a Cloudflare Access application:
+
+1. Zero Trust → Access → Applications → Add an application (Self-hosted).
+2. Application domain: the Preview worker hostname (for example `qualification-shop-lot-7-my-website.glennrichard-dev.workers.dev`).
+3. Path policies covering at least `/admin` and `/api/admin` (and subpaths).
+4. Allow policy: your operator identity (email / IdP group).
+5. After Access, open `/admin` and complete the ADMIN_EMAILS magic-link if no Nomad403 session exists.
+
+Without Access configured on the hostname, `/admin` relies only on magic-link + `ADMIN_EMAILS`. Configure Access before treating Preview admin as edge-hardened.
 
 Stripe remains optional and disabled until test-only STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET and the eight Price IDs from lib/billing/stripe-env.ts are set on this Preview. Use the same preview secret put command for each. Never put application credentials in build variables. No payments or Stripe resources were created.
 
