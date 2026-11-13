@@ -475,18 +475,12 @@ export default function ShopExperience() {
 
   const motionDuration = reduced ? 0 : 0.45
 
-  const offersScrollLock = section === "offers" || menuOpen || authOpen
-
   return (
-    <div
-      className={`fixed inset-0 overflow-x-hidden bg-white text-black ${
-        offersScrollLock ? "overflow-hidden" : "overflow-y-auto"
-      }`}
-    >
+    <div className="fixed inset-0 overflow-hidden bg-white text-black">
       <ShopAsciiBackground />
       <CustomCursor />
       <ShopSubscribeGooDefs />
-      <div className={`relative z-10 flex flex-col ${section === "offers" ? "h-dvh" : "min-h-dvh"}`}>
+      <div className="relative z-10 flex h-dvh flex-col">
         <SiteChromeNav
           mode="day"
           currentPage="shop"
@@ -502,10 +496,14 @@ export default function ShopExperience() {
           onPageChange={() => setMenuOpen(false)}
           documentNavigation
         />
-        <main className={`site-grid flex min-h-0 flex-1 flex-col pt-1 ${section === "offers" ? "pb-3 md:pb-20" : "pb-20"}`}>
+        <main className="site-grid flex min-h-0 flex-1 flex-col pt-1 pb-3 md:pb-20">
           <div className="site-grid-inner flex min-h-0 flex-1 flex-col">
           <h1 className="sr-only">Shop Nomad403</h1>
-          <div className={`border border-black bg-white/80 ${section === "offers" ? "flex min-h-0 flex-1 flex-col overflow-hidden" : ""}`}>
+          <div
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden border border-black ${
+              section === "offers" ? "bg-white/80" : "bg-transparent"
+            }`}
+          >
           {menuOpen ? null : (
           <div className="relative z-40 shrink-0 border-b border-black bg-white">
           <nav aria-label={shopText(ui.sectionNav, language)} className="min-w-0 overflow-x-auto">
@@ -541,7 +539,7 @@ export default function ShopExperience() {
               className={
                 section === "offers"
                   ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain md:overflow-hidden"
-                  : "min-w-0 p-5 md:p-6"
+                  : "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-5 md:p-6"
               }
             >
               {section === "offers" ? (
@@ -722,14 +720,15 @@ function AccountGate({
   signedOut: Localized
   children: ReactNode
 }) {
+  const router = useRouter()
   if (session.status === "loading") return <EmptyCopy language={language} copy={ui.loading} />
   if (session.status === "anonymous" || session.status === "unavailable") {
     return (
       <div className="flex flex-col items-start gap-4">
         <EmptyCopy language={language} copy={signedOut} />
-        <Link href="/shop?section=account" className={ghostButtonClass}>
+        <ShopSubscribeButton type="button" className="!w-auto" onClick={() => router.push("/shop?section=account")}>
           {shopText(ui.goAccount, language)}
-        </Link>
+        </ShopSubscribeButton>
       </div>
     )
   }

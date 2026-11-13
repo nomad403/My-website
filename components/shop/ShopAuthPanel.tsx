@@ -2,12 +2,10 @@
 
 import { useState, type FormEvent } from "react"
 import { shopText, type Localized } from "@/lib/shop/catalog"
+import ShopSubscribeButton from "./ShopSubscribeButton"
 
 const fieldClass =
   "min-h-12 w-full rounded-xl border border-gray-300/50 bg-white px-4 py-3 font-home-title text-base leading-[1.62] text-gray-800 transition-all duration-300 placeholder:text-gray-500 focus:border-cyan-400 focus:outline-none"
-
-const buttonClass =
-  "font-kode min-h-12 rounded-full border border-black bg-black px-6 text-[0.8125rem] uppercase tracking-[0.12em] text-white transition-opacity duration-300 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
 
 const copy = {
   signIn: { fr: "Connexion", en: "Sign in" },
@@ -115,9 +113,9 @@ export default function ShopAuthPanel({
             className={fieldClass}
           />
         </label>
-        <button type="submit" className={`${buttonClass} w-fit`} disabled={pending}>
+        <ShopSubscribeButton type="submit" className="!w-auto" disabled={pending}>
           {shopText(pending ? copy.sending : copy.submit, language)}
-        </button>
+        </ShopSubscribeButton>
       </form>
       {status ? (
         <p role="status" className="font-home-title text-[0.8125rem] leading-[1.62] text-black">
