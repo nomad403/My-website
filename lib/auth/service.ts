@@ -11,6 +11,7 @@ import {
 } from "./crypto"
 import { openSessionCookie, sealSessionCookie } from "./cookie"
 import { normalizeEmail } from "./email"
+import { hashPassword, normalizePassword, normalizePersonName, verifyPassword } from "./password"
 import type { RateLimiter } from "./rate-limit"
 import { EmailConflictError, type AuthStore, type UserRecord } from "./store"
 import { encodeBase32, otpauthUrl, verifyTotp } from "./totp"
@@ -26,6 +27,7 @@ export type AuthEnv = {
 export type Mailer = {
   configured: boolean
   sendMagicLink(to: string, url: string): Promise<void>
+  sendPasswordReset?(to: string, url: string): Promise<void>
 }
 
 export type AuthDeps = {
@@ -174,6 +176,28 @@ export function createAuthService(deps: AuthDeps) {
     return true
   }
 
+  async function finalizeClientSession(
+    user: UserRecord,
+    names?: { firstName?: string; lastName?: string },
+  ): Promise<ServiceResult> {
+    let next = user
+    if (await withdrawAdmin(next)) next = { ...next, role: "client" }
+    if (next.role === "client" && deps.env.adminEmails.has(next.email)) {
+      await deps.store.setUserRole(next.id, "admin", deps.now())
+      next = { ...next, role: "admin" }
+      await audit("role.promoted", next.id)
+    }
+    await deps.store.ensureProfile(next.id, next.email, names)
+    await deps.store.markLogin(next.id, deps.now())
+    const cookie = await issueSession(next.id, false)
+    await audit("session.created", next.id, { mfa: false, method: "password" })
+    return {
+      status: 200,
+      body: { ok: true, role: next.role },
+      cookie,
+    }
+  }
+
   async function authenticate(cookieValue: string | null): Promise<ActiveSession | null> {
     if (!cookieValue) return null
     const opened = await openSessionCookie(cookieValue, deps.env.authSecret)
@@ -219,6 +243,124 @@ export function createAuthService(deps: AuthDeps) {
   }
 
   return {
+    async signUp(input: {
+      email: unknown
+      password: unknown
+      firstName: unknown
+      lastName: unknown
+      ip: string | null
+    }): Promise<ServiceResult> {
+      const email = normalizeEmail(input.email)
+      const password = normalizePassword(input.password)
+      const firstName = normalizePersonName(input.firstName)
+      const lastName = normalizePersonName(input.lastName)
+      if (!email) return fail(400, "email_invalid", "Indiquez une adresse e-mail valide.")
+      if (!password) return fail(400, "password_invalid", "Le mot de passe doit contenir entre 8 et 128 caractères.")
+      if (!firstName || !lastName) return fail(400, "name_invalid", "Indiquez un prénom et un nom valides.")
+      if (!input.ip) return fail(503, "unavailable", "Service temporairement indisponible.")
+      const limited = await consumeLimit(`signup:email:${mac(email, deps.env.authSecret)}`, 5, 3600)
+      if (limited) return limited
+      const ipLimited = await consumeLimit(`signup:ip:${mac(input.ip, deps.env.authSecret)}`, 20, 3600)
+      if (ipLimited) return ipLimited
+
+      const existing = await deps.store.findUserByEmail(email)
+      if (existing) return fail(409, "email_taken", "Cette adresse e-mail est déjà utilisée.")
+
+      const passwordHash = await hashPassword(password)
+      let user: UserRecord
+      try {
+        user = await deps.store.insertUser({
+          email,
+          role: deps.env.adminEmails.has(email) ? "admin" : "client",
+          passwordHash,
+        })
+      } catch (error) {
+        if (error instanceof EmailConflictError) {
+          return fail(409, "email_taken", "Cette adresse e-mail est déjà utilisée.")
+        }
+        throw error
+      }
+      await audit("user.signed_up", user.id)
+      return finalizeClientSession(user, { firstName, lastName })
+    },
+
+    async signIn(input: {
+      email: unknown
+      password: unknown
+      ip: string | null
+    }): Promise<ServiceResult> {
+      const email = normalizeEmail(input.email)
+      const password = normalizePassword(input.password)
+      if (!email) return fail(400, "email_invalid", "Indiquez une adresse e-mail valide.")
+      if (!password) return fail(400, "password_invalid", "Mot de passe invalide.")
+      if (!input.ip) return fail(503, "unavailable", "Service temporairement indisponible.")
+      const limited = await consumeLimit(`signin:email:${mac(email, deps.env.authSecret)}`, 10, 3600)
+      if (limited) return limited
+      const ipLimited = await consumeLimit(`signin:ip:${mac(input.ip, deps.env.authSecret)}`, 30, 3600)
+      if (ipLimited) return ipLimited
+
+      const user = await deps.store.findUserByEmail(email)
+      const ok = await verifyPassword(password, user?.passwordHash)
+      if (!user || user.disabledAt || !ok) {
+        await audit("signin.failed", user?.id ?? null)
+        return fail(401, "credentials_invalid", "E-mail ou mot de passe incorrect.")
+      }
+      return finalizeClientSession(user)
+    },
+
+    async requestPasswordReset(input: { email: unknown; ip: string | null }): Promise<ServiceResult> {
+      const email = normalizeEmail(input.email)
+      if (!email) return fail(400, "email_invalid", "Indiquez une adresse e-mail valide.")
+      if (!deps.mailer.configured || !input.ip) {
+        return fail(503, "unavailable", "Service temporairement indisponible.")
+      }
+      const limited = await consumeLimit(`reset:email:${mac(email, deps.env.authSecret)}`, 5, 3600)
+      if (limited) return limited
+      const ipLimited = await consumeLimit(`reset:ip:${mac(input.ip, deps.env.authSecret)}`, 20, 3600)
+      if (ipLimited) return ipLimited
+
+      const existing = await deps.store.findUserByEmail(email)
+      if (existing && !existing.disabledAt) {
+        const token = randomToken()
+        const tokenHash = hashToken(token)
+        const expiresAt = new Date(deps.now().getTime() + MAGIC_LINK_TTL_MS)
+        await deps.store.deleteOpenMagicLinks(email)
+        await deps.store.insertMagicLink({ email, tokenHash, expiresAt })
+        const url = `${deps.env.appUrl}/shop?section=account&reset=${encodeURIComponent(token)}`
+        try {
+          if (deps.mailer.sendPasswordReset) await deps.mailer.sendPasswordReset(email, url)
+          else await deps.mailer.sendMagicLink(email, url)
+        } catch {
+          await deps.store.deleteMagicLinkByHash(tokenHash)
+          return fail(503, "unavailable", "Service temporairement indisponible.")
+        }
+        await audit("password_reset.issued", existing.id)
+      }
+      return { status: 200, body: { ok: true } }
+    },
+
+    async resetPassword(input: {
+      token: unknown
+      password: unknown
+      ip: string | null
+    }): Promise<ServiceResult> {
+      if (!input.ip) return fail(503, "unavailable", "Service temporairement indisponible.")
+      const limited = await consumeLimit(`reset-verify:ip:${mac(input.ip, deps.env.authSecret)}`, 30, 900)
+      if (limited) return limited
+      const password = normalizePassword(input.password)
+      if (!password) return fail(400, "password_invalid", "Le mot de passe doit contenir entre 8 et 128 caractères.")
+      const token = typeof input.token === "string" && TOKEN_RE.test(input.token) ? input.token : ""
+      const link = token ? await deps.store.consumeMagicLink(hashToken(token), deps.now()) : null
+      if (!link) return fail(400, "link_invalid", "Lien invalide ou expiré.")
+
+      const user = await deps.store.findUserByEmail(link.email)
+      if (!user || user.disabledAt) return fail(400, "link_invalid", "Lien invalide ou expiré.")
+      await deps.store.setPasswordHash(user.id, await hashPassword(password), deps.now())
+      await deps.store.revokeUserSessions(user.id, deps.now())
+      await audit("password_reset.completed", user.id)
+      return finalizeClientSession(user)
+    },
+
     async requestMagicLink(input: { email: unknown; ip: string | null }): Promise<ServiceResult> {
       const email = normalizeEmail(input.email)
       if (!email) return fail(400, "email_invalid", "Indiquez une adresse e-mail valide.")

@@ -172,21 +172,22 @@ export default function ClientWorkspace({
     )
   }
 
+  if (error === "auth_required") {
+    return (
+      <TextCard className="max-w-xl">
+        <ShopAuthPanel language={language} onAuthenticated={() => void load()} />
+      </TextCard>
+    )
+  }
+
   if (error) {
     return (
-      <div className="flex max-w-xl flex-col gap-4">
-        <TextCard role="alert">
-          <p className="font-home-title text-sm">{t(error)}</p>
-          <div className="mt-4">
-            <ActionButton onClick={() => void load()}>{t("retry")}</ActionButton>
-          </div>
-        </TextCard>
-        {error === "auth_required" ? (
-          <TextCard>
-            <ShopAuthPanel language={language} />
-          </TextCard>
-        ) : null}
-      </div>
+      <TextCard className="max-w-xl" role="alert">
+        <p className="font-home-title text-sm">{t(error)}</p>
+        <div className="mt-4">
+          <ActionButton onClick={() => void load()}>{t("retry")}</ActionButton>
+        </div>
+      </TextCard>
     )
   }
 

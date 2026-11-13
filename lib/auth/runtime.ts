@@ -54,6 +54,36 @@ function createResendMailer(source:NodeJS.ProcessEnv): Mailer {
       })
       if (result.error) throw new Error("Mail was rejected")
     },
+    async sendPasswordReset(to, url) {
+      if (!apiKey || !from) throw new Error("Mail is not configured")
+      if (source.NOMAD403_ENV === "preview") {
+        const allow = String(source.QUALIFICATION_EMAILS ?? "")
+          .toLowerCase()
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean)
+        const open = allow.length === 0 || allow.includes("*")
+        if (!open && !allow.includes(to.toLowerCase())) {
+          throw new Error("preview_recipient_blocked")
+        }
+      }
+      const { Resend } = await import("resend")
+      const resend = new Resend(apiKey)
+      const result = await resend.emails.send({
+        from,
+        to,
+        subject: "Réinitialisation du mot de passe Nomad403",
+        text: [
+          "Bonjour,",
+          "",
+          "Utilisez ce lien pour choisir un nouveau mot de passe. Il expire dans 15 minutes et ne fonctionne qu'une fois.",
+          url,
+          "",
+          "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.",
+        ].join("\n"),
+      })
+      if (result.error) throw new Error("Mail was rejected")
+    },
   }
 }
 

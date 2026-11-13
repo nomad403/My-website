@@ -49,13 +49,14 @@ export class MemoryAuthStore implements AuthStore {
     return [...this.users.values()].find((user) => user.email === email) ?? null
   }
 
-  async insertUser(input: { email: string; role: UserRole }) {
+  async insertUser(input: { email: string; role: UserRole; passwordHash?: string | null }) {
     if (await this.findUserByEmail(input.email)) throw new EmailConflictError()
     const now = new Date()
     const user: UserRecord = {
       id: randomUUID(),
       email: input.email,
       role: input.role,
+      passwordHash: input.passwordHash ?? null,
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
@@ -69,6 +70,13 @@ export class MemoryAuthStore implements AuthStore {
     const user = this.users.get(userId)
     if (!user) return
     user.role = role
+    user.updatedAt = at
+  }
+
+  async setPasswordHash(userId: string, passwordHash: string, at: Date) {
+    const user = this.users.get(userId)
+    if (!user) return
+    user.passwordHash = passwordHash
     user.updatedAt = at
   }
 

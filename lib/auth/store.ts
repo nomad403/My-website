@@ -11,6 +11,7 @@ export type UserRecord = {
   id: string
   email: string
   role: UserRole
+  passwordHash: string | null
   createdAt: Date
   updatedAt: Date
   lastLoginAt: Date | null
@@ -74,11 +75,16 @@ export type AuditEntry = {
 
 export interface AuthStore {
   findUserByEmail(email: string): Promise<UserRecord | null>
-  insertUser(input: { email: string; role: UserRole }): Promise<UserRecord>
+  insertUser(input: { email: string; role: UserRole; passwordHash?: string | null }): Promise<UserRecord>
   setUserRole(userId: string, role: UserRole, at: Date): Promise<void>
+  setPasswordHash(userId: string, passwordHash: string, at: Date): Promise<void>
   setDisabled(userId: string, at: Date | null): Promise<void>
   markLogin(userId: string, at: Date): Promise<void>
-  ensureProfile(userId: string, email: string): Promise<void>
+  ensureProfile(
+    userId: string,
+    email: string,
+    names?: { firstName?: string; lastName?: string },
+  ): Promise<void>
   deleteOpenMagicLinks(email: string): Promise<void>
   insertMagicLink(input: { email: string; tokenHash: string; expiresAt: Date }): Promise<void>
   deleteMagicLinkByHash(tokenHash: string): Promise<void>

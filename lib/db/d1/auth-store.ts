@@ -4,8 +4,8 @@ import type { BillingInputs } from "../../billing/metrics"
 import type { D1Connection, D1Binding } from "./types"
 import { date, nullableDate, milliseconds, uuid } from "./codec"
 
-type UserRow = { id: string; email: string; role: UserRecord["role"]; created_at: number; updated_at: number; last_login_at: number | null; disabled_at: number | null }
-const mapUser = (row: UserRow): UserRecord => ({ id: row.id, email: row.email, role: row.role, createdAt: date(row.created_at), updatedAt: date(row.updated_at), lastLoginAt: nullableDate(row.last_login_at), disabledAt: nullableDate(row.disabled_at) })
+type UserRow = { id: string; email: string; role: UserRecord["role"]; password_hash: string | null; created_at: number; updated_at: number; last_login_at: number | null; disabled_at: number | null }
+const mapUser = (row: UserRow): UserRecord => ({ id: row.id, email: row.email, role: row.role, passwordHash: row.password_hash ?? null, createdAt: date(row.created_at), updatedAt: date(row.updated_at), lastLoginAt: nullableDate(row.last_login_at), disabledAt: nullableDate(row.disabled_at) })
 
 /** Parallel implementation of AuthStore. Not selected by the application runtime yet.
  * Construct per request with a primary-first D1 session, never a global singleton.
@@ -16,13 +16,16 @@ export class D1AuthStore implements AuthStore {
   const row = await this.db.prepare("SELECT * FROM users WHERE email=?").bind(email).first<UserRow>()
   return row ? mapUser(row) : null
  }
- async insertUser(input: {email: string; role: UserRecord["role"]}) {
-  const row = await this.db.prepare("INSERT INTO users(id,email,role) VALUES(?,?,?) ON CONFLICT(email) DO NOTHING RETURNING *").bind(randomUUID(),input.email,input.role).first<UserRow>()
+ async insertUser(input: {email: string; role: UserRecord["role"]; passwordHash?: string | null}) {
+  const row = await this.db.prepare("INSERT INTO users(id,email,role,password_hash) VALUES(?,?,?,?) ON CONFLICT(email) DO NOTHING RETURNING *").bind(randomUUID(),input.email,input.role,input.passwordHash ?? null).first<UserRow>()
   if (!row) throw new EmailConflictError()
   return mapUser(row)
  }
  async setUserRole(userId: string, role: UserRecord["role"], at: Date) {
   await this.db.prepare("UPDATE users SET role=?,updated_at=? WHERE id=?").bind(role,milliseconds(at),uuid(userId)).run()
+ }
+ async setPasswordHash(userId: string, passwordHash: string, at: Date) {
+  await this.db.prepare("UPDATE users SET password_hash=?,updated_at=? WHERE id=?").bind(passwordHash,milliseconds(at),uuid(userId)).run()
  }
  async setDisabled(userId: string, at: Date | null) {
   await this.db.prepare("UPDATE users SET disabled_at=?,updated_at=? WHERE id=?").bind(at ? milliseconds(at) : null,milliseconds(at ?? new Date()),uuid(userId)).run()
@@ -30,8 +33,12 @@ export class D1AuthStore implements AuthStore {
  async markLogin(userId: string, at: Date) {
   await this.db.prepare("UPDATE users SET last_login_at=?,updated_at=? WHERE id=?").bind(milliseconds(at),milliseconds(at),uuid(userId)).run()
  }
- async ensureProfile(userId: string, email: string) {
-  await this.db.prepare("INSERT INTO customer_profiles(user_id,billing_email) VALUES(?,?) ON CONFLICT(user_id) DO NOTHING").bind(uuid(userId),email).run()
+ async ensureProfile(userId: string, email: string, names?: { firstName?: string; lastName?: string }) {
+  const firstName = names?.firstName ?? ""
+  const lastName = names?.lastName ?? ""
+  await this.db.prepare(
+   "INSERT INTO customer_profiles(user_id,billing_email,first_name,last_name) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET first_name=CASE WHEN excluded.first_name='' THEN customer_profiles.first_name ELSE excluded.first_name END, last_name=CASE WHEN excluded.last_name='' THEN customer_profiles.last_name ELSE excluded.last_name END",
+  ).bind(uuid(userId),email,firstName,lastName).run()
  }
  async deleteOpenMagicLinks(email: string) {
   await this.db.prepare("DELETE FROM magic_links WHERE email=? AND consumed_at IS NULL").bind(email).run()

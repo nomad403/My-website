@@ -42,6 +42,7 @@ function mapUser(row: typeof users.$inferSelect): UserRecord {
     id: row.id,
     email: row.email,
     role: row.role,
+    passwordHash: row.passwordHash ?? null,
     createdAt: asDate(row.createdAt),
     updatedAt: asDate(row.updatedAt),
     lastLoginAt: asOptionalDate(row.lastLoginAt),
@@ -68,9 +69,12 @@ export class DrizzleAuthStore implements AuthStore {
     return row ? mapUser(row) : null
   }
 
-  async insertUser(input: { email: string; role: UserRecord["role"] }) {
+  async insertUser(input: { email: string; role: UserRecord["role"]; passwordHash?: string | null }) {
     try {
-      const [row] = await this.db.insert(users).values(input).returning()
+      const [row] = await this.db
+        .insert(users)
+        .values({ email: input.email, role: input.role, passwordHash: input.passwordHash ?? null })
+        .returning()
       return mapUser(row)
     } catch (error) {
       if (isUniqueViolation(error)) throw new EmailConflictError()
@@ -80,6 +84,10 @@ export class DrizzleAuthStore implements AuthStore {
 
   async setUserRole(userId: string, role: UserRecord["role"], at: Date) {
     await this.db.update(users).set({ role, updatedAt: at }).where(eq(users.id, userId))
+  }
+
+  async setPasswordHash(userId: string, passwordHash: string, at: Date) {
+    await this.db.update(users).set({ passwordHash, updatedAt: at }).where(eq(users.id, userId))
   }
 
   async setDisabled(userId: string, at: Date | null) {
@@ -93,11 +101,27 @@ export class DrizzleAuthStore implements AuthStore {
     await this.db.update(users).set({ lastLoginAt: at, updatedAt: at }).where(eq(users.id, userId))
   }
 
-  async ensureProfile(userId: string, email: string) {
+  async ensureProfile(
+    userId: string,
+    email: string,
+    names?: { firstName?: string; lastName?: string },
+  ) {
+    const firstName = names?.firstName ?? ""
+    const lastName = names?.lastName ?? ""
     await this.db
       .insert(customerProfiles)
-      .values({ userId, billingEmail: email })
+      .values({ userId, billingEmail: email, firstName, lastName })
       .onConflictDoNothing({ target: customerProfiles.userId })
+    if (firstName || lastName) {
+      await this.db
+        .update(customerProfiles)
+        .set({
+          ...(firstName ? { firstName } : {}),
+          ...(lastName ? { lastName } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(customerProfiles.userId, userId))
+    }
   }
 
   async deleteOpenMagicLinks(email: string) {
