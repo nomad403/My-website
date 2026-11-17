@@ -962,24 +962,34 @@ body {
   transition: opacity 0.2s ease;
 }
 
-/* Mobile : hiérarchie par taille / opacités (ProFont = une seule graisse). */
+/* Mobile accordion : keep the detail short so “Voir le projet” stays reachable. */
 @media (max-width: 767px) {
+  .projects-scroll-list__detail {
+    width: min(100%, 34ch);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
   .projects-scroll-list__detail-inner {
-    padding: 0.65rem 0.35rem 1.25rem 0;
+    padding: 0.35rem 0.2rem 0.7rem 0;
+  }
+
+  .projects-scroll-list__detail-inner::before {
+    inset: -0.2rem -0.85rem -0.55rem -0.35rem;
   }
 
   .projects-scroll-list__detail-eyebrow {
-    margin: 0 0 0.4rem;
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
+    margin: 0 0 0.18rem;
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
     opacity: 1;
   }
 
   .projects-scroll-list__detail-summary {
-    margin: 0 0 0.7rem;
-    font-size: 1rem;
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
     font-weight: 300;
-    line-height: 1.62;
+    line-height: 1.38;
     opacity: 0.82;
   }
 
@@ -987,16 +997,21 @@ body {
     font-weight: 300;
   }
 
+  /* Drop the second pitch line on mobile; desktop panel keeps the full copy. */
+  .projects-scroll-list__detail-summary > p + p {
+    display: none;
+  }
+
   .projects-scroll-list__detail-stack {
-    margin: 0 0 0.7rem;
-    gap: 0.3rem 0.55rem;
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
+    margin: 0 0 0.35rem;
+    gap: 0.18rem 0.4rem;
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
     opacity: 1;
   }
 
   .projects-scroll-list__detail-link {
-    font-size: 0.8125rem;
+    font-size: 0.6875rem;
     letter-spacing: 0.12em;
     opacity: 1;
     border-bottom-width: 1.5px;
