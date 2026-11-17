@@ -5,7 +5,10 @@ assert.equal(config.name,"my-website","Unexpected Worker target")
 assert.equal(config.main,"cloudflare/worker.mjs")
 assert.equal(config.keep_vars,true)
 assert.deepEqual(config.durable_objects,{bindings:[{name:"CONTACT_LIMITER",class_name:"ContactLimiter"}]})
-assert.deepEqual(config.exports,{ContactLimiter:{type:"durable-object",storage:"sqlite"}})
+assert.deepEqual(config.exports,{
+ ContactLimiter:{type:"durable-object",storage:"sqlite"},
+ AuthLimiter:{type:"durable-object",state:"deleted"},
+})
 assert.deepEqual(config.previews.durable_objects,config.durable_objects)
 assert.equal(config.services?.length,1)
 assert.equal(config.services[0].binding,"WORKER_SELF_REFERENCE")

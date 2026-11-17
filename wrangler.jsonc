@@ -66,6 +66,10 @@
     "ContactLimiter": {
       "type": "durable-object",
       "storage": "sqlite"
+    },
+    "AuthLimiter": {
+      "type": "durable-object",
+      "state": "deleted"
     }
   }
 }

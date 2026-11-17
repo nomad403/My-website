@@ -6,6 +6,7 @@ La version Cloudflare du formulaire reserve ses envois dans un Durable Object SQ
 
 - Runtime Production : RESEND_API_KEY (secret), RESEND_FROM, RESEND_TO.
 - wrangler.jsonc declare CONTACT_LIMITER et exports.ContactLimiter (type durable-object, storage sqlite).
+- exports.AuthLimiter reste en tombstone `state: deleted` tant que Cloudflare n'a pas retire l'ancien namespace orphelin de ce Worker.
 - Le premier deploiement de cette declaration provisionne le namespace ; ne pas creer manuellement un namespace d'un autre nom.
 - Le Worker d'entree cloudflare/worker.mjs conserve le fetch OpenNext et exporte la classe ContactLimiter.
 - keep_vars=true preserve les variables runtime saisies dans le dashboard lors des prochains deploiements. Les secrets Resend ne sont ni lus par l'audit ni commites.
