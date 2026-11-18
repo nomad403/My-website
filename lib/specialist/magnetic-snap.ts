@@ -1,29 +1,22 @@
-/** Pure helpers for magnetic category snap in the expertise list. */
-
-export function easeOutQuint(t: number) {
-  const p = 1 - Math.min(1, Math.max(0, t))
-  return 1 - p ** 5
-}
+/** Pure helpers for inertia-based magnetic category snap. */
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-/** Wheel / trackpad impulse tuning — soft enough for pixel trackpads. */
-export const MAGNET_WHEEL_IMMEDIATE = 0.16
-export const MAGNET_WHEEL_IMPULSE = 0.1
-export const MAGNET_WHEEL_FRICTION = 0.88
-export const MAGNET_WHEEL_MAX_VELOCITY = 26
-export const MAGNET_MIN_VELOCITY = 0.28
-/** Below this speed the magnet dominates and finishes the settle. */
-export const MAGNET_CAPTURE_VELOCITY = 2.4
-export const MAGNET_PULL_MIN = 0.1
-export const MAGNET_PULL_MAX = 0.28
-export const MAGNET_SETTLE_DISTANCE = 0.65
-export const MAGNET_SETTLE_VELOCITY = 0.35
-/** Per-event caps as a fraction of the scroller viewport. */
-export const MAGNET_WHEEL_IMMEDIATE_CAP = 0.1
-export const MAGNET_WHEEL_IMPULSE_CAP = 0.14
+/** Take over native coast when speed falls under this (px/frame ~16ms). */
+export const MAGNET_CAPTURE_VELOCITY = 3.2
+export const MAGNET_MIN_VELOCITY = 0.22
+export const MAGNET_FRICTION = 0.86
+export const MAGNET_PULL_MIN = 0.12
+export const MAGNET_PULL_MAX = 0.3
+export const MAGNET_SETTLE_DISTANCE = 0.6
+export const MAGNET_SETTLE_VELOCITY = 0.3
+/** Wait after last wheel/touch before treating motion as coast. */
+export const MAGNET_COAST_IDLE_MS = 48
+/** Fallback if scrollend is missing. */
+export const MAGNET_SETTLE_FALLBACK_MS = 72
+export const MAGNET_VELOCITY_EMA = 0.55
 
 export interface SnapBlock {
   id: string
@@ -51,9 +44,9 @@ export function measureSnapBlocks(
 }
 
 /**
- * Adaptive magnetic target:
- * - slow scroll → nearest category start
- * - fast scroll → bias toward the next category in the fling direction
+ * Inertia-aware target:
+ * - slow / short coast → nearest category
+ * - fast fling → commit to the next/prev category in that direction
  */
 export function pickMagneticTarget(
   scrollTop: number,
@@ -63,8 +56,10 @@ export function pickMagneticTarget(
 ): SnapBlock | null {
   if (blocks.length === 0) return null
 
-  const maxForesight = viewport * 0.48
-  const foresight = clamp(velocity * 12, -maxForesight, maxForesight)
+  const speed = Math.abs(velocity)
+  const maxForesight = viewport * 0.55
+  // Stronger foresight with inertia so a decisive flick lands on the next block.
+  const foresight = clamp(velocity * (speed > 2.5 ? 18 : 10), -maxForesight, maxForesight)
   const probe = scrollTop + foresight
 
   let best = blocks[0]
@@ -78,8 +73,7 @@ export function pickMagneticTarget(
     }
   }
 
-  // Strong fling: commit to the next/prev category along the momentum.
-  if (Math.abs(velocity) > 1.1) {
+  if (speed > 1.4) {
     const direction = Math.sign(velocity)
     for (let i = 0; i < blocks.length - 1; i++) {
       const current = blocks[i]
@@ -96,19 +90,19 @@ export function pickMagneticTarget(
 }
 
 /**
- * One physics step: friction + magnetic pull that strengthens as speed drops.
- * Returns the next velocity (px/frame). Caller applies it to scrollTop.
+ * Spring step: keep residual inertia, pull harder as speed drops.
  */
 export function stepMagneticVelocity(
   scrollTop: number,
   targetTop: number,
   velocity: number,
-  friction = MAGNET_WHEEL_FRICTION,
+  friction = MAGNET_FRICTION,
 ): number {
   const distance = targetTop - scrollTop
   const speed = Math.abs(velocity)
   const pull = clamp(
-    MAGNET_PULL_MIN + (1 - clamp(speed / 22, 0, 1)) * (MAGNET_PULL_MAX - MAGNET_PULL_MIN),
+    MAGNET_PULL_MIN +
+      (1 - clamp(speed / 18, 0, 1)) * (MAGNET_PULL_MAX - MAGNET_PULL_MIN),
     MAGNET_PULL_MIN,
     MAGNET_PULL_MAX,
   )
@@ -124,12 +118,4 @@ export function isMagnetSettled(
     Math.abs(targetTop - scrollTop) < MAGNET_SETTLE_DISTANCE &&
     Math.abs(velocity) < MAGNET_SETTLE_VELOCITY
   )
-}
-
-/** Normalize wheel delta to roughly pixel units. */
-export function normalizeWheelDelta(event: WheelEvent, viewport: number) {
-  let delta = event.deltaY
-  if (event.deltaMode === 1) delta *= 16
-  if (event.deltaMode === 2) delta *= viewport
-  return delta
 }
