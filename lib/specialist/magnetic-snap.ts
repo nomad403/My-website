@@ -9,6 +9,19 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
+/** Wheel / trackpad impulse tuning — continuous motion, no idle pause. */
+export const MAGNET_WHEEL_IMMEDIATE = 0.62
+export const MAGNET_WHEEL_IMPULSE = 0.42
+export const MAGNET_WHEEL_FRICTION = 0.905
+export const MAGNET_WHEEL_MAX_VELOCITY = 56
+export const MAGNET_MIN_VELOCITY = 0.28
+/** Below this speed the magnet dominates and finishes the settle. */
+export const MAGNET_CAPTURE_VELOCITY = 2.8
+export const MAGNET_PULL_MIN = 0.1
+export const MAGNET_PULL_MAX = 0.32
+export const MAGNET_SETTLE_DISTANCE = 0.65
+export const MAGNET_SETTLE_VELOCITY = 0.35
+
 export interface SnapBlock {
   id: string
   top: number
@@ -47,8 +60,8 @@ export function pickMagneticTarget(
 ): SnapBlock | null {
   if (blocks.length === 0) return null
 
-  const maxForesight = viewport * 0.42
-  const foresight = clamp(velocity * 10, -maxForesight, maxForesight)
+  const maxForesight = viewport * 0.48
+  const foresight = clamp(velocity * 12, -maxForesight, maxForesight)
   const probe = scrollTop + foresight
 
   let best = blocks[0]
@@ -79,10 +92,41 @@ export function pickMagneticTarget(
   return best
 }
 
-/** Duration scales with distance; short hops stay snappy, long hops stay smooth. */
-export function snapDurationMs(distance: number, reducedMotion: boolean) {
-  if (reducedMotion) return 0
-  const abs = Math.abs(distance)
-  if (abs < 2) return 0
-  return clamp(280 + abs * 0.45, 320, 720)
+/**
+ * One physics step: friction + magnetic pull that strengthens as speed drops.
+ * Returns the next velocity (px/frame). Caller applies it to scrollTop.
+ */
+export function stepMagneticVelocity(
+  scrollTop: number,
+  targetTop: number,
+  velocity: number,
+  friction = MAGNET_WHEEL_FRICTION,
+): number {
+  const distance = targetTop - scrollTop
+  const speed = Math.abs(velocity)
+  const pull = clamp(
+    MAGNET_PULL_MIN + (1 - clamp(speed / 22, 0, 1)) * (MAGNET_PULL_MAX - MAGNET_PULL_MIN),
+    MAGNET_PULL_MIN,
+    MAGNET_PULL_MAX,
+  )
+  return velocity * friction + distance * pull
+}
+
+export function isMagnetSettled(
+  scrollTop: number,
+  targetTop: number,
+  velocity: number,
+) {
+  return (
+    Math.abs(targetTop - scrollTop) < MAGNET_SETTLE_DISTANCE &&
+    Math.abs(velocity) < MAGNET_SETTLE_VELOCITY
+  )
+}
+
+/** Normalize wheel delta to roughly pixel units. */
+export function normalizeWheelDelta(event: WheelEvent, viewport: number) {
+  let delta = event.deltaY
+  if (event.deltaMode === 1) delta *= 16
+  if (event.deltaMode === 2) delta *= viewport
+  return delta
 }

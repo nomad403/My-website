@@ -2,10 +2,18 @@
 
 import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
 import {
-  easeOutQuint,
+  clamp,
+  isMagnetSettled,
+  MAGNET_CAPTURE_VELOCITY,
+  MAGNET_MIN_VELOCITY,
+  MAGNET_SETTLE_DISTANCE,
+  MAGNET_WHEEL_IMMEDIATE,
+  MAGNET_WHEEL_IMPULSE,
+  MAGNET_WHEEL_MAX_VELOCITY,
   measureSnapBlocks,
+  normalizeWheelDelta,
   pickMagneticTarget,
-  snapDurationMs,
+  stepMagneticVelocity,
 } from "@/lib/specialist/magnetic-snap"
 
 interface UseSpecialistMagneticSnapOptions {
@@ -21,8 +29,8 @@ interface UseSpecialistMagneticSnapOptions {
 }
 
 /**
- * Free native scroll during the gesture, then a smooth adaptive magnetic snap
- * to the nearest (or momentum-biased) category block.
+ * Continuous magnetic scroll: wheel/trackpad never idles then snaps.
+ * Motion is one physics loop (impulse → friction → strengthening magnet).
  */
 export function useSpecialistMagneticSnap({
   scrollerRef,
@@ -46,71 +54,49 @@ export function useSpecialistMagneticSnap({
     if (!scroller) return
 
     let disposed = false
-    let lastScrollTop = scroller.scrollTop
     let velocity = 0
-    let idleTimer = 0
-    let glideFrame = 0
-    let ticking = false
-    let snapping = false
-    const hasScrollEnd = "onscrollend" in scroller
+    let frame = 0
+    let touching = false
+    let lastScrollTop = scroller.scrollTop
+    let lastScrollTs = performance.now()
+    let lastCategoryId = ""
+    let settledCategoryId = ""
 
-    const cancelGlide = () => {
-      if (glideFrame) {
-        cancelAnimationFrame(glideFrame)
-        glideFrame = 0
+    const cancelMotion = () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+        frame = 0
       }
     }
+
+    const maxScroll = () =>
+      Math.max(0, scroller.scrollHeight - scroller.clientHeight)
 
     const readBlocks = () =>
       measureSnapBlocks(scroller, blockRefs.current.values())
 
-    const syncActiveFromScroll = () => {
-      const blocks = readBlocks()
-      if (blocks.length === 0) return
-      const target = pickMagneticTarget(
-        scroller.scrollTop,
-        scroller.clientHeight,
-        0,
-        blocks,
-      )
-      if (target) onActiveRef.current(target.id)
+    const clampScroll = (value: number) =>
+      Math.min(maxScroll(), Math.max(0, value))
+
+    const emitActive = (categoryId: string) => {
+      if (!categoryId || categoryId === lastCategoryId) return
+      lastCategoryId = categoryId
+      onActiveRef.current(categoryId)
     }
 
-    const glideTo = (to: number, categoryId: string, durationMs: number) => {
-      const from = scroller.scrollTop
-      const distance = to - from
-      if (Math.abs(distance) < 1.5 || durationMs <= 0) {
-        scroller.scrollTop = to
-        snapping = false
+    const finishSettle = (categoryId: string) => {
+      cancelMotion()
+      velocity = 0
+      if (categoryId && categoryId !== settledCategoryId) {
+        settledCategoryId = categoryId
         onSettledRef.current(categoryId)
-        return
+      } else if (categoryId) {
+        emitActive(categoryId)
       }
-
-      cancelGlide()
-      snapping = true
-      const startedAt = performance.now()
-
-      const step = (now: number) => {
-        if (disposed) return
-        const progress = Math.min(1, (now - startedAt) / durationMs)
-        scroller.scrollTop = from + distance * easeOutQuint(progress)
-        if (progress < 1) {
-          glideFrame = window.requestAnimationFrame(step)
-          return
-        }
-        glideFrame = 0
-        snapping = false
-        onSettledRef.current(categoryId)
-      }
-
-      glideFrame = window.requestAnimationFrame(step)
     }
 
-    const settle = () => {
-      if (disposed || !enabledRef.current || snapping) return
+    const jumpToTarget = () => {
       const blocks = readBlocks()
-      if (blocks.length === 0) return
-
       const target = pickMagneticTarget(
         scroller.scrollTop,
         scroller.clientHeight,
@@ -118,62 +104,205 @@ export function useSpecialistMagneticSnap({
         blocks,
       )
       if (!target) return
+      scroller.scrollTop = clampScroll(target.top)
+      finishSettle(target.id)
+    }
 
-      const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight)
-      const to = Math.min(maxScroll, Math.max(0, target.top))
-      const distance = to - scroller.scrollTop
-      glideTo(to, target.id, snapDurationMs(distance, reducedMotionRef.current))
+    const tick = () => {
+      if (disposed) return
+      frame = 0
+
+      if (!enabledRef.current || touching) {
+        velocity = 0
+        return
+      }
+
+      const blocks = readBlocks()
+      if (blocks.length === 0) {
+        velocity = 0
+        return
+      }
+
+      const target = pickMagneticTarget(
+        scroller.scrollTop,
+        scroller.clientHeight,
+        velocity,
+        blocks,
+      )
+      if (!target) {
+        velocity = 0
+        return
+      }
+
+      const to = clampScroll(target.top)
+      emitActive(target.id)
+
+      if (reducedMotionRef.current) {
+        scroller.scrollTop = to
+        finishSettle(target.id)
+        return
+      }
+
+      if (isMagnetSettled(scroller.scrollTop, to, velocity)) {
+        scroller.scrollTop = to
+        finishSettle(target.id)
+        return
+      }
+
+      // Once slow enough, magnet owns the rest — still continuous, no pause.
+      if (Math.abs(velocity) < MAGNET_CAPTURE_VELOCITY) {
+        velocity = stepMagneticVelocity(scroller.scrollTop, to, velocity)
+      } else {
+        velocity *= 0.94
+        // Soft foresight pull so fast motion already leans toward the target.
+        velocity += (to - scroller.scrollTop) * 0.035
+      }
+
+      const next = clampScroll(scroller.scrollTop + velocity)
+      if (next === 0 || next === maxScroll()) {
+        // Edge bounce kill — settle to nearest edge category.
+        scroller.scrollTop = next
+        velocity *= 0.4
+      } else {
+        scroller.scrollTop = next
+      }
+
+      lastScrollTop = scroller.scrollTop
+      lastScrollTs = performance.now()
+
+      if (
+        Math.abs(velocity) > MAGNET_MIN_VELOCITY ||
+        Math.abs(to - scroller.scrollTop) > MAGNET_SETTLE_DISTANCE
+      ) {
+        frame = window.requestAnimationFrame(tick)
+        return
+      }
+
+      scroller.scrollTop = to
+      finishSettle(target.id)
+    }
+
+    const ensureTick = () => {
+      if (!frame && !disposed) frame = window.requestAnimationFrame(tick)
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      if (!enabledRef.current) return
+      if (event.ctrlKey) return
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+
+      // Own the gesture so native inertia never dies, then a second snap starts.
+      event.preventDefault()
+      touching = false
+
+      if (reducedMotionRef.current) {
+        scroller.scrollTop = clampScroll(
+          scroller.scrollTop + normalizeWheelDelta(event, scroller.clientHeight),
+        )
+        jumpToTarget()
+        return
+      }
+
+      const delta = normalizeWheelDelta(event, scroller.clientHeight)
+      const viewport = Math.max(1, scroller.clientHeight)
+      const immediate = clamp(
+        delta * MAGNET_WHEEL_IMMEDIATE,
+        -viewport * 0.28,
+        viewport * 0.28,
+      )
+      const impulse = clamp(
+        delta * MAGNET_WHEEL_IMPULSE,
+        -viewport * 0.38,
+        viewport * 0.38,
+      )
+
+      scroller.scrollTop = clampScroll(scroller.scrollTop + immediate)
+      velocity = clamp(
+        velocity + impulse,
+        -MAGNET_WHEEL_MAX_VELOCITY,
+        MAGNET_WHEEL_MAX_VELOCITY,
+      )
+      lastScrollTop = scroller.scrollTop
+      lastScrollTs = performance.now()
+      settledCategoryId = ""
+
+      const blocks = readBlocks()
+      const live = pickMagneticTarget(
+        scroller.scrollTop,
+        scroller.clientHeight,
+        velocity,
+        blocks,
+      )
+      if (live) emitActive(live.id)
+
+      ensureTick()
+    }
+
+    const onTouchStart = () => {
+      touching = true
+      cancelMotion()
+      velocity = 0
+      lastScrollTop = scroller.scrollTop
+      lastScrollTs = performance.now()
+    }
+
+    const onTouchEnd = () => {
+      if (!enabledRef.current) {
+        touching = false
+        return
+      }
+      touching = false
+      // Hand off native residual motion into the same continuous magnet loop.
+      const now = performance.now()
+      const dt = Math.max(8, now - lastScrollTs)
+      const sampled = ((scroller.scrollTop - lastScrollTop) / dt) * 16.67
+      velocity = clamp(sampled, -MAGNET_WHEEL_MAX_VELOCITY, MAGNET_WHEEL_MAX_VELOCITY)
+      settledCategoryId = ""
+      if (reducedMotionRef.current) {
+        jumpToTarget()
+        return
+      }
+      ensureTick()
     }
 
     const onScroll = () => {
-      if (snapping) return
+      if (frame || !touching) return
+      const now = performance.now()
       const scrollTop = scroller.scrollTop
-      velocity = scrollTop - lastScrollTop
+      // Sample while finger is down so touchend inherits real momentum.
+      const dt = Math.max(8, now - lastScrollTs)
+      velocity = clamp(
+        ((scrollTop - lastScrollTop) / dt) * 16.67,
+        -MAGNET_WHEEL_MAX_VELOCITY,
+        MAGNET_WHEEL_MAX_VELOCITY,
+      )
       lastScrollTop = scrollTop
+      lastScrollTs = now
 
-      if (!ticking) {
-        ticking = true
-        window.requestAnimationFrame(() => {
-          ticking = false
-          if (!disposed && !snapping) syncActiveFromScroll()
-        })
-      }
-
-      window.clearTimeout(idleTimer)
-      if (!enabledRef.current) return
-      idleTimer = window.setTimeout(settle, hasScrollEnd ? 140 : 110)
+      const blocks = readBlocks()
+      const live = pickMagneticTarget(
+        scrollTop,
+        scroller.clientHeight,
+        0,
+        blocks,
+      )
+      if (live) emitActive(live.id)
     }
 
-    const onScrollEnd = () => {
-      window.clearTimeout(idleTimer)
-      if (enabledRef.current) settle()
-    }
-
-    const onWheel = () => {
-      // User took over: abort an in-flight magnetic glide.
-      if (snapping) {
-        cancelGlide()
-        snapping = false
-      }
-    }
-
+    scroller.addEventListener("wheel", onWheel, { passive: false })
+    scroller.addEventListener("touchstart", onTouchStart, { passive: true })
+    scroller.addEventListener("touchend", onTouchEnd, { passive: true })
+    scroller.addEventListener("touchcancel", onTouchEnd, { passive: true })
     scroller.addEventListener("scroll", onScroll, { passive: true })
-    scroller.addEventListener("wheel", onWheel, { passive: true })
-    scroller.addEventListener("touchstart", onWheel, { passive: true })
-    if (hasScrollEnd) {
-      scroller.addEventListener("scrollend", onScrollEnd)
-    }
 
     return () => {
       disposed = true
-      window.clearTimeout(idleTimer)
-      cancelGlide()
-      scroller.removeEventListener("scroll", onScroll)
+      cancelMotion()
       scroller.removeEventListener("wheel", onWheel)
-      scroller.removeEventListener("touchstart", onWheel)
-      if (hasScrollEnd) {
-        scroller.removeEventListener("scrollend", onScrollEnd)
-      }
+      scroller.removeEventListener("touchstart", onTouchStart)
+      scroller.removeEventListener("touchend", onTouchEnd)
+      scroller.removeEventListener("touchcancel", onTouchEnd)
+      scroller.removeEventListener("scroll", onScroll)
     }
   }, [scrollerRef, blockRefs])
 }
