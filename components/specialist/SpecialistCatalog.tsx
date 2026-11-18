@@ -70,14 +70,15 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
         const categoryId = (visible?.target as HTMLElement | undefined)?.dataset.categoryId
         if (!categoryId || categoryId === activeCategoryRef.current) return
+        // No title shuffle while scrolling — animation mid-gesture makes the list feel sticky.
         window.clearTimeout(categorySyncTimerRef.current)
         categorySyncTimerRef.current = window.setTimeout(() => {
-          setCategory(categoryId)
-        }, 80)
+          setCategory(categoryId, false)
+        }, 120)
       },
       {
         root: scroller,
-        threshold: [0.4, 0.6],
+        threshold: [0.35, 0.55, 0.75],
       },
     )
 
@@ -157,7 +158,6 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
               <div className="specialist-catalog__frame-header relative z-20 shrink-0 border-b border-black bg-white px-4 py-2.5 md:px-5 md:py-3">
                 <h2 className="font-electric-blue text-[1.375rem] font-normal lowercase leading-[0.95] tracking-[0.02em] text-black md:text-[1.625rem] lg:text-[1.875rem]">
                   <ShuffleText
-                    key={`${activeCategoryId}-${lang}`}
                     shuffleKey={titleShuffleKey}
                     enableHover={false}
                     shuffleDuration={150}
