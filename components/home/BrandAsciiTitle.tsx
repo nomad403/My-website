@@ -32,6 +32,7 @@ interface BrandAsciiTitleProps {
   mode: "day" | "night"
   enabled: boolean
   marginLeft: number
+  marginTop?: number
   fontSize: number
   scaleX: number
 }
@@ -88,6 +89,7 @@ export default function BrandAsciiTitle({
   mode,
   enabled,
   marginLeft,
+  marginTop,
   fontSize,
   scaleX,
 }: BrandAsciiTitleProps) {
@@ -389,7 +391,13 @@ export default function BrandAsciiTitle({
   }
 
   return (
-    <div data-capture="home-brand" className="mt-4 md:mt-6" style={{ marginLeft: `${marginLeft}px` }}>
+    <div
+      data-capture="home-brand"
+      style={{
+        marginLeft: `${marginLeft}px`,
+        marginTop: `${marginTop ?? 16}px`,
+      }}
+    >
       <div
         ref={hitRef}
         className={`relative select-none ${canHover ? "cursor-crosshair" : "cursor-default"}`}

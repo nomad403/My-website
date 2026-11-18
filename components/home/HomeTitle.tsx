@@ -7,6 +7,7 @@ import {
   HOME_BRAND_FONT_WEIGHT,
   HOME_BRAND_LETTER_SPACING_EM,
   HOME_BRAND_MAX_FONT_PX_DESKTOP,
+  HOME_BRAND_MAX_FONT_PX_LAPTOP,
   HOME_BRAND_MAX_FONT_PX_MOBILE,
   HOME_BRAND_MIN_FONT_PX,
   HOME_BRAND_TEXT,
@@ -15,7 +16,9 @@ import {
   HOME_TITLE_LINE_HEIGHT_MOBILE,
   HOME_TITLE_BRAND_SIZE_RATIO_DESKTOP,
   HOME_TITLE_BRAND_SIZE_RATIO_MOBILE,
+  HOME_TITLE_DESKTOP_WIDE_MIN_PX,
   HOME_TITLE_MAX_FONT_PX_DESKTOP,
+  HOME_TITLE_MAX_FONT_PX_LAPTOP,
   HOME_TITLE_MAX_FONT_PX_MOBILE,
   HOME_TITLE_MIN_FONT_PX,
   HOME_TITLE_SHUFFLE_MS,
@@ -119,11 +122,6 @@ export default function HomeTitle({
     [lines, alternateLines],
   )
 
-  const maxFontPx = isMobile ? HOME_TITLE_MAX_FONT_PX_MOBILE : HOME_TITLE_MAX_FONT_PX_DESKTOP
-  const maxBrandFontPx = isMobile
-    ? HOME_BRAND_MAX_FONT_PX_MOBILE
-    : HOME_BRAND_MAX_FONT_PX_DESKTOP
-
   const titleFontWeight = isMobile ? 400 : 300
 
   const lineStyle = {
@@ -136,6 +134,9 @@ export default function HomeTitle({
 
   const titleColorClass = mode === "night" ? "text-white" : "text-black"
   const titleFontClass = isMobile ? "font-home-title-mobile" : "font-home-title"
+  const brandGapPx = isMobile
+    ? 16
+    : Math.max(12, Math.min(24, Math.round(brandFontSize * 0.1)))
 
   useLayoutEffect(() => {
     const container = containerRef.current
@@ -143,6 +144,20 @@ export default function HomeTitle({
 
     const update = () => {
       const containerWidth = container.clientWidth
+      const viewportWidth = window.innerWidth
+      const laptopDesktop =
+        !isMobile && viewportWidth < HOME_TITLE_DESKTOP_WIDE_MIN_PX
+      const maxFontPx = isMobile
+        ? HOME_TITLE_MAX_FONT_PX_MOBILE
+        : laptopDesktop
+          ? HOME_TITLE_MAX_FONT_PX_LAPTOP
+          : HOME_TITLE_MAX_FONT_PX_DESKTOP
+      const maxBrandFontPx = isMobile
+        ? HOME_BRAND_MAX_FONT_PX_MOBILE
+        : laptopDesktop
+          ? HOME_BRAND_MAX_FONT_PX_LAPTOP
+          : HOME_BRAND_MAX_FONT_PX_DESKTOP
+
       const layout = readHeaderBandLayout(container, isMobile)
       const logoLeft = layout?.left ?? 0
       // Mobile : toute la largeur utile sous le logo, pour garder exactement 2 lignes nowrap.
@@ -233,12 +248,12 @@ export default function HomeTitle({
       ro.disconnect()
       window.removeEventListener("resize", updateWhenReady)
     }
-  }, [lines, alternateLines, maxFontPx, maxBrandFontPx, isMobile, titleFontWeight])
+  }, [lines, alternateLines, isMobile, titleFontWeight])
 
   return (
-    <div data-capture="home-title" className="pointer-events-auto w-full min-w-0 px-4 md:px-8"
+    <div data-capture="home-title" className="site-grid pointer-events-auto w-full min-w-0"
       style={{ visibility: layoutReady ? "visible" : "hidden" }}>
-      <div ref={containerRef} className="mx-auto w-full max-w-7xl">
+      <div ref={containerRef} className="site-grid-inner">
         <div
           className="flex min-w-0 flex-col overflow-hidden"
           style={{
@@ -269,6 +284,7 @@ export default function HomeTitle({
           mode={mode}
           enabled={ready && layoutReady && !isMobile}
           marginLeft={headerBand.left}
+          marginTop={brandGapPx}
           fontSize={brandFontSize}
           scaleX={brandScaleX}
         />

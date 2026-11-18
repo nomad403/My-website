@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import { requestOrientationPermission, resetOrientationPermission } from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
+  readAudioGateChoice,
   setAudioGateChoice,
   setSiteSfxMuted,
   startAmbientLoop,
@@ -29,6 +30,27 @@ export function useAudioGate() {
   return useContext(AudioGateContext)
 }
 
+function armSilentAudioUnlock() {
+  const unlock = () => {
+    activateSiteSfx()
+    void unlockSiteSfx()
+      .catch(() => undefined)
+      .finally(() => {
+        startAmbientLoop()
+      })
+    window.removeEventListener("pointerdown", unlock)
+    window.removeEventListener("keydown", unlock)
+  }
+
+  window.addEventListener("pointerdown", unlock, { once: true })
+  window.addEventListener("keydown", unlock, { once: true })
+
+  return () => {
+    window.removeEventListener("pointerdown", unlock)
+    window.removeEventListener("keydown", unlock)
+  }
+}
+
 export function AudioGateProvider({
   children,
   disabled = false,
@@ -37,25 +59,46 @@ export function AudioGateProvider({
   /** Capture mode must not place an interaction gate in recorded footage. */
   disabled?: boolean
 }) {
-  const [visible, setVisible] = useState(!disabled)
+  // false until hydrated: avoid flashing the gate for returning visitors.
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    setVisible(!disabled)
-    if (disabled) return
+    if (disabled) {
+      setVisible(false)
+      return
+    }
 
-    const resetEntry = () => {
-      resetOrientationPermission()
+    resetOrientationPermission()
+
+    const choice = readAudioGateChoice()
+
+    if (choice === "accepted") {
+      // Preference kept in localStorage — skip the modal.
+      // Browser autoplay still needs a gesture: unlock on the next click/key.
+      setSiteSfxMuted(false)
+      setVisible(false)
+      let disarm = armSilentAudioUnlock()
+      const onPageShow = (event: PageTransitionEvent) => {
+        if (!event.persisted) return
+        disarm()
+        disarm = armSilentAudioUnlock()
+      }
+      window.addEventListener("pageshow", onPageShow)
+      return () => {
+        disarm()
+        window.removeEventListener("pageshow", onPageShow)
+      }
+    }
+
+    if (choice === "declined") {
       setSiteSfxMuted(true)
-      setVisible(true)
+      setVisible(false)
+      return
     }
-    resetEntry()
 
-    // A restored document also needs a fresh, explicit entry gesture.
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) resetEntry()
-    }
-    window.addEventListener("pageshow", onPageShow)
-    return () => window.removeEventListener("pageshow", onPageShow)
+    // First visit (or cleared storage): explicit entry gate.
+    setSiteSfxMuted(true)
+    setVisible(true)
   }, [disabled])
 
   return (

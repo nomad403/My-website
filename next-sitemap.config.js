@@ -5,10 +5,11 @@ module.exports = {
     changefreq: 'weekly',
     priority: 0.7,
     sitemapSize: 5000,              
-    exclude: ['/404', '/card/qr.svg', '/glenn-richard.vcf'],
+    exclude: ['/404', '/card/qr.svg', '/glenn-richard.vcf', '/admin', '/auth/verify', '/auth/mfa'],
     additionalPaths: async (config) => [
       await config.transform(config, '/projects'),
       await config.transform(config, '/specialist'),
       await config.transform(config, '/contact'),
+      await config.transform(config, '/shop'),
     ],
   }

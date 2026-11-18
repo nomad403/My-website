@@ -30,9 +30,26 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "NOMAD403_ENV": "production",
+    "SHOP_ENABLED": "1",
+    "SHOP_DB_ID": "a5f76558-e7c4-4ca6-bd3a-c1f87243a6df",
+    "APP_URL": "https://www.nomad403.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "SHOP_DB",
+      "database_name": "nomad403-prod",
+      "database_id": "a5f76558-e7c4-4ca6-bd3a-c1f87243a6df",
+      "migrations_dir": "drizzle-d1"
+    }
+  ],
   "previews": {
     "vars": {
-      "NOMAD403_ENV": "preview"
+      "NOMAD403_ENV": "preview",
+      "SHOP_ENABLED": "1",
+      "SHOP_DB_ID": "2eb5526a-1d0c-469c-ae36-debe83ec8218",
+      "APP_URL": "https://qualification-shop-lot-7-my-website.glennrichard-dev.workers.dev"
     },
     "services": [],
     "r2_buckets": [
@@ -49,9 +66,21 @@
         {
           "name": "CONTACT_LIMITER",
           "class_name": "ContactLimiter"
+        },
+        {
+          "name": "AUTH_LIMITER",
+          "class_name": "AuthLimiter"
         }
       ]
-    }
+    },
+    "d1_databases": [
+      {
+        "binding": "SHOP_DB",
+        "database_name": "nomad403-shop-qualification",
+        "database_id": "2eb5526a-1d0c-469c-ae36-debe83ec8218",
+        "migrations_dir": "drizzle-d1"
+      }
+    ]
   },
   "keep_vars": true,
   "durable_objects": {
@@ -59,6 +88,10 @@
       {
         "name": "CONTACT_LIMITER",
         "class_name": "ContactLimiter"
+      },
+      {
+        "name": "AUTH_LIMITER",
+        "class_name": "AuthLimiter"
       }
     ]
   },
@@ -69,7 +102,7 @@
     },
     "AuthLimiter": {
       "type": "durable-object",
-      "state": "deleted"
+      "storage": "sqlite"
     }
   }
 }

@@ -111,3 +111,17 @@ test("Cloudflare Durable Object: real SQLite, atomic quotas and persistent reser
     await rm(target, { recursive: true, force: true })
   }
 })
+
+test('Auth Cloudflare limiter: atomic concurrency, expiry and private keys',async()=>{
+ const modulePath=resolve('tests/fixtures/auth-limiter-local.mjs')
+ const mf=new Miniflare(convertV4MiniflareOptions({workers:[{name:'auth-test',compatibilityDate:'2026-11-10',compatibilityFlags:['nodejs_compat'],modules:[{type:'ESModule',path:modulePath,contents:"import {AuthLimiter} from '../../cloudflare/auth-limiter.mjs'; export class TestAuth extends AuthLimiter { now(){return this.clock??1000} async fetch(r){if(new URL(r.url).pathname==='/clock'){this.clock=Number(await r.text());return new Response('ok')}if(new URL(r.url).pathname==='/keys')return Response.json(this.sql.exec('SELECT k FROM counters').toArray());return super.fetch(r)}} export default {fetch(){return new Response('local')}}"},{type:'ESModule',path:resolve('cloudflare/auth-limiter.mjs')}],durableObjects:{LIMITER:{className:'TestAuth',useSQLite:true}},outboundService:()=>{throw Error('No external calls')}}]}))
+ try{const ns=await mf.getDurableObjectNamespace('LIMITER'),stub=ns.get(ns.idFromName('scope'))
+ const consume=key=>stub.fetch('https://local/consume',{method:'POST',body:JSON.stringify({key,limit:5,windowSeconds:60})}).then(r=>r.json())
+ const results=await Promise.all(Array.from({length:30},()=>consume('magic:client@example.test')))
+ assert.equal(results.filter(r=>r.allowed).length,5);assert.equal(results.filter(r=>!r.allowed).length,25)
+ assert.equal((await consume('magic:other@example.test')).allowed,true)
+ const rows=await (await stub.fetch('https://local/keys')).json();assert.ok(rows.every(r=>/^[0-9a-f]{64}$/.test(r.k)));assert.ok(!JSON.stringify(rows).includes('example.test'))
+ await stub.fetch('https://local/clock',{method:'POST',body:'1060'});assert.equal((await consume('magic:client@example.test')).allowed,true)
+ assert.equal((await stub.fetch('https://local/consume',{method:'POST',body:JSON.stringify({key:'x',limit:0,windowSeconds:60})})).status,400)
+ }finally{await mf.dispose()}
+})
