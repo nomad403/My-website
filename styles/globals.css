@@ -1297,16 +1297,12 @@ body {
 .specialist-catalog__frame-body {
   container-type: size;
   container-name: specialist-frame;
-  /* Free native scroll: snap fought trackpads/wheels and felt sticky. */
+  /* Native free scroll; magnetic adaptive snap is handled in JS. */
   scroll-snap-type: none;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-}
-
-.specialist-catalog__frame-body--free {
-  scroll-snap-type: none;
 }
 
 .specialist-catalog__frame-body::-webkit-scrollbar {

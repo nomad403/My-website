@@ -11,6 +11,7 @@ import SpecialistServiceRow from "@/components/specialist/SpecialistServiceRow"
 import ShuffleText from "@/components/ascii/ShuffleText"
 import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
 import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
+import { useSpecialistMagneticSnap } from "@/hooks/useSpecialistMagneticSnap"
 import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 interface SpecialistCatalogProps {
@@ -27,7 +28,6 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const blockRefs = useRef<Map<string, HTMLElement>>(new Map())
   const activeCategoryRef = useRef(activeCategoryId)
-  const categorySyncTimerRef = useRef(0)
 
   activeCategoryRef.current = activeCategoryId
 
@@ -58,36 +58,24 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     if (shuffle) setTitleShuffleKey((key) => key + 1)
   }, [])
 
-  // One owner for category sync: IntersectionObserver only (no wheel hijack / scrollTo race).
-  useEffect(() => {
-    const scroller = scrollerRef.current
-    if (!scroller) return
+  const onActiveCategory = useCallback(
+    (categoryId: string) => setCategory(categoryId, false),
+    [setCategory],
+  )
+  const onSettledCategory = useCallback(
+    (categoryId: string) => setCategory(categoryId, !reducedMotion),
+    [reducedMotion, setCategory],
+  )
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        const categoryId = (visible?.target as HTMLElement | undefined)?.dataset.categoryId
-        if (!categoryId || categoryId === activeCategoryRef.current) return
-        // No title shuffle while scrolling — animation mid-gesture makes the list feel sticky.
-        window.clearTimeout(categorySyncTimerRef.current)
-        categorySyncTimerRef.current = window.setTimeout(() => {
-          setCategory(categoryId, false)
-        }, 120)
-      },
-      {
-        root: scroller,
-        threshold: [0.35, 0.55, 0.75],
-      },
-    )
-
-    blockRefs.current.forEach((block) => observer.observe(block))
-    return () => {
-      window.clearTimeout(categorySyncTimerRef.current)
-      observer.disconnect()
-    }
-  }, [setCategory])
+  // Free scroll during the gesture, magnetic adaptive snap when it settles.
+  useSpecialistMagneticSnap({
+    scrollerRef,
+    blockRefs,
+    enabled: !activeService && !demoStory?.playing,
+    reducedMotion,
+    onActiveCategory,
+    onSettledCategory,
+  })
 
   const handleToggle = (serviceId: string) => {
     setActiveService((current) => (current === serviceId ? null : serviceId))
@@ -98,13 +86,8 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     else blockRefs.current.delete(categoryId)
   }
 
-  // While a row is expanded, height changes: turn snap off so CSS snap does not yank mid-animation.
-  const scrollerClassName = [
-    "specialist-catalog__scroller specialist-catalog__frame-body relative min-h-0 flex-1 overflow-y-auto overscroll-contain",
-    activeService ? "specialist-catalog__frame-body--free" : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
+  const scrollerClassName =
+    "specialist-catalog__scroller specialist-catalog__frame-body relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
 
   return (
     <div className="specialist-catalog absolute inset-0 z-10 w-full overflow-y-auto overscroll-contain lg:overflow-hidden">
