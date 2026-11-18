@@ -8,7 +8,9 @@ import {
   MAGNET_MIN_VELOCITY,
   MAGNET_SETTLE_DISTANCE,
   MAGNET_WHEEL_IMMEDIATE,
+  MAGNET_WHEEL_IMMEDIATE_CAP,
   MAGNET_WHEEL_IMPULSE,
+  MAGNET_WHEEL_IMPULSE_CAP,
   MAGNET_WHEEL_MAX_VELOCITY,
   measureSnapBlocks,
   normalizeWheelDelta,
@@ -207,13 +209,13 @@ export function useSpecialistMagneticSnap({
       const viewport = Math.max(1, scroller.clientHeight)
       const immediate = clamp(
         delta * MAGNET_WHEEL_IMMEDIATE,
-        -viewport * 0.28,
-        viewport * 0.28,
+        -viewport * MAGNET_WHEEL_IMMEDIATE_CAP,
+        viewport * MAGNET_WHEEL_IMMEDIATE_CAP,
       )
       const impulse = clamp(
         delta * MAGNET_WHEEL_IMPULSE,
-        -viewport * 0.38,
-        viewport * 0.38,
+        -viewport * MAGNET_WHEEL_IMPULSE_CAP,
+        viewport * MAGNET_WHEEL_IMPULSE_CAP,
       )
 
       scroller.scrollTop = clampScroll(scroller.scrollTop + immediate)

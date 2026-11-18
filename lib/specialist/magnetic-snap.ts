@@ -9,18 +9,21 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-/** Wheel / trackpad impulse tuning — continuous motion, no idle pause. */
-export const MAGNET_WHEEL_IMMEDIATE = 0.62
-export const MAGNET_WHEEL_IMPULSE = 0.42
-export const MAGNET_WHEEL_FRICTION = 0.905
-export const MAGNET_WHEEL_MAX_VELOCITY = 56
+/** Wheel / trackpad impulse tuning — soft enough for pixel trackpads. */
+export const MAGNET_WHEEL_IMMEDIATE = 0.16
+export const MAGNET_WHEEL_IMPULSE = 0.1
+export const MAGNET_WHEEL_FRICTION = 0.88
+export const MAGNET_WHEEL_MAX_VELOCITY = 26
 export const MAGNET_MIN_VELOCITY = 0.28
 /** Below this speed the magnet dominates and finishes the settle. */
-export const MAGNET_CAPTURE_VELOCITY = 2.8
+export const MAGNET_CAPTURE_VELOCITY = 2.4
 export const MAGNET_PULL_MIN = 0.1
-export const MAGNET_PULL_MAX = 0.32
+export const MAGNET_PULL_MAX = 0.28
 export const MAGNET_SETTLE_DISTANCE = 0.65
 export const MAGNET_SETTLE_VELOCITY = 0.35
+/** Per-event caps as a fraction of the scroller viewport. */
+export const MAGNET_WHEEL_IMMEDIATE_CAP = 0.1
+export const MAGNET_WHEEL_IMPULSE_CAP = 0.14
 
 export interface SnapBlock {
   id: string
