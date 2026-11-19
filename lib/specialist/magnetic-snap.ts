@@ -1,26 +1,40 @@
-/** Pure helpers for inertia-based magnetic category snap. */
+/** Pure helpers for step-locked, spring-settled category snap. */
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-/** Take over native coast when speed falls under this (px/frame ~16ms). */
-export const MAGNET_CAPTURE_VELOCITY = 3.2
-export const MAGNET_MIN_VELOCITY = 0.22
-export const MAGNET_FRICTION = 0.86
-export const MAGNET_PULL_MIN = 0.12
-export const MAGNET_PULL_MAX = 0.3
-export const MAGNET_SETTLE_DISTANCE = 0.6
-export const MAGNET_SETTLE_VELOCITY = 0.3
-/** Wait after last wheel/touch before treating motion as coast. */
-export const MAGNET_COAST_IDLE_MS = 48
-/** Fallback if scrollend is missing. */
+/** Coast handoff when |v| falls under this (px/s). */
+export const MAGNET_CAPTURE_VELOCITY = 520
+export const MAGNET_SETTLE_DISTANCE = 0.45
+export const MAGNET_SETTLE_VELOCITY = 22
+export const MAGNET_COAST_IDLE_MS = 52
 export const MAGNET_SETTLE_FALLBACK_MS = 72
-export const MAGNET_VELOCITY_EMA = 0.55
+export const MAGNET_VELOCITY_EMA = 0.34
+
+/**
+ * Slightly overdamped spring — smooth arrival, no rebound hitch.
+ * damping ≈ 2 * sqrt(stiffness) * 1.08
+ */
+export const MAGNET_SPRING_STIFFNESS = 54
+export const MAGNET_SPRING_DAMPING = 15.9
+
+export const MAGNET_STEP_COMMIT = 0.28
+export const MAGNET_STEP_VELOCITY = 180
+export const MAGNET_STEP_SLACK_PX = 14
+export const MAGNET_HANDOFF_MAX_VELOCITY = 1400
+/** Ignore tiny trackpad residuals while a spring settle is already running. */
+export const MAGNET_WHEEL_INTERRUPT_DELTA = 10
 
 export interface SnapBlock {
   id: string
   top: number
+}
+
+export interface SpringState {
+  position: number
+  /** px/s */
+  velocity: number
 }
 
 /** Absolute content tops for each category block inside the scroller. */
@@ -43,70 +57,74 @@ export function measureSnapBlocks(
   return measured
 }
 
-/**
- * Inertia-aware target:
- * - slow / short coast → nearest category
- * - fast fling → commit to the next/prev category in that direction
- */
-export function pickMagneticTarget(
-  scrollTop: number,
-  viewport: number,
-  velocity: number,
-  blocks: SnapBlock[],
-): SnapBlock | null {
-  if (blocks.length === 0) return null
-
-  const speed = Math.abs(velocity)
-  const maxForesight = viewport * 0.55
-  // Stronger foresight with inertia so a decisive flick lands on the next block.
-  const foresight = clamp(velocity * (speed > 2.5 ? 18 : 10), -maxForesight, maxForesight)
-  const probe = scrollTop + foresight
-
-  let best = blocks[0]
-  let bestDistance = Math.abs(blocks[0].top - probe)
-
+export function nearestBlockIndex(scrollTop: number, blocks: SnapBlock[]): number {
+  if (blocks.length === 0) return 0
+  let best = 0
+  let bestDistance = Math.abs(blocks[0].top - scrollTop)
   for (let i = 1; i < blocks.length; i++) {
-    const distance = Math.abs(blocks[i].top - probe)
+    const distance = Math.abs(blocks[i].top - scrollTop)
     if (distance < bestDistance) {
-      best = blocks[i]
+      best = i
       bestDistance = distance
     }
   }
-
-  if (speed > 1.4) {
-    const direction = Math.sign(velocity)
-    for (let i = 0; i < blocks.length - 1; i++) {
-      const current = blocks[i]
-      const next = blocks[i + 1]
-      if (probe >= current.top && probe <= next.top) {
-        return direction > 0 ? next : current
-      }
-      if (probe < current.top && i === 0 && direction < 0) return current
-      if (probe > next.top && i === blocks.length - 2 && direction > 0) return next
-    }
-  }
-
   return best
 }
 
 /**
- * Spring step: keep residual inertia, pull harder as speed drops.
+ * One gesture → at most one category step from the origin.
  */
-export function stepMagneticVelocity(
+export function pickStepTarget(
   scrollTop: number,
-  targetTop: number,
   velocity: number,
-  friction = MAGNET_FRICTION,
-): number {
-  const distance = targetTop - scrollTop
-  const speed = Math.abs(velocity)
-  const pull = clamp(
-    MAGNET_PULL_MIN +
-      (1 - clamp(speed / 18, 0, 1)) * (MAGNET_PULL_MAX - MAGNET_PULL_MIN),
-    MAGNET_PULL_MIN,
-    MAGNET_PULL_MAX,
-  )
-  return velocity * friction + distance * pull
+  blocks: SnapBlock[],
+  originIndex: number,
+): SnapBlock | null {
+  if (blocks.length === 0) return null
+
+  const origin = clamp(originIndex, 0, blocks.length - 1)
+  const originBlock = blocks[origin]
+  const prev = origin > 0 ? blocks[origin - 1] : null
+  const next = origin < blocks.length - 1 ? blocks[origin + 1] : null
+  const delta = scrollTop - originBlock.top
+
+  const nextGap = next ? Math.max(1, next.top - originBlock.top) : 0
+  const prevGap = prev ? Math.max(1, originBlock.top - prev.top) : 0
+
+  const commitNext =
+    next &&
+    (delta >= nextGap * MAGNET_STEP_COMMIT ||
+      delta >= nextGap * 0.5 ||
+      (delta > MAGNET_STEP_SLACK_PX && velocity > MAGNET_STEP_VELOCITY))
+
+  const commitPrev =
+    prev &&
+    (delta <= -prevGap * MAGNET_STEP_COMMIT ||
+      delta <= -prevGap * 0.5 ||
+      (delta < -MAGNET_STEP_SLACK_PX && velocity < -MAGNET_STEP_VELOCITY))
+
+  if (commitNext && next) return next
+  if (commitPrev && prev) return prev
+  return originBlock
+}
+
+/**
+ * Semi-implicit spring-damper, frame-rate independent.
+ * velocity in px/s, dt in seconds.
+ */
+export function integrateSpring(
+  position: number,
+  velocity: number,
+  target: number,
+  dt: number,
+  stiffness = MAGNET_SPRING_STIFFNESS,
+  damping = MAGNET_SPRING_DAMPING,
+): SpringState {
+  const step = clamp(dt, 1 / 240, 1 / 30)
+  const accel = -stiffness * (position - target) - damping * velocity
+  const nextVelocity = velocity + accel * step
+  const nextPosition = position + nextVelocity * step
+  return { position: nextPosition, velocity: nextVelocity }
 }
 
 export function isMagnetSettled(
@@ -118,4 +136,31 @@ export function isMagnetSettled(
     Math.abs(targetTop - scrollTop) < MAGNET_SETTLE_DISTANCE &&
     Math.abs(velocity) < MAGNET_SETTLE_VELOCITY
   )
+}
+
+/**
+ * Keep native coast energy. Only gently redirect when opposing the detent —
+ * never hard-reseed (that causes the snap hitch).
+ */
+export function handoffVelocity(
+  distance: number,
+  sampledVelocity: number,
+): number {
+  const toward = Math.sign(distance) || 1
+  let velocity = clamp(
+    sampledVelocity,
+    -MAGNET_HANDOFF_MAX_VELOCITY,
+    MAGNET_HANDOFF_MAX_VELOCITY,
+  )
+
+  if (Math.sign(velocity) === toward || Math.abs(velocity) < 1) {
+    // Continuous: if nearly stopped, give a soft push proportional to travel.
+    if (Math.abs(velocity) < 40) {
+      velocity += toward * clamp(Math.abs(distance) * 1.1, 40, 380)
+    }
+    return velocity
+  }
+
+  // Opposing coast: bleed then ease toward the detent (no sudden flip spike).
+  return toward * Math.min(Math.abs(velocity) * 0.22, 280)
 }

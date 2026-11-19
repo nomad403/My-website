@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
 import {
-  clamp,
+  handoffVelocity,
+  integrateSpring,
   isMagnetSettled,
   MAGNET_CAPTURE_VELOCITY,
   MAGNET_COAST_IDLE_MS,
-  MAGNET_MIN_VELOCITY,
   MAGNET_SETTLE_DISTANCE,
   MAGNET_SETTLE_FALLBACK_MS,
   MAGNET_VELOCITY_EMA,
+  MAGNET_WHEEL_INTERRUPT_DELTA,
   measureSnapBlocks,
-  pickMagneticTarget,
-  stepMagneticVelocity,
+  nearestBlockIndex,
+  pickStepTarget,
   type SnapBlock,
 } from "@/lib/specialist/magnetic-snap"
 
@@ -29,8 +30,8 @@ interface UseSpecialistMagneticSnapOptions {
 }
 
 /**
- * Native trackpad/touch scroll, then inertia-based magnetic snap.
- * No wheel hijack: sensitivity stays browser-native; we only finish the coast.
+ * Native scroll, then a soft overdamped spring onto at most one category step.
+ * Avoids hitch sources: no live rail writes, no settle restarts on residual wheel.
  */
 export function useSpecialistMagneticSnap({
   scrollerRef,
@@ -54,17 +55,22 @@ export function useSpecialistMagneticSnap({
     if (!scroller) return
 
     let disposed = false
+    /** px/s */
     let velocity = 0
     let frame = 0
     let idleTimer = 0
     let touching = false
     let driving = false
+    let gestureActive = false
+    let gestureOriginIndex = 0
     let lastScrollTop = scroller.scrollTop
     let lastScrollTs = performance.now()
     let lastInputTs = 0
+    let driveTs = 0
     let lastCategoryId = ""
     let settledCategoryId = ""
     let lockedTarget: SnapBlock | null = null
+    let selfScroll = false
     const hasScrollEnd = "onscrollend" in scroller
 
     const cancelDrive = () => {
@@ -85,15 +91,32 @@ export function useSpecialistMagneticSnap({
     const clampScroll = (value: number) =>
       Math.min(maxScroll(), Math.max(0, value))
 
+    const writeScroll = (value: number) => {
+      selfScroll = true
+      scroller.scrollTop = value
+      lastScrollTop = value
+      lastScrollTs = performance.now()
+      selfScroll = false
+    }
+
     const emitActive = (categoryId: string) => {
       if (!categoryId || categoryId === lastCategoryId) return
       lastCategoryId = categoryId
       onActiveRef.current(categoryId)
     }
 
+    const armGesture = () => {
+      if (gestureActive) return
+      const blocks = readBlocks()
+      if (blocks.length === 0) return
+      gestureOriginIndex = nearestBlockIndex(scroller.scrollTop, blocks)
+      gestureActive = true
+    }
+
     const finishSettle = (categoryId: string) => {
       cancelDrive()
       velocity = 0
+      gestureActive = false
       if (categoryId && categoryId !== settledCategoryId) {
         settledCategoryId = categoryId
         onSettledRef.current(categoryId)
@@ -102,17 +125,21 @@ export function useSpecialistMagneticSnap({
       }
     }
 
-    const resolveTarget = (useVelocity: number) => {
+    const resolveStep = (useVelocity: number) => {
       const blocks = readBlocks()
-      return pickMagneticTarget(
+      if (blocks.length === 0) return null
+      if (!gestureActive) {
+        gestureOriginIndex = nearestBlockIndex(scroller.scrollTop, blocks)
+      }
+      return pickStepTarget(
         scroller.scrollTop,
-        scroller.clientHeight,
         useVelocity,
         blocks,
+        gestureOriginIndex,
       )
     }
 
-    const tick = () => {
+    const tick = (now: number) => {
       if (disposed) return
       frame = 0
 
@@ -121,75 +148,78 @@ export function useSpecialistMagneticSnap({
         return
       }
 
-      const to = clampScroll(lockedTarget.top)
+      const blocks = readBlocks()
+      const fresh = blocks.find((block) => block.id === lockedTarget!.id)
+      const to = clampScroll((fresh ?? lockedTarget).top)
       emitActive(lockedTarget.id)
 
       if (reducedMotionRef.current) {
-        scroller.scrollTop = to
+        writeScroll(to)
         finishSettle(lockedTarget.id)
         return
       }
+
+      const dt = Math.min(0.032, Math.max(0.001, (now - driveTs) / 1000))
+      driveTs = now
 
       if (isMagnetSettled(scroller.scrollTop, to, velocity)) {
-        scroller.scrollTop = to
+        writeScroll(to)
         finishSettle(lockedTarget.id)
         return
       }
 
-      velocity = stepMagneticVelocity(scroller.scrollTop, to, velocity)
-      scroller.scrollTop = clampScroll(scroller.scrollTop + velocity)
-      lastScrollTop = scroller.scrollTop
-      lastScrollTs = performance.now()
+      const next = integrateSpring(scroller.scrollTop, velocity, to, dt)
+      velocity = next.velocity
+      writeScroll(clampScroll(next.position))
 
-      if (
-        Math.abs(velocity) > MAGNET_MIN_VELOCITY ||
-        Math.abs(to - scroller.scrollTop) > MAGNET_SETTLE_DISTANCE
-      ) {
-        frame = window.requestAnimationFrame(tick)
+      if (isMagnetSettled(scroller.scrollTop, to, velocity)) {
+        writeScroll(to)
+        finishSettle(lockedTarget.id)
         return
       }
 
-      scroller.scrollTop = to
-      finishSettle(lockedTarget.id)
+      frame = window.requestAnimationFrame(tick)
     }
 
-    const beginSnap = (reason: "coast" | "end") => {
+    const beginSnap = () => {
       if (disposed || !enabledRef.current || touching || driving) return
 
-      const target = resolveTarget(velocity)
+      const target = resolveStep(velocity)
       if (!target) return
 
       const to = clampScroll(target.top)
       const distance = to - scroller.scrollTop
 
       if (Math.abs(distance) < MAGNET_SETTLE_DISTANCE) {
-        scroller.scrollTop = to
+        writeScroll(to)
         finishSettle(target.id)
         return
       }
 
       if (reducedMotionRef.current) {
-        scroller.scrollTop = to
+        writeScroll(to)
         finishSettle(target.id)
         return
       }
 
-      // Inherit coast velocity; nudge toward target so motion never restarts from rest.
-      if (Math.sign(velocity) !== Math.sign(distance) || Math.abs(velocity) < 0.4) {
-        velocity = clamp(distance * 0.08, -MAGNET_CAPTURE_VELOCITY, MAGNET_CAPTURE_VELOCITY)
-      }
-
+      velocity = handoffVelocity(distance, velocity)
       lockedTarget = target
       driving = true
       settledCategoryId = ""
+      driveTs = performance.now()
       emitActive(target.id)
-      void reason
       frame = window.requestAnimationFrame(tick)
+    }
+
+    const interruptDriveForNewGesture = () => {
+      if (!driving) return
+      cancelDrive()
+      gestureActive = false
     }
 
     const markInput = () => {
       lastInputTs = performance.now()
-      if (driving) cancelDrive()
+      armGesture()
       window.clearTimeout(idleTimer)
     }
 
@@ -203,12 +233,13 @@ export function useSpecialistMagneticSnap({
           scheduleSettle()
           return
         }
-        beginSnap("end")
+        beginSnap()
       }, MAGNET_SETTLE_FALLBACK_MS)
     }
 
     const onPointerInput = () => {
       touching = true
+      interruptDriveForNewGesture()
       markInput()
     }
 
@@ -218,18 +249,26 @@ export function useSpecialistMagneticSnap({
       scheduleSettle()
     }
 
-    const onWheel = () => {
+    const onWheel = (event: WheelEvent) => {
       touching = false
+
+      // Trackpad keeps emitting tiny wheel events during coast/settle —
+      // restarting the spring on those residuals is what felt like hitching.
+      if (driving) {
+        if (Math.abs(event.deltaY) < MAGNET_WHEEL_INTERRUPT_DELTA) return
+        interruptDriveForNewGesture()
+      }
+
       markInput()
     }
 
     const onScroll = () => {
-      if (disposed) return
+      if (disposed || selfScroll) return
 
       const now = performance.now()
       const scrollTop = scroller.scrollTop
-      const dt = Math.max(8, now - lastScrollTs)
-      const instant = ((scrollTop - lastScrollTop) / dt) * 16.67
+      const dtSec = Math.max(0.001, (now - lastScrollTs) / 1000)
+      const instant = (scrollTop - lastScrollTop) / dtSec
       lastScrollTop = scrollTop
       lastScrollTs = now
 
@@ -238,20 +277,21 @@ export function useSpecialistMagneticSnap({
       velocity =
         velocity * (1 - MAGNET_VELOCITY_EMA) + instant * MAGNET_VELOCITY_EMA
 
-      const live = resolveTarget(0)
+      if (!gestureActive && enabledRef.current) armGesture()
+
+      const live = resolveStep(velocity)
       if (live) emitActive(live.id)
 
       if (!enabledRef.current || touching) return
 
       const sinceInput = now - lastInputTs
-      // Native coast: once input stopped and speed drops, finish with inertia snap.
       if (
         sinceInput >= MAGNET_COAST_IDLE_MS &&
-        Math.abs(velocity) > 0.05 &&
+        Math.abs(velocity) > 12 &&
         Math.abs(velocity) <= MAGNET_CAPTURE_VELOCITY
       ) {
         window.clearTimeout(idleTimer)
-        beginSnap("coast")
+        beginSnap()
         return
       }
 
@@ -261,7 +301,7 @@ export function useSpecialistMagneticSnap({
     const onScrollEnd = () => {
       window.clearTimeout(idleTimer)
       if (!enabledRef.current || touching || driving) return
-      beginSnap("end")
+      beginSnap()
     }
 
     scroller.addEventListener("wheel", onWheel, { passive: true })
