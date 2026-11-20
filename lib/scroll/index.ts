@@ -1,0 +1,17 @@
+export {
+  blendEma,
+  clamp,
+  easeOutQuint,
+  handoffTowardTarget,
+  integrateSpring,
+  isSpringSettled,
+  normalizeWheelDelta,
+  SCROLL_HANDOFF_MAX_VELOCITY,
+  SCROLL_SETTLE_DISTANCE,
+  SCROLL_SETTLE_VELOCITY,
+  SCROLL_SPRING_DAMPING,
+  SCROLL_SPRING_STIFFNESS,
+  SCROLL_VELOCITY_EMA,
+  supportsScrollEndEvent,
+  type SpringState,
+} from "@/lib/scroll/physics"

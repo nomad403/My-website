@@ -1,3 +1,12 @@
+import {
+  clamp,
+  easeOutQuint,
+  normalizeWheelDelta,
+  supportsScrollEndEvent,
+} from "@/lib/scroll"
+
+export { clamp, easeOutQuint, normalizeWheelDelta, supportsScrollEndEvent }
+
 export interface ListMetrics {
   itemHeight: number
   paddingY: number
@@ -21,11 +30,6 @@ export const WHEEL_MIN_VELOCITY = 0.85
 export const WHEEL_MAX_VELOCITY = 32
 export const SNAP_CAPTURE_VELOCITY = 5
 export const SNAP_CAPTURE_FRACTION = 0.28
-export const SNAP_GLIDE_MS = 220
-/** Durée de base pour un scroll animé vers un item cliqué. */
-export const SELECT_GLIDE_MS = 280
-export const SELECT_GLIDE_MS_PER_ITEM = 55
-export const SELECT_GLIDE_MS_MAX = 520
 
 const JUMP_FROM = 0.28
 const JUMP_TO = 0.72
@@ -52,14 +56,6 @@ export const EMPTY_METRICS: ListMetrics = {
   loopBlocks: MIN_LOOP_BLOCKS,
   middleBlock: (MIN_LOOP_BLOCKS - 1) / 2,
   trackHeight: 0,
-}
-
-export function easeOutQuint(t: number): number {
-  return 1 - Math.pow(1 - t, 5)
-}
-
-export function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value))
 }
 
 export function mod(n: number, m: number): number {
@@ -174,14 +170,3 @@ export function sameMetrics(a: ListMetrics, b: ListMetrics): boolean {
   return a.itemHeight === b.itemHeight && a.viewport === b.viewport
 }
 
-export function supportsScrollEndEvent(): boolean {
-  return typeof window !== "undefined" && "onscrollend" in window
-}
-
-export function normalizeWheelDelta(event: WheelEvent, viewport: number): number {
-  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return event.deltaY * 16
-  if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
-    return event.deltaY * viewport
-  }
-  return event.deltaY
-}

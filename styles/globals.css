@@ -1297,9 +1297,9 @@ body {
 .specialist-catalog__frame-body {
   container-type: size;
   container-name: specialist-frame;
-  /* Native free scroll; magnetic adaptive snap is handled in JS. */
+  /* Controlled category slides are driven in JS (no free snap scroll). */
   scroll-snap-type: none;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;

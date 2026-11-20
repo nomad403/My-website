@@ -85,14 +85,24 @@ const PRESENT_SHADER = `
   uniform vec3 ink;
   uniform float alpha;
   uniform float glyphCount;
+  // Normalized padding inside each atlas slot (kills LinearFilter bleed seams).
+  uniform float glyphPad;
   varying vec2 vUv;
   void main() {
-    vec2 cell = floor(vUv * grid);
+    // Keep cell ids stable at exact integer UV boundaries.
+    vec2 cellUv = min(vUv * grid, grid - 1e-4);
+    vec2 cell = floor(cellUv);
     float value = texture2D(levelsTexture, (cell + 0.5) / grid).r;
     float glyph = floor(value * (glyphCount - 1.0) + 0.5);
-    vec2 local = fract(vUv * grid);
-    float coverage = texture2D(glyphTexture, vec2((glyph + local.x) / glyphCount, local.y)).a;
-    float opacity = coverage * alpha;
+    vec2 local = fract(cellUv);
+    // Stay inside the padded slot (no neighbor bleed) without cropping the glyph.
+    float pad = glyphPad * 0.5;
+    float u = mix(pad, 1.0 - pad, local.x);
+    float v = mix(pad, 1.0 - pad, local.y);
+    // Slight coverage lift: seam fixes removed atlas bleed that previously
+    // fattened glyphs, which made the ink look washed on white.
+    float coverage = min(1.0, texture2D(glyphTexture, vec2((glyph + u) / glyphCount, v)).a * 1.18);
+    float opacity = min(1.0, coverage * alpha);
     gl_FragColor = vec4(ink * opacity, opacity);
   }
 `
@@ -110,22 +120,32 @@ export function createAsciiGpuPass(source: AsciiGpuSource, options: AsciiGpuOpti
   const atlas = document.createElement("canvas")
   // Oversample glyphs once so DPR captures stay sharp, without rendering the
   // expensive sphere scene at the output resolution.
-  const cellHeight = Math.ceil(options.fontPx * 3)
-  const cellWidth = Math.ceil(options.fontPx * 0.6 * 3)
+  const atlasPad = 1
+  const innerWidth = Math.ceil(options.fontPx * 0.6 * 3)
+  const innerHeight = Math.ceil(options.fontPx * 3)
+  const cellWidth = innerWidth + atlasPad * 2
+  const cellHeight = innerHeight + atlasPad * 2
   atlas.width = cellWidth * glyphs.length
   atlas.height = cellHeight
   const ctx = atlas.getContext("2d")
   if (!ctx) throw new Error("ASCII glyph atlas: 2D canvas unavailable")
   ctx.font = `${options.fontPx * 3}px Consolas, Monaco, "Liberation Mono", monospace`
   ctx.textBaseline = "alphabetic"
+  ctx.textAlign = "center"
   ctx.fillStyle = "white"
   for (let i = 0; i < glyphs.length; i++) {
-    ctx.fillText(glyphs[i], i * cellWidth, cellHeight * 0.8)
+    // Center each glyph in its padded slot so columns don't show empty strips.
+    const cx = i * cellWidth + atlasPad + innerWidth * 0.5
+    const cy = atlasPad + innerHeight * 0.8
+    ctx.fillText(glyphs[i], cx, cy)
   }
   const glyphTexture = new api.CanvasTexture(atlas)
   glyphTexture.generateMipmaps = false
   glyphTexture.minFilter = api.LinearFilter
   glyphTexture.magFilter = api.LinearFilter
+  glyphTexture.wrapS = api.ClampToEdgeWrapping
+  glyphTexture.wrapT = api.ClampToEdgeWrapping
+  const glyphPad = atlasPad / cellWidth
   const target = new api.WebGLRenderTarget(options.cols, options.rows, {
     minFilter: api.NearestFilter,
     magFilter: api.NearestFilter,
@@ -165,6 +185,7 @@ export function createAsciiGpuPass(source: AsciiGpuSource, options: AsciiGpuOpti
       ink: { value: new api.Vector3() },
       alpha: { value: 0 },
       glyphCount: { value: glyphs.length },
+      glyphPad: { value: glyphPad },
     },
     depthTest: false,
     depthWrite: false,
@@ -182,7 +203,9 @@ export function createAsciiGpuPass(source: AsciiGpuSource, options: AsciiGpuOpti
   const clearColor = new api.Color()
   const color = new api.Color()
   const update = (next: Pick<AsciiGpuOptions, "color" | "opacity" | "visible" | "invert" | "mode">) => {
-    color.set(next.color).convertLinearToSRGB()
+    // Untonemapped present pass blends as display-referred sRGB.
+    color.set(next.color)
+    if (color.convertLinearToSRGB) color.convertLinearToSRGB()
     material.uniforms.ink.value.set(color.r, color.g, color.b)
     material.uniforms.alpha.value = next.visible ? next.opacity : 0
     analysis.uniforms.invertLuminance.value = Number(next.invert)

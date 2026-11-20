@@ -11,12 +11,14 @@ import SpecialistServiceRow from "@/components/specialist/SpecialistServiceRow"
 import ShuffleText from "@/components/ascii/ShuffleText"
 import ShuffleDualLines from "@/components/ascii/ShuffleDualLines"
 import { useDemoStoryOptional } from "@/contexts/DemoStoryContext"
-import { useSpecialistMagneticSnap } from "@/hooks/useSpecialistMagneticSnap"
+import { useSpecialistCategorySlide } from "@/hooks/useSpecialistCategorySlide"
 import { DEMO_HOLD_MS, DEMO_SHUFFLE_MS } from "@/lib/demo/script"
 
 interface SpecialistCatalogProps {
   lang: SpecialistLang
 }
+
+const SPECIALIST_CATEGORY_IDS = SPECIALIST_CATALOG.map((category) => category.id)
 
 export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
   const { t } = useLanguage()
@@ -58,23 +60,20 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     if (shuffle) setTitleShuffleKey((key) => key + 1)
   }, [])
 
-  const onActiveCategory = useCallback(
-    (categoryId: string) => setCategory(categoryId, false),
-    [setCategory],
-  )
-  const onSettledCategory = useCallback(
+  const onCategoryChange = useCallback(
     (categoryId: string) => setCategory(categoryId, !reducedMotion),
     [reducedMotion, setCategory],
   )
 
-  // Free scroll during the gesture, magnetic adaptive snap when it settles.
-  useSpecialistMagneticSnap({
+  // One scroll/swipe → one slide to the adjacent category.
+  useSpecialistCategorySlide({
     scrollerRef,
     blockRefs,
+    categoryIds: SPECIALIST_CATEGORY_IDS,
+    activeCategoryId,
     enabled: !activeService && !demoStory?.playing,
     reducedMotion,
-    onActiveCategory,
-    onSettledCategory,
+    onCategoryChange,
   })
 
   const handleToggle = (serviceId: string) => {

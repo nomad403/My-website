@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { snapAsciiAxisCount } from "@/lib/ascii/ascii-grid-fit"
 import { createAsciiGpuPass, type AsciiGpuSource, type AsciiGpuOptions } from "@/lib/ascii/ascii-gpu-pass"
 import { VIEWPORT_BLEED_PX } from "@/lib/ascii/viewport-bleed"
 
@@ -26,10 +27,22 @@ export default function AsciiGpuOverlay({ source, onReady, onError, ...options }
       const charWidth = Math.max(options.fontPx * 0.6,
         (probe.measureText("M").width + probe.measureText("W").width) / 2)
       try {
+        // Fit the ASCII grid to the drawing buffer so each cell is ~integer
+        // device pixels — fractional widths create vertical moiré seams.
+        const renderer = source.three.renderer
+        const dpr = renderer.getPixelRatio() || 1
+        const bufferW =
+          renderer.domElement.width ||
+          Math.round((window.innerWidth + bleed) * dpr)
+        const bufferH =
+          renderer.domElement.height ||
+          Math.round((window.innerHeight + bleed) * dpr)
+        const cols = snapAsciiAxisCount(bufferW, charWidth * dpr)
+        const rows = snapAsciiAxisCount(bufferH, options.fontPx * dpr)
         const next = createAsciiGpuPass(source, {
           ...latest.current,
-          cols: Math.ceil((window.innerWidth + bleed) / charWidth),
-          rows: Math.ceil((window.innerHeight + bleed) / options.fontPx),
+          cols,
+          rows,
         })
         pass.current = next
         try {

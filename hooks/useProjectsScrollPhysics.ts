@@ -2,20 +2,20 @@
 
 import { useEffect, type MutableRefObject, type RefObject } from "react"
 import {
+  handoffTowardTarget,
+  integrateSpring,
+  isSpringSettled,
+} from "@/lib/scroll"
+import {
   RECENTER_DRIFT_BLOCKS,
   SNAP_CAPTURE_FRACTION,
   SNAP_CAPTURE_VELOCITY,
-  SELECT_GLIDE_MS,
-  SELECT_GLIDE_MS_MAX,
-  SELECT_GLIDE_MS_PER_ITEM,
-  SNAP_GLIDE_MS,
   WHEEL_FRICTION,
   WHEEL_IMMEDIATE,
   WHEEL_IMPULSE,
   WHEEL_MAX_VELOCITY,
   WHEEL_MIN_VELOCITY,
   clamp,
-  easeOutQuint,
   loopShift,
   nearestVirtualIndex,
   normalizeWheelDelta,
@@ -145,9 +145,9 @@ export function useProjectsScrollPhysics({
       idleTimer = window.setTimeout(settle, hasScrollEnd ? 320 : 140)
     }
 
-    const glideTo = (to: number, durationMs: number) => {
-      const from = scroller.scrollTop
-      const distance = to - from
+    /** Shared spring settle (same physics as expertise magnetic snap). */
+    const springTo = (to: number, seedVelocityPxFrame = 0) => {
+      const distance = to - scroller.scrollTop
       if (Math.abs(distance) < 0.5) {
         setSnapEnabled(true)
         settle()
@@ -156,21 +156,43 @@ export function useProjectsScrollPhysics({
 
       cancelMotion()
       setSnapEnabled(false)
-      velocityRef.current = 0
 
-      const startedAt = performance.now()
+      // Projects fling uses px/frame; shared spring expects px/s.
+      let velocity = handoffTowardTarget(distance, seedVelocityPxFrame * 60)
+      velocityRef.current = seedVelocityPxFrame
+      let driveTs = performance.now()
+
       const step = (now: number) => {
         if (disposed) return
-        const progress = Math.min(1, (now - startedAt) / durationMs)
-        scroller.scrollTop = from + distance * easeOutQuint(progress)
-        if (progress < 1) {
-          glideFrame = window.requestAnimationFrame(step)
+        const dt = Math.min(0.032, Math.max(0.001, (now - driveTs) / 1000))
+        driveTs = now
+
+        if (isSpringSettled(scroller.scrollTop, to, velocity)) {
+          scroller.scrollTop = to
+          glideFrame = 0
+          velocityRef.current = 0
+          setSnapEnabled(true)
+          settle()
           return
         }
-        glideFrame = 0
-        setSnapEnabled(true)
-        settle()
+
+        const next = integrateSpring(scroller.scrollTop, velocity, to, dt)
+        velocity = next.velocity
+        scroller.scrollTop = next.position
+        velocityRef.current = velocity / 60
+
+        if (isSpringSettled(scroller.scrollTop, to, velocity)) {
+          scroller.scrollTop = to
+          glideFrame = 0
+          velocityRef.current = 0
+          setSnapEnabled(true)
+          settle()
+          return
+        }
+
+        glideFrame = window.requestAnimationFrame(step)
       }
+
       glideFrame = window.requestAnimationFrame(step)
     }
 
@@ -196,7 +218,7 @@ export function useProjectsScrollPhysics({
         nearest,
         extra,
       )
-      glideTo(to, SNAP_GLIDE_MS)
+      springTo(to, velocityRef.current)
     }
 
     const animateToVirtualIndex = (virtualIndex: number) => {
@@ -210,13 +232,7 @@ export function useProjectsScrollPhysics({
         virtualIndex,
         extra,
       )
-      const blocks = Math.abs(to - scroller.scrollTop) / currentMetrics.itemHeight
-      const duration = clamp(
-        SELECT_GLIDE_MS + blocks * SELECT_GLIDE_MS_PER_ITEM,
-        SELECT_GLIDE_MS,
-        SELECT_GLIDE_MS_MAX,
-      )
-      glideTo(to, duration)
+      springTo(to, 0)
     }
 
     if (animateToVirtualIndexRef) {
