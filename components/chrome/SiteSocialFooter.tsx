@@ -3,6 +3,8 @@
 import SoundToggle from "@/components/chrome/SoundToggle"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import ShuffleText from "@/components/ascii/ShuffleText"
+import { useLanguage } from "@/contexts/LanguageContext"
+import { useLegalModal } from "@/components/legal/LegalModal"
 
 type FooterMode = "day" | "night"
 
@@ -32,10 +34,16 @@ interface SiteSocialFooterProps {
 }
 
 export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
+  const { language } = useLanguage()
+  const { openLegal } = useLegalModal()
   const linkClass =
     mode === "night"
       ? "text-white hover:text-cyan-400"
       : "text-black hover:text-cyan-400"
+  const legalClass =
+    mode === "night"
+      ? "text-white/35 hover:text-white/70"
+      : "text-black/30 hover:text-black/60"
 
   return (
     <div className="site-chrome site-grid absolute bottom-0 left-0 right-0 z-50 py-6 md:py-8">
@@ -57,6 +65,14 @@ export default function SiteSocialFooter({ mode }: SiteSocialFooterProps) {
           ))}
         </div>
         <div className="flex items-center justify-center gap-3 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+          <button
+            type="button"
+            onClick={() => openLegal("mentions")}
+            className={`font-kode text-[0.5625rem] uppercase tracking-[0.14em] transition-colors ${legalClass}`}
+            aria-label={language === "en" ? "Legal notice" : "Mentions légales"}
+          >
+            {language === "en" ? "Legal" : "Légal"}
+          </button>
           <SoundToggle />
           <LanguageSwitcher />
         </div>

@@ -13,6 +13,7 @@ import JsonLdWebsite from "@/components/seo/JsonLdWebsite"
 import ButtonSfxListener from "@/components/chrome/ButtonSfxListener"
 import DvdScreensaver from "@/components/chrome/DvdScreensaver"
 import AudioGate, { AudioGateProvider } from "@/components/chrome/AudioGate"
+import { LegalModalProvider } from "@/components/legal/LegalModal"
 import { useLockMobileDocumentScroll } from "@/hooks/useLockMobileDocumentScroll"
 import { isCaptureMode } from "@/lib/capture/mode"
 
@@ -41,7 +42,9 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   if (isBareAccount) {
     return (
       <LanguageProvider>
-        <BackgroundProvider>{children}</BackgroundProvider>
+        <BackgroundProvider>
+          <LegalModalProvider>{children}</LegalModalProvider>
+        </BackgroundProvider>
       </LanguageProvider>
     )
   }
@@ -52,24 +55,26 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         <DynamicFavicon />
         <AudioGateProvider disabled={captureMode}>
           <PageProvider>
-            <DynamicSocialTags />
-            <JsonLdWebsite />
-            <BackgroundLayers />
-            <CustomCursor />
-            <ButtonSfxListener />
-            {!captureMode && <AudioGate />}
-            <DvdScreensaver />
-            {/* Forcer la présence de la fonte dans le DOM */}
-            <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
-              .
-            </span>
-            <span aria-hidden className="invisible absolute -z-50 font-home-title">
-              .
-            </span>
-            <span aria-hidden className="invisible absolute -z-50 font-electric-blue">
-              .
-            </span>
-            {children}
+            <LegalModalProvider>
+              <DynamicSocialTags />
+              <JsonLdWebsite />
+              <BackgroundLayers />
+              <CustomCursor />
+              <ButtonSfxListener />
+              {!captureMode && <AudioGate />}
+              <DvdScreensaver />
+              {/* Forcer la présence de la fonte dans le DOM */}
+              <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
+                .
+              </span>
+              <span aria-hidden className="invisible absolute -z-50 font-home-title">
+                .
+              </span>
+              <span aria-hidden className="invisible absolute -z-50 font-electric-blue">
+                .
+              </span>
+              {children}
+            </LegalModalProvider>
           </PageProvider>
         </AudioGateProvider>
       </BackgroundProvider>

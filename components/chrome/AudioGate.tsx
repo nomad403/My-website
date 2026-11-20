@@ -3,7 +3,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useLanguage } from "@/contexts/LanguageContext"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
-import { requestOrientationPermission, resetOrientationPermission } from "@/lib/ui/interaction"
+import {
+  enableOrientationWithoutPrompt,
+  orientationRequiresUserPrompt,
+  readOrientationSessionState,
+  requestOrientationPermission,
+  resetOrientationPermission,
+} from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
   readAudioGateChoice,
@@ -20,6 +26,8 @@ function isMotionDevice() {
     window.matchMedia?.("(pointer: coarse)")?.matches === true
   )
 }
+
+type GateMode = "experience" | "motion"
 
 const AudioGateContext = createContext({
   visible: true,
@@ -61,6 +69,7 @@ export function AudioGateProvider({
 }) {
   // false until hydrated: avoid flashing the gate for returning visitors.
   const [visible, setVisible] = useState(false)
+  const [gateMode, setGateMode] = useState<GateMode>("experience")
 
   useEffect(() => {
     if (disabled) {
@@ -68,48 +77,96 @@ export function AudioGateProvider({
       return
     }
 
-    resetOrientationPermission()
+    let cancelled = false
+    let disarm: (() => void) | undefined
 
-    const choice = readAudioGateChoice()
+    const run = async () => {
+      resetOrientationPermission()
 
-    if (choice === "accepted") {
-      // Preference kept in localStorage — skip the modal.
-      // Browser autoplay still needs a gesture: unlock on the next click/key.
-      setSiteSfxMuted(false)
-      setVisible(false)
-      let disarm = armSilentAudioUnlock()
-      const onPageShow = (event: PageTransitionEvent) => {
-        if (!event.persisted) return
-        disarm()
+      const choice = readAudioGateChoice()
+      const motionDevice = isMotionDevice()
+
+      if (choice === "declined") {
+        setSiteSfxMuted(true)
+        setVisible(false)
+        return
+      }
+
+      if (choice === "accepted") {
+        setSiteSfxMuted(false)
+
+        if (!motionDevice) {
+          setVisible(false)
+          disarm = armSilentAudioUnlock()
+          return
+        }
+
+        const sensorState = await readOrientationSessionState()
+        if (cancelled) return
+
+        if (sensorState === "granted" || sensorState === "unsupported") {
+          if (sensorState === "granted") enableOrientationWithoutPrompt()
+          setVisible(false)
+          disarm = armSilentAudioUnlock()
+          return
+        }
+
+        if (sensorState === "denied") {
+          // OS blocked sensors — don't loop the modal; keep audio preference.
+          setVisible(false)
+          disarm = armSilentAudioUnlock()
+          return
+        }
+
+        // Indeterminate session (typical iOS): preference is saved, sensors are not.
+        if (orientationRequiresUserPrompt()) {
+          setGateMode("motion")
+          setVisible(true)
+          return
+        }
+
+        enableOrientationWithoutPrompt()
+        setVisible(false)
         disarm = armSilentAudioUnlock()
+        return
       }
-      window.addEventListener("pageshow", onPageShow)
-      return () => {
-        disarm()
-        window.removeEventListener("pageshow", onPageShow)
-      }
-    }
 
-    if (choice === "declined") {
+      // pending / missing / unreadable storage → explicit entry gate.
+      setGateMode("experience")
       setSiteSfxMuted(true)
-      setVisible(false)
-      return
+      setVisible(true)
     }
 
-    // First visit (or cleared storage): explicit entry gate.
-    setSiteSfxMuted(true)
-    setVisible(true)
+    void run()
+
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return
+      disarm?.()
+      void run()
+    }
+    window.addEventListener("pageshow", onPageShow)
+
+    return () => {
+      cancelled = true
+      disarm?.()
+      window.removeEventListener("pageshow", onPageShow)
+    }
   }, [disabled])
 
   return (
     <AudioGateContext.Provider value={{ visible, setVisible }}>
-      {children}
+      <AudioGateModeContext.Provider value={gateMode}>
+        {children}
+      </AudioGateModeContext.Provider>
     </AudioGateContext.Provider>
   )
 }
 
+const AudioGateModeContext = createContext<GateMode>("experience")
+
 export default function AudioGate() {
   const { visible, setVisible } = useAudioGate()
+  const gateMode = useContext(AudioGateModeContext)
   const { language } = useLanguage()
   const [entering, setEntering] = useState(false)
 
@@ -120,19 +177,25 @@ export default function AudioGate() {
     language === "en"
       ? {
           label: "nomad403",
-          title: "Enter",
+          title: gateMode === "motion" ? "Motion" : "Enter",
           intro: "Enable sound for the full experience.",
-          motionIntro: "Enable motion sensitivity for the full experience. Your browser may ask for sensor access.",
+          motionIntro:
+            gateMode === "motion"
+              ? "Motion access is still needed for this session. Your browser may ask for sensor permission."
+              : "Enable motion sensitivity for the full experience. Your browser may ask for sensor access.",
           yes: "Yes",
-          no: "No",
+          no: gateMode === "motion" ? "Not now" : "No",
         }
       : {
           label: "nomad403",
-          title: "Entrer",
+          title: gateMode === "motion" ? "Sensibilité" : "Entrer",
           intro: "Activez le son pour l’expérience complète.",
-          motionIntro: "Activez la sensibilité aux mouvements pour l’expérience complète. Le navigateur pourra demander l’accès aux capteurs.",
+          motionIntro:
+            gateMode === "motion"
+              ? "L’accès aux mouvements est encore requis pour cette session. Le navigateur pourra demander l’accès aux capteurs."
+              : "Activez la sensibilité aux mouvements pour l’expérience complète. Le navigateur pourra demander l’accès aux capteurs.",
           yes: "Oui",
-          no: "Non",
+          no: gateMode === "motion" ? "Plus tard" : "Non",
         }
 
   const handleEnter = async () => {
@@ -143,13 +206,29 @@ export default function AudioGate() {
     const motionPermission = isMotionDevice()
       ? requestOrientationPermission()
       : Promise.resolve(false)
-    setAudioGateChoice("accepted")
+
+    if (gateMode === "experience") {
+      setAudioGateChoice("accepted")
+    }
+
     setSiteSfxMuted(false)
     activateSiteSfx()
     await Promise.all([motionPermission, unlockSiteSfx().catch(() => undefined)])
     startAmbientLoop()
     setVisible(false)
     setEntering(false)
+  }
+
+  const handleDecline = () => {
+    if (gateMode === "motion") {
+      // Keep the saved audio/experience preference; skip sensors for this session.
+      setVisible(false)
+      armSilentAudioUnlock()
+      return
+    }
+    setAudioGateChoice("declined")
+    setSiteSfxMuted(true)
+    setVisible(false)
   }
 
   return (
@@ -183,8 +262,12 @@ export default function AudioGate() {
               }}
               aria-label={
                 language === "en"
-                  ? "Enable the full experience and enter the site"
-                  : "Activer l’expérience complète et entrer sur le site"
+                  ? gateMode === "motion"
+                    ? "Enable motion sensitivity"
+                    : "Enable the full experience and enter the site"
+                  : gateMode === "motion"
+                    ? "Activer la sensibilité aux mouvements"
+                    : "Activer l’expérience complète et entrer sur le site"
               }
               className="flex-1 border border-black/10 bg-black px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-white transition-colors duration-300 hover:bg-black/90"
             >
@@ -194,13 +277,15 @@ export default function AudioGate() {
               type="button"
               data-no-sfx
               disabled={entering}
-              onClick={() => {
-                setAudioGateChoice("declined")
-                setSiteSfxMuted(true)
-                setVisible(false)
-              }}
+              onClick={handleDecline}
               aria-label={
-                language === "en" ? "Continue without the full experience" : "Continuer sans l’expérience complète"
+                language === "en"
+                  ? gateMode === "motion"
+                    ? "Continue without motion sensitivity"
+                    : "Continue without the full experience"
+                  : gateMode === "motion"
+                    ? "Continuer sans sensibilité aux mouvements"
+                    : "Continuer sans l’expérience complète"
               }
               className="flex-1 border border-black/10 bg-white px-3 py-2.5 text-[0.625rem] font-normal uppercase tracking-[0.14em] text-black transition-colors duration-300 hover:bg-black/5"
             >
