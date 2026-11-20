@@ -8,6 +8,8 @@ const SLIDE_MS_MIN = 320
 const SLIDE_MS_MAX = 520
 const WHEEL_STEP_THRESHOLD = 42
 const TOUCH_STEP_THRESHOLD = 48
+/** Match SpecialistServiceRow exit duration so layout is stable before measuring. */
+const DETAIL_COLLAPSE_MS = 300
 
 interface UseSpecialistCategorySlideOptions {
   scrollerRef: RefObject<HTMLDivElement | null>
@@ -16,6 +18,10 @@ interface UseSpecialistCategorySlideOptions {
   activeCategoryId: string
   enabled: boolean
   reducedMotion: boolean
+  /** True while a service detail panel is expanded. */
+  detailOpen: boolean
+  /** Collapse the open detail before measuring / sliding. */
+  onCollapseDetail: () => void
   onCategoryChange: (categoryId: string) => void
 }
 
@@ -27,9 +33,15 @@ function blockTop(scroller: HTMLElement, block: HTMLElement) {
   )
 }
 
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
 /**
  * Controlled category paging: one scroll/swipe gesture → one slide up or down.
- * No free scroll, no magnetic snap — direction only.
+ * Open details are collapsed first so expand height cannot desync the snap.
  */
 export function useSpecialistCategorySlide({
   scrollerRef,
@@ -38,16 +50,22 @@ export function useSpecialistCategorySlide({
   activeCategoryId,
   enabled,
   reducedMotion,
+  detailOpen,
+  onCollapseDetail,
   onCategoryChange,
 }: UseSpecialistCategorySlideOptions) {
   const enabledRef = useRef(enabled)
   const reducedMotionRef = useRef(reducedMotion)
   const activeIdRef = useRef(activeCategoryId)
+  const detailOpenRef = useRef(detailOpen)
+  const onCollapseRef = useRef(onCollapseDetail)
   const onChangeRef = useRef(onCategoryChange)
   const categoryIdsRef = useRef(categoryIds)
   enabledRef.current = enabled
   reducedMotionRef.current = reducedMotion
   activeIdRef.current = activeCategoryId
+  detailOpenRef.current = detailOpen
+  onCollapseRef.current = onCollapseDetail
   onChangeRef.current = onCategoryChange
   categoryIdsRef.current = categoryIds
 
@@ -57,6 +75,7 @@ export function useSpecialistCategorySlide({
 
     let disposed = false
     let animating = false
+    let busy = false
     let frame = 0
     let wheelAcc = 0
     let touchStartY = 0
@@ -76,6 +95,15 @@ export function useSpecialistCategorySlide({
     const indexOf = (id: string) => {
       const index = categoryIdsRef.current.indexOf(id)
       return index >= 0 ? index : 0
+    }
+
+    /** Keep the active category pinned to the top after expand/collapse/layout. */
+    const syncActivePosition = () => {
+      if (disposed || animating) return
+      const block = blockRefs.current.get(activeIdRef.current)
+      if (!block) return
+      const to = clamp(blockTop(scroller, block), 0, maxScroll())
+      if (Math.abs(scroller.scrollTop - to) > 1) scroller.scrollTop = to
     }
 
     const slideToIndex = (nextIndex: number) => {
@@ -117,7 +145,10 @@ export function useSpecialistCategorySlide({
           return
         }
         frame = 0
-        scroller.scrollTop = to
+        const liveBlock = blockRefs.current.get(id)
+        scroller.scrollTop = liveBlock
+          ? clamp(blockTop(scroller, liveBlock), 0, maxScroll())
+          : to
         animating = false
         wheelAcc = 0
       }
@@ -125,24 +156,51 @@ export function useSpecialistCategorySlide({
       frame = window.requestAnimationFrame(step)
     }
 
+    /** Close any open detail and wait until height is back before measuring. */
+    const ensureDetailCollapsed = async () => {
+      if (!detailOpenRef.current) return
+      onCollapseRef.current()
+      const settleMs = reducedMotionRef.current ? 0 : DETAIL_COLLAPSE_MS
+      if (settleMs > 0) await wait(settleMs)
+      if (disposed) return
+      // Two frames: React commit + layout after exit animation.
+      await new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => resolve())
+        })
+      })
+      if (disposed) return
+      syncActivePosition()
+    }
+
     const stepBy = (direction: 1 | -1) => {
-      if (!enabledRef.current || animating) return
+      if (!enabledRef.current || animating || busy) return
       const current = indexOf(activeIdRef.current)
       const next = current + direction
       if (next < 0 || next >= categoryIdsRef.current.length) {
         wheelAcc = 0
         return
       }
-      slideToIndex(next)
+
+      busy = true
+      void (async () => {
+        try {
+          await ensureDetailCollapsed()
+          if (disposed || !enabledRef.current) return
+          slideToIndex(next)
+        } finally {
+          busy = false
+        }
+      })()
     }
 
     const onWheel = (event: WheelEvent) => {
-      if (!enabledRef.current) return
       if (event.ctrlKey) return
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
 
+      // Always lock free scroll so expand/collapse cannot desync paging.
       event.preventDefault()
-      if (animating) return
+      if (!enabledRef.current || animating || busy) return
 
       wheelAcc += normalizeWheelDelta(event, scroller.clientHeight)
       if (Math.abs(wheelAcc) < WHEEL_STEP_THRESHOLD) return
@@ -153,13 +211,13 @@ export function useSpecialistCategorySlide({
     }
 
     const onTouchStart = (event: TouchEvent) => {
-      if (!enabledRef.current || animating) return
+      if (animating || busy) return
       touchActive = true
       touchStartY = event.touches[0]?.clientY ?? 0
     }
 
     const onTouchMove = (event: TouchEvent) => {
-      if (!enabledRef.current || !touchActive) return
+      if (!touchActive) return
       const y = event.touches[0]?.clientY ?? touchStartY
       if (Math.abs(y - touchStartY) > 10) event.preventDefault()
     }
@@ -167,21 +225,23 @@ export function useSpecialistCategorySlide({
     const onTouchEnd = (event: TouchEvent) => {
       if (!touchActive) return
       touchActive = false
-      if (!enabledRef.current || animating) return
+      if (!enabledRef.current || animating || busy) return
       const y = event.changedTouches[0]?.clientY ?? touchStartY
       const dy = touchStartY - y
       if (Math.abs(dy) < TOUCH_STEP_THRESHOLD) return
       stepBy(dy > 0 ? 1 : -1)
     }
 
-    // Keep the active category visually aligned if layout shifts (expand/collapse elsewhere).
-    const syncActivePosition = () => {
-      if (!enabledRef.current || animating) return
-      const block = blockRefs.current.get(activeIdRef.current)
-      if (!block) return
-      const to = clamp(blockTop(scroller, block), 0, maxScroll())
-      if (Math.abs(scroller.scrollTop - to) > 2) scroller.scrollTop = to
-    }
+    const track = scroller.firstElementChild
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            if (busy) return
+            syncActivePosition()
+          })
+        : null
+    resizeObserver?.observe(scroller)
+    if (track instanceof HTMLElement) resizeObserver?.observe(track)
 
     scroller.addEventListener("wheel", onWheel, { passive: false })
     scroller.addEventListener("touchstart", onTouchStart, { passive: true })
@@ -195,6 +255,7 @@ export function useSpecialistCategorySlide({
     return () => {
       disposed = true
       cancelAnim()
+      resizeObserver?.disconnect()
       scroller.removeEventListener("wheel", onWheel)
       scroller.removeEventListener("touchstart", onTouchStart)
       scroller.removeEventListener("touchmove", onTouchMove)
@@ -203,4 +264,18 @@ export function useSpecialistCategorySlide({
       window.removeEventListener("resize", syncActivePosition)
     }
   }, [scrollerRef, blockRefs])
+
+  // Re-pin after React state changes (open detail, category id, gate flip).
+  useEffect(() => {
+    const scroller = scrollerRef.current
+    if (!scroller) return
+    const block = blockRefs.current.get(activeCategoryId)
+    if (!block) return
+    const to = clamp(
+      blockTop(scroller, block),
+      0,
+      Math.max(0, scroller.scrollHeight - scroller.clientHeight),
+    )
+    if (Math.abs(scroller.scrollTop - to) > 1) scroller.scrollTop = to
+  }, [activeCategoryId, enabled, detailOpen, scrollerRef, blockRefs])
 }

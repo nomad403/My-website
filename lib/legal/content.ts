@@ -32,9 +32,21 @@ const host = {
   site: "https://www.cloudflare.com",
 }
 
+/** Source : Annuaire des entreprises / societe.com SIREN 840640080 (adresse non diffusible). */
+const publisher = {
+  statusFr: "Entrepreneur individuel",
+  statusEn: "Sole trader",
+  seatFr: "Bagnolet (93), France",
+  seatEn: "Bagnolet (93), France",
+  siren: "840 640 080",
+  siret: "840 640 080 00023",
+  vat: "FR83840640080",
+  naf: "62.01Z — Programmation informatique",
+}
+
 export const LEGAL_FR: LegalCopy = {
   close: "Fermer",
-  pendingNote: "Mentions « à préciser » : à compléter (immatriculation).",
+  pendingNote: "Médiation conso : à désigner avant ventes B2C récurrentes.",
   sections: [
     {
       id: "mentions",
@@ -45,10 +57,12 @@ export const LEGAL_FR: LegalCopy = {
           fields: [
             { label: "Nom", value: cardProfile.fullName },
             { label: "Enseigne", value: cardProfile.company },
-            { label: "Statut", value: "Entrepreneur individuel", pending: true },
-            { label: "Siège", value: "France", pending: true },
-            { label: "SIREN", value: "À préciser", pending: true },
-            { label: "TVA", value: "À préciser", pending: true },
+            { label: "Statut", value: publisher.statusFr },
+            { label: "Siège", value: publisher.seatFr },
+            { label: "SIREN", value: publisher.siren },
+            { label: "SIRET", value: publisher.siret },
+            { label: "TVA", value: publisher.vat },
+            { label: "NAF", value: publisher.naf },
             { label: "Email", value: cardProfile.email },
             { label: "Tél.", value: cardProfile.phoneDisplay },
           ],
@@ -158,7 +172,7 @@ export const LEGAL_FR: LegalCopy = {
 
 export const LEGAL_EN: LegalCopy = {
   close: "Close",
-  pendingNote: "“To confirm” fields: complete once registered.",
+  pendingNote: "Consumer mediation: appoint before recurring B2C sales.",
   sections: [
     {
       id: "mentions",
@@ -169,10 +183,12 @@ export const LEGAL_EN: LegalCopy = {
           fields: [
             { label: "Name", value: cardProfile.fullName },
             { label: "Brand", value: cardProfile.company },
-            { label: "Status", value: "Sole trader", pending: true },
-            { label: "Address", value: "France", pending: true },
-            { label: "SIREN", value: "To confirm", pending: true },
-            { label: "VAT", value: "To confirm", pending: true },
+            { label: "Status", value: publisher.statusEn },
+            { label: "Address", value: publisher.seatEn },
+            { label: "SIREN", value: publisher.siren },
+            { label: "SIRET", value: publisher.siret },
+            { label: "VAT", value: publisher.vat },
+            { label: "NAF", value: publisher.naf },
             { label: "Email", value: cardProfile.email },
             { label: "Phone", value: cardProfile.phoneDisplay },
           ],

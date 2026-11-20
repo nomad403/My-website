@@ -56,6 +56,7 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
   const setCategory = useCallback((categoryId: string, shuffle = true) => {
     if (!categoryId || categoryId === activeCategoryRef.current) return
     activeCategoryRef.current = categoryId
+    setActiveService(null)
     setActiveCategoryId(categoryId)
     if (shuffle) setTitleShuffleKey((key) => key + 1)
   }, [])
@@ -65,14 +66,20 @@ export default function SpecialistCatalog({ lang }: SpecialistCatalogProps) {
     [reducedMotion, setCategory],
   )
 
-  // One scroll/swipe → one slide to the adjacent category.
+  const collapseDetail = useCallback(() => {
+    setActiveService(null)
+  }, [])
+
+  // One scroll/swipe → collapse open detail, then slide to the adjacent category.
   useSpecialistCategorySlide({
     scrollerRef,
     blockRefs,
     categoryIds: SPECIALIST_CATEGORY_IDS,
     activeCategoryId,
-    enabled: !activeService && !demoStory?.playing,
+    enabled: !demoStory?.playing,
     reducedMotion,
+    detailOpen: activeService !== null,
+    onCollapseDetail: collapseDetail,
     onCategoryChange,
   })
 

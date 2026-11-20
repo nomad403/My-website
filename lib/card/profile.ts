@@ -27,7 +27,7 @@ export const cardProfile: CardProfile = {
   website: "https://nomad403.com",
   cardUrl: "https://nomad403.com/card",
   canonicalUrl: "https://www.nomad403.com/card",
-  email: "glennrichard.dev@gmail.com",
+  email: "iamnomad403@gmail.com",
   phone: "+33769500472",
   phoneDisplay: "07 69 50 04 72",
   expertise: ["Web", "Android & iOS", "Intelligence artificielle", "Automatisation", "Expériences interactives"],
