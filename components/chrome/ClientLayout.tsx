@@ -39,44 +39,40 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   // permission gates, dynamic SEO overrides or decorative WebGL effects.
   if (isContactCard) return <>{children}</>
 
-  if (isBareAccount) {
-    return (
-      <LanguageProvider>
-        <BackgroundProvider>
-          <LegalModalProvider>{children}</LegalModalProvider>
-        </BackgroundProvider>
-      </LanguageProvider>
-    )
-  }
-
+  // Keep Language / AudioGate / Legal providers mounted across shop↔portfolio
+  // navigations so the experience choice is not re-evaluated from scratch.
   return (
     <LanguageProvider>
       <BackgroundProvider>
-        <DynamicFavicon />
-        <AudioGateProvider disabled={captureMode}>
-          <PageProvider>
-            <LegalModalProvider>
-              <DynamicSocialTags />
-              <JsonLdWebsite />
-              <BackgroundLayers />
-              <CustomCursor />
-              <ButtonSfxListener />
-              {!captureMode && <AudioGate />}
-              <DvdScreensaver />
-              {/* Forcer la présence de la fonte dans le DOM */}
-              <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
-                .
-              </span>
-              <span aria-hidden className="invisible absolute -z-50 font-home-title">
-                .
-              </span>
-              <span aria-hidden className="invisible absolute -z-50 font-electric-blue">
-                .
-              </span>
-              {children}
-            </LegalModalProvider>
-          </PageProvider>
-        </AudioGateProvider>
+        <LegalModalProvider>
+          <AudioGateProvider disabled={captureMode}>
+            {isBareAccount ? (
+              children
+            ) : (
+              <PageProvider>
+                <DynamicFavicon />
+                <DynamicSocialTags />
+                <JsonLdWebsite />
+                <BackgroundLayers />
+                <CustomCursor />
+                <ButtonSfxListener />
+                {!captureMode && <AudioGate />}
+                <DvdScreensaver />
+                {/* Forcer la présence de la fonte dans le DOM */}
+                <span aria-hidden className="invisible absolute -z-50 font-[var(--font-enigma)]">
+                  .
+                </span>
+                <span aria-hidden className="invisible absolute -z-50 font-home-title">
+                  .
+                </span>
+                <span aria-hidden className="invisible absolute -z-50 font-electric-blue">
+                  .
+                </span>
+                {children}
+              </PageProvider>
+            )}
+          </AudioGateProvider>
+        </LegalModalProvider>
       </BackgroundProvider>
     </LanguageProvider>
   )

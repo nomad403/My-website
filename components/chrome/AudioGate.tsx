@@ -1,6 +1,14 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import { useLanguage } from "@/contexts/LanguageContext"
 import LanguageSwitcher from "@/components/chrome/LanguageSwitcher"
 import {
@@ -8,7 +16,6 @@ import {
   orientationRequiresUserPrompt,
   readOrientationSessionState,
   requestOrientationPermission,
-  resetOrientationPermission,
 } from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
@@ -19,12 +26,32 @@ import {
   unlockSiteSfx,
 } from "@/lib/ui/site-sfx"
 
+const MOTION_SKIP_KEY = "nomad403:motion-gate-skip"
+
 function isMotionDevice() {
   if (typeof window === "undefined") return false
   return (
     window.matchMedia?.("(max-width: 767px)")?.matches === true ||
     window.matchMedia?.("(pointer: coarse)")?.matches === true
   )
+}
+
+function readMotionSkip() {
+  if (typeof window === "undefined") return false
+  try {
+    return window.sessionStorage.getItem(MOTION_SKIP_KEY) === "1"
+  } catch {
+    return false
+  }
+}
+
+function writeMotionSkip() {
+  if (typeof window === "undefined") return
+  try {
+    window.sessionStorage.setItem(MOTION_SKIP_KEY, "1")
+  } catch {
+    // ignore
+  }
 }
 
 type GateMode = "experience" | "motion"
@@ -68,26 +95,41 @@ export function AudioGateProvider({
   disabled?: boolean
 }) {
   // false until hydrated: avoid flashing the gate for returning visitors.
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisibleState] = useState(false)
   const [gateMode, setGateMode] = useState<GateMode>("experience")
+  const resolvedRef = useRef(false)
+  const disarmRef = useRef<(() => void) | undefined>(undefined)
+
+  const setVisible = useCallback((next: boolean) => {
+    if (!next) resolvedRef.current = true
+    setVisibleState(next)
+  }, [])
 
   useEffect(() => {
     if (disabled) {
-      setVisible(false)
+      setVisibleState(false)
       return
     }
 
+    // Already decided for this JS session — do not re-open on route changes.
+    if (resolvedRef.current) return
+
     let cancelled = false
-    let disarm: (() => void) | undefined
+
+    const enterWithoutGate = () => {
+      resolvedRef.current = true
+      setVisibleState(false)
+      disarmRef.current?.()
+      disarmRef.current = armSilentAudioUnlock()
+    }
 
     const run = async () => {
-      resetOrientationPermission()
-
       const choice = readAudioGateChoice()
       const motionDevice = isMotionDevice()
 
       if (choice === "declined") {
         setSiteSfxMuted(true)
+        resolvedRef.current = true
         setVisible(false)
         return
       }
@@ -96,8 +138,12 @@ export function AudioGateProvider({
         setSiteSfxMuted(false)
 
         if (!motionDevice) {
-          setVisible(false)
-          disarm = armSilentAudioUnlock()
+          enterWithoutGate()
+          return
+        }
+
+        if (readMotionSkip()) {
+          enterWithoutGate()
           return
         }
 
@@ -106,52 +152,54 @@ export function AudioGateProvider({
 
         if (sensorState === "granted" || sensorState === "unsupported") {
           if (sensorState === "granted") enableOrientationWithoutPrompt()
-          setVisible(false)
-          disarm = armSilentAudioUnlock()
+          enterWithoutGate()
           return
         }
 
         if (sensorState === "denied") {
-          // OS blocked sensors — don't loop the modal; keep audio preference.
-          setVisible(false)
-          disarm = armSilentAudioUnlock()
+          writeMotionSkip()
+          enterWithoutGate()
           return
         }
 
-        // Indeterminate session (typical iOS): preference is saved, sensors are not.
+        // Indeterminate session (typical iOS): ask for sensors once per tab.
         if (orientationRequiresUserPrompt()) {
           setGateMode("motion")
-          setVisible(true)
+          setVisibleState(true)
           return
         }
 
         enableOrientationWithoutPrompt()
-        setVisible(false)
-        disarm = armSilentAudioUnlock()
+        enterWithoutGate()
         return
       }
 
       // pending / missing / unreadable storage → explicit entry gate.
       setGateMode("experience")
       setSiteSfxMuted(true)
-      setVisible(true)
+      setVisibleState(true)
     }
 
     void run()
 
     const onPageShow = (event: PageTransitionEvent) => {
-      if (!event.persisted) return
-      disarm?.()
+      // bfcache restore only — never re-prompt after an in-app navigation.
+      if (!event.persisted || resolvedRef.current) return
       void run()
     }
     window.addEventListener("pageshow", onPageShow)
 
     return () => {
       cancelled = true
-      disarm?.()
       window.removeEventListener("pageshow", onPageShow)
     }
   }, [disabled])
+
+  useEffect(() => {
+    return () => {
+      disarmRef.current?.()
+    }
+  }, [])
 
   return (
     <AudioGateContext.Provider value={{ visible, setVisible }}>
@@ -209,6 +257,8 @@ export default function AudioGate() {
 
     if (gateMode === "experience") {
       setAudioGateChoice("accepted")
+    } else {
+      writeMotionSkip()
     }
 
     setSiteSfxMuted(false)
@@ -221,7 +271,8 @@ export default function AudioGate() {
 
   const handleDecline = () => {
     if (gateMode === "motion") {
-      // Keep the saved audio/experience preference; skip sensors for this session.
+      // Keep the saved audio/experience preference; skip sensors for this tab.
+      writeMotionSkip()
       setVisible(false)
       armSilentAudioUnlock()
       return
