@@ -57,6 +57,75 @@ export function activateSiteSfx() {
   }
 }
 
+/** True once a real user gesture has unlocked (or attempted to unlock) audio. */
+export function isSiteSfxGestureUnlocked() {
+  return userGestureActivated
+}
+
+/**
+ * Call only from a real user-gesture handler (pointer/key/touch/click).
+ * Creates/resumes AudioContext in the same turn so Chrome/Safari autoplay allows sound after reload.
+ */
+export function primeSiteSfxFromUserGesture() {
+  if (typeof window === "undefined") return
+  ensureMuteFromStorage()
+  if (muted) return
+
+  userGestureActivated = true
+  const audio = ensureContext()
+  if (!audio) return
+
+  if (audio.state === "suspended" || audio.state === "interrupted") {
+    void audio.resume().catch(() => undefined)
+  }
+
+  try {
+    const buffer = audio.createBuffer(1, 1, audio.sampleRate)
+    const src = audio.createBufferSource()
+    src.buffer = buffer
+    src.connect(audio.destination)
+    src.start(0)
+  } catch {
+    /* ignore */
+  }
+
+  if (canUseAmbientSfxOnThisDevice()) {
+    bindAmbientInteraction()
+    if (!ambientRuntime) startAmbientMix()
+    else resumeAmbientMix()
+  }
+}
+
+let gestureUnlockArmed = false
+
+/**
+ * After reload with a saved “accepted” preference, browsers still require a gesture.
+ * Arm capture-phase listeners until the first interaction primes the AudioContext.
+ */
+export function armSiteSfxGestureUnlock() {
+  if (typeof window === "undefined" || gestureUnlockArmed) return
+  ensureMuteFromStorage()
+  if (muted) return
+  if (userGestureActivated && ctx?.state === "running") return
+
+  gestureUnlockArmed = true
+
+  const onGesture = () => {
+    if (muted) return
+    primeSiteSfxFromUserGesture()
+    if (ctx?.state === "running" || userGestureActivated) {
+      window.removeEventListener("pointerdown", onGesture, true)
+      window.removeEventListener("keydown", onGesture, true)
+      window.removeEventListener("touchstart", onGesture, true)
+      gestureUnlockArmed = false
+    }
+  }
+
+  window.addEventListener("pointerdown", onGesture, { capture: true, passive: true })
+  window.addEventListener("keydown", onGesture, { capture: true, passive: true })
+  window.addEventListener("touchstart", onGesture, { capture: true, passive: true })
+}
+
 function ensureMuteFromStorage() {
   if (storageRead || typeof window === "undefined") return
   storageRead = true
@@ -159,9 +228,9 @@ export function setSiteSfxMuted(next: boolean) {
 
   if (next) {
     stopAmbientMix()
-  } else {
-    activateSiteSfx()
-
+  } else if (userGestureActivated) {
+    // Preference unmute only resumes audio if a real gesture already unlocked the context.
+    // Restoring “accepted” from localStorage after reload is NOT a user gesture.
     if (backgroundMuted) {
       if (masterGain && ctx) {
         const now = ctx.currentTime
@@ -186,6 +255,8 @@ export function setSiteSfxMuted(next: boolean) {
         void unlockSiteSfx()
       }
     }
+  } else {
+    armSiteSfxGestureUnlock()
   }
 
   muteListeners.forEach((listener) => listener(muted))
@@ -723,16 +794,21 @@ export function startAmbientLoop() {
   }
   ambientActivationBound = true
 
-  const startOnGesture = () => {
-    activateSiteSfx()
+  // If we are already inside a gesture unlock, start immediately.
+  if (userGestureActivated) {
     attemptAmbientStart()
   }
 
-  window.addEventListener("pointerdown", startOnGesture, { passive: true })
-  window.addEventListener("keydown", startOnGesture, { passive: true })
-  window.addEventListener("touchstart", startOnGesture, { passive: true })
-  window.addEventListener("click", startOnGesture, { passive: true })
-  window.addEventListener("mousedown", startOnGesture, { passive: true })
+  const startOnGesture = () => {
+    primeSiteSfxFromUserGesture()
+    attemptAmbientStart()
+  }
+
+  window.addEventListener("pointerdown", startOnGesture, { capture: true, passive: true })
+  window.addEventListener("keydown", startOnGesture, { capture: true, passive: true })
+  window.addEventListener("touchstart", startOnGesture, { capture: true, passive: true })
+  window.addEventListener("click", startOnGesture, { capture: true, passive: true })
+  window.addEventListener("mousedown", startOnGesture, { capture: true, passive: true })
 }
 
 export function playSiteSfx(id: SiteSfxId, options?: SiteSfxOptions) {

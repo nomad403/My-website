@@ -19,6 +19,8 @@ import {
 } from "@/lib/ui/interaction"
 import {
   activateSiteSfx,
+  armSiteSfxGestureUnlock,
+  primeSiteSfxFromUserGesture,
   readAudioGateChoice,
   setAudioGateChoice,
   setSiteSfxMuted,
@@ -66,24 +68,11 @@ export function useAudioGate() {
 }
 
 function armSilentAudioUnlock() {
-  const unlock = () => {
-    activateSiteSfx()
-    void unlockSiteSfx()
-      .catch(() => undefined)
-      .finally(() => {
-        startAmbientLoop()
-      })
-    window.removeEventListener("pointerdown", unlock)
-    window.removeEventListener("keydown", unlock)
-  }
-
-  window.addEventListener("pointerdown", unlock, { once: true })
-  window.addEventListener("keydown", unlock, { once: true })
-
-  return () => {
-    window.removeEventListener("pointerdown", unlock)
-    window.removeEventListener("keydown", unlock)
-  }
+  // Preference may be restored without a gesture (reload). Browsers still need
+  // one click/key before AudioContext can run — arm capture listeners for that.
+  armSiteSfxGestureUnlock()
+  startAmbientLoop()
+  return () => undefined
 }
 
 export function AudioGateProvider({
@@ -262,6 +251,8 @@ export default function AudioGate() {
     }
 
     setSiteSfxMuted(false)
+    // Gate buttons are a real user gesture — unlock audio in this same turn.
+    primeSiteSfxFromUserGesture()
     activateSiteSfx()
     await Promise.all([motionPermission, unlockSiteSfx().catch(() => undefined)])
     startAmbientLoop()

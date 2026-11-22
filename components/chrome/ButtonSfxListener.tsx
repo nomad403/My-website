@@ -4,10 +4,11 @@ import { useEffect } from "react"
 import { useAudioGate } from "@/components/chrome/AudioGate"
 import { playButtonSfx, preloadButtonSfx } from "@/lib/ui/button-sfx"
 import {
-  activateSiteSfx,
+  armSiteSfxGestureUnlock,
   isSiteSfxMuted,
-  unlockSiteSfx,
+  primeSiteSfxFromUserGesture,
   startAmbientLoop,
+  unlockSiteSfx,
 } from "@/lib/ui/site-sfx"
 
 const INTERACTIVE_SELECTOR = [
@@ -36,31 +37,36 @@ export default function ButtonSfxListener() {
   const { visible: entryVisible } = useAudioGate()
   useEffect(() => {
     if (entryVisible) return
+
+    // After reload with saved preference: wait for the next real gesture.
+    armSiteSfxGestureUnlock()
+    startAmbientLoop()
+
     const unlock = () => {
       if (isSiteSfxMuted()) return
-      activateSiteSfx()
+      primeSiteSfxFromUserGesture()
       startAmbientLoop()
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (isSiteSfxMuted()) return
+      primeSiteSfxFromUserGesture()
+      if (!findInteractiveTarget(event.target)) return
+      preloadButtonSfx()
+      // Play in the same gesture turn; resume() may still be pending but
+      // playSiteSfx retries once the context is running.
+      playButtonSfx()
       void unlockSiteSfx()
     }
-    const handleClick = (event: MouseEvent) => {
-      if (!findInteractiveTarget(event.target)) return
-      if (isSiteSfxMuted()) return
-      activateSiteSfx()
-      startAmbientLoop()
-      void unlockSiteSfx().then(() => {
-        preloadButtonSfx()
-        playButtonSfx()
-      })
-    }
 
-    document.addEventListener("pointerdown", unlock, { passive: true })
-    document.addEventListener("keydown", unlock, { passive: true })
-    document.addEventListener("click", handleClick, { passive: true })
+    document.addEventListener("pointerdown", unlock, { capture: true, passive: true })
+    document.addEventListener("keydown", unlock, { capture: true, passive: true })
+    document.addEventListener("pointerdown", handlePointerDown, { capture: true, passive: true })
 
     return () => {
-      document.removeEventListener("pointerdown", unlock)
-      document.removeEventListener("keydown", unlock)
-      document.removeEventListener("click", handleClick)
+      document.removeEventListener("pointerdown", unlock, true)
+      document.removeEventListener("keydown", unlock, true)
+      document.removeEventListener("pointerdown", handlePointerDown, true)
     }
   }, [entryVisible])
 
